@@ -37,7 +37,7 @@ app.post("/api/save", async (req, res) => {
     app.get('/api/data', async (req, res) => {
         try {
             const result = await pool.query(
-            'SELECT cell_index, value FROM data'
+            "SELECT cell_index, value FROM data"
         );
        
     const formatted ={};

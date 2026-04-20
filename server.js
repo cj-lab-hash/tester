@@ -11,8 +11,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-// Endpoint to append data to the JSON file
-app.post("/api/save", (req, res) => {
+app.post("/api/save", async (req, res) => {
     const { index, value } = req.body;
     
     try {

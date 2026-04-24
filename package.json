@@ -1,18 +1,23 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
+    
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.104.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^4.19.2",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "playwright": "^1.59.1"
   },
   "description": "",
   "devDependencies": {

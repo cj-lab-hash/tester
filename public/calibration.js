@@ -1,4 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
 const SUPABASE_URL = "https://YOURPROJECT.supabase.co";
 const SUPABASE_KEY = "YOUR_PUBLISHABLE_OR_ANON_KEY";
 
@@ -15,7 +16,7 @@ async function fetchPlansFor(ids) {
     .in("identification", ids);
 
   if (error) {
-    console.error("Supabase fetch error:", error.message);
+    console.error("Supabase error:", error.message);
     return [];
   }
   return data || [];
@@ -27,7 +28,6 @@ async function renderSchedules() {
 
   const rows = Array.from(table.querySelectorAll("tr")).slice(1);
 
-  // column 0 = TESTER NAME (SZxxx)
   const ids = rows
     .map(tr => normalizeIdent(tr.cells?.[0]?.textContent))
     .filter(id => id.startsWith("SZ"));
@@ -38,18 +38,13 @@ async function renderSchedules() {
   const map = new Map(plans.map(p => [normalizeIdent(p.identification), p]));
 
   for (const tr of rows) {
-    const name = normalizeIdent(tr.cells?.[0]?.textContent);
-    if (!name.startsWith("SZ")) continue;
+    const ident = normalizeIdent(tr.cells?.[0]?.textContent);
+    if (!ident.startsWith("SZ")) continue;
 
-    const plan = map.get(name);
-
-    // column 4 = CAL SCHEDULE, column 5 = PM SCHEDULE (based on your screenshot)
+    const plan = map.get(ident);
     tr.cells[4].textContent = plan?.cal_schedule ?? "N/A";
     tr.cells[5].textContent = plan?.pm_schedule ?? "N/A";
   }
 }
 
 window.addEventListener("DOMContentLoaded", renderSchedules);
-
-// DO NOT use service_role / sb_secret key in frontend
-

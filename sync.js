@@ -150,7 +150,7 @@ async function main() {
       return;
     }
 
-    // ✅ One search only (SZ*)
+    // ✅ Read queries from .env: IDENT_QUERIES=SZ
     const queries = (process.env.IDENT_QUERIES || "SZ*")
       .split(",")
       .map(s => s.trim())

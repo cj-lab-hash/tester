@@ -36,6 +36,7 @@ app.post("/api/save", async (req, res) => {
 
     app.get('/api/data', async (req, res) => {
         try {
+            console.log('Fetching data from database...');
             const result = await pool.query(
             "SELECT cell_index, value FROM data"
         );

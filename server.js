@@ -38,9 +38,8 @@ app.post("/api/save", async (req, res) => {
         try {
             console.log('Fetching data from database...');
             const result = await pool.query(
-            "SELECT cell_index, value FROM data ORDER BY cell_index"
+            "SELECT cell_index, value FROM data"
         );
-        res.json(result.rows);
        
     const formatted ={};
     result.rows.forEach(row => {

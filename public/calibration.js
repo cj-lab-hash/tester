@@ -49,7 +49,7 @@ function setCellStatus(td, type, scheduleText) {
     pill.classList.add("status-due-soon");
     pill.textContent = status.label;
     td.appendChild(pill);
-  } else if (status.state === "ok") {
+  // } else if (status.state === "ok") {
     // Optional: show OK pill (comment out if you don’t want)
     pill.classList.add("status-ok");
     pill.textContent = status.label;
@@ -113,8 +113,86 @@ async function renderSchedulesAndHighlights() {
     }
   }
 }
+// === Smart refresh (12 hours) ===
+const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+const LAST_REFRESH_KEY = "calibration_last_refresh_ts";
 
-window.addEventListener("DOMContentLoaded", renderSchedulesAndHighlights);
+function shouldRefreshNow() {
+  const last = Number(localStorage.getItem(LAST_REFRESH_KEY) || "0");
+  return Date.now() - last >= TWELVE_HOURS;
+}
+
+async function refreshData() {
+  try {
+    // Your existing function that fetches + renders + highlights
+    await renderSchedulesAndHighlights();
+
+    localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
+    console.log("✅ Refreshed calibration data:", new Date().toLocaleString());
+  } catch (err) {
+    console.error("❌ Refresh failed:", err);
+  }
+}
+
+// 1) On first page load: refresh once
+window.addEventListener("DOMContentLoaded", () => {
+  refreshData();
+});
+
+// 2) When user returns to the tab: refresh only if 12 hours passed
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && shouldRefreshNow()) {
+    refreshData();
+  }
+});
+
+// Optional: also refresh when the window gains focus (more reliable)
+window.addEventListener("focus", () => {
+  if (shouldRefreshNow()) {
+    refreshData();
+  }
+});
+
+// window.addEventListener("DOMContentLoaded", renderSchedulesAndHighlights);
+// === Smart refresh (12 hours) ===
+const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+const LAST_REFRESH_KEY = "calibration_last_refresh_ts";
+
+function shouldRefreshNow() {
+  const last = Number(localStorage.getItem(LAST_REFRESH_KEY) || "0");
+  return Date.now() - last >= TWELVE_HOURS;
+}
+
+async function refreshData() {
+  try {
+    // Your existing function that fetches + renders + highlights
+    await renderSchedulesAndHighlights();
+
+    localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
+    console.log("✅ Refreshed calibration data:", new Date().toLocaleString());
+  } catch (err) {
+    console.error("❌ Refresh failed:", err);
+  }
+}
+
+// 1) On first page load: refresh once
+window.addEventListener("DOMContentLoaded", () => {
+  refreshData();
+});
+
+// 2) When user returns to the tab: refresh only if 12 hours passed
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && shouldRefreshNow()) {
+    refreshData();
+  }
+});
+
+// Optional: also refresh when the window gains focus (more reliable)
+window.addEventListener("focus", () => {
+  if (shouldRefreshNow()) {
+    refreshData();
+  }
+});
 
 const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_YAq1ZIeaJdjx4w0G4DwY3g_tXAZHuVk";

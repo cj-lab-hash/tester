@@ -47,7 +47,7 @@
                         <td data-index="16" class="cal-status"></td>
                         <td data-index="17" class="pm-status"></td>
                 </tr>
-                <tr>
+                <tr">
                         <td data-index="18">TERCAT011</td>
                         <td data-index="19">T4112A</td>
                         <td data-index="20" ondblclick="editCell(this)"></td>
@@ -79,7 +79,7 @@
                         <td data-index="40" class="cal-status"></td>
                         <td data-index="41" class="pm-status"></td>
                 </tr>
-                <tr>
+                <tr hidden="true">
                         <td data-index="42">SZ001</td>
                         <td data-index="43">SZ1</td>
                         <td data-index="44" ondblclick="editCell(this)"></td>
@@ -135,7 +135,7 @@
                         <td data-index="75" class="cal-status"></td>
                         <td data-index="76" class="pm-status"></td>
                 </tr>
-                <tr>
+                <tr hidden="true">
                         <td data-index="76">SZ017</td>
                         <td data-index="77">SZ3650E</td>
                         <td data-index="78" ondblclick="editCell(this)"></td>
@@ -238,17 +238,18 @@
         }
 
         // Function to refresh the page every 30 seconds
-        function refreshPage() {
-            setTimeout(function() {
-                window.location.reload();
-            }, 30000); // 30000 milliseconds = 30 seconds
-        }
+        // function refreshPage() {
+        //     setTimeout(function() {
+        //         window.location.reload();
+        //     //}, 30000); // 30000 milliseconds = 30 seconds
+        //     }, 4.32e+7); // 4.32e+7 milliseconds = 12 hours
+        // }
 
-        // Call the functions when the page loads
-        window.onload = function() {
-            loadData(); // Load data from the server
-            refreshPage(); // Set up page refresh
-        };
+        // // Call the functions when the page loads
+        // window.onload = function() {
+        //     loadData(); // Load data from the server
+        //     refreshPage(); // Set up page refresh
+        // };
 
 
        

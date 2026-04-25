@@ -3,9 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright";
 
 const CALMASTER_URL = process.env.CALMASTER_URL;
-const IDENT_QUERY = process.env.IDENT_QUERY || "SZ*";
-const ROWS_PER_PAGE = process.env.ROWS_PER_PAGE || "100";
 
+const ROWS_PER_PAGE = process.env.ROWS_PER_PAGE || "100";
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!process.env.SUPABASE_URL || !serviceKey) {
@@ -152,36 +151,57 @@ async function main() {
     }
 
     // ✅ One search only (SZ*)
-    await fillIdentificationAndSearch(searchFrame, IDENT_QUERY);
-    await page.waitForTimeout(1500);
+    const queries = (process.env.IDENT_QUERIES || "SZ*")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
 
-    // ✅ Optional: show more rows
-    await setRowsPerPage(mainFrame, ROWS_PER_PAGE);
-    await page.waitForTimeout(1000);
-
-    // ✅ Scrape only required columns
-    const plans = await scrapePlans(mainFrame);
-
-    if (!plans.length) {
-      console.log("No rows scraped. Check IDENT_QUERY or table headers.");
-      return;
+    let total = 0;
+    for (const q of queries) {
+      total += await runQuery(searchFrame, mainFrame, q, ROWS_PER_PAGE);
     }
 
-    const checkedAt = new Date().toISOString();
-    const payload = plans.map((r) => ({ ...r, checked_at: checkedAt }));
+    console.log(`\n🎉 Done. Total rows upserted: ${total}`);
 
-    const { error } = await supabase
-      .from("calibration_plans")
-      .upsert(payload, { onConflict: "identification" });
-
-    if (error) throw error;
-
-    console.log(`✅ Upserted ${payload.length} rows (query: ${IDENT_QUERY})`);
   } catch (err) {
     console.error("Sync failed:", err);
   } finally {
     await browser.close();
   }
+}
+
+async function runQuery(searchFrame, mainFrame, queryText, rowsPerPageValue) {
+  console.log(`\n🔎 Searching Identification = ${queryText}`);
+
+  // 1) Fill identification and click Search
+  await fillIdentificationAndSearch(searchFrame, queryText);
+
+  await mainFrame.waitForTimeout(1500);
+
+  // 3) Optional: set rows per page (e.g. 100)
+  await setRowsPerPage(mainFrame, rowsPerPageValue);
+  await mainFrame.waitForTimeout(1000);
+
+  // 4) Scrape table rows
+  const plans = await scrapePlans(mainFrame);
+
+  if (!plans.length) {
+    console.log(`⚠️ No rows scraped for ${queryText}`);
+    return 0;
+  }
+
+  // 5) Upsert into Supabase (single batch)
+  const checkedAt = new Date().toISOString();
+  const payload = plans.map(r => ({ ...r, checked_at: checkedAt }));
+
+  const { error } = await supabase
+    .from("calibration_plans")
+    .upsert(payload, { onConflict: "identification" });
+
+  if (error) throw error;
+
+  console.log(`✅ Upserted ${payload.length} rows for ${queryText}`);
+  return payload.length;
 }
 
 main();

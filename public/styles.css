@@ -33,3 +33,46 @@ input {
 width: 100%;
 box-sizing: border-box;
 }
+
+td.cal-overdue, td.pm-overdue {
+  background: #ffd6d6; /* light red */
+  font-weight: 700;
+}
+
+td.cal-due-soon, td.pm-due-soon {
+  background: #fff2c2; /* light yellow */
+  font-weight: 700;
+}
+
+tr.row-overdue {
+  background: #ffeaea; /* row red tint */
+}
+
+tr.row-due-soon {
+  background: #fff8dc; /* row yellow tint */
+}
+
+.status-pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+.status-overdue {
+  background: #ffb3b3;
+  color: #600;
+}
+
+.status-due-soon {
+  background: #ffe08a;
+  color: #5a3d00;
+}
+
+.status-ok {
+  background: #c9f3d1;
+  color: #0b4d1a;
+}

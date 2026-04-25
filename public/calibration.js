@@ -122,7 +122,8 @@ async function renderSchedulesAndHighlights() {
   // collect SZ rows based on TESTER NAME column (col 0)
   const ids = rows
     .map(tr => normalizeIdent(tr.cells?.[0]?.textContent))
-    .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT"));
+    // .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT"));
+    .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT") || id.startsWith("QUARTET"));
 
   if (!ids.length) return;
 
@@ -133,7 +134,7 @@ async function renderSchedulesAndHighlights() {
     tr.classList.remove("row-overdue", "row-due-soon");
 
     const testerName = normalizeIdent(tr.cells?.[0]?.textContent);
-    if (!(testerName.startsWith("SZ") || testerName.startsWith("TERCAT"))) continue;
+    if (!(testerName.startsWith("SZ") || testerName.startsWith("TERCAT") || testerName.startsWith("QUARTET"))) continue;
 
     const plan = map.get(testerName);
 

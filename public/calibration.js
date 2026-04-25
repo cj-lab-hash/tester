@@ -88,7 +88,7 @@ function setCellStatus(td, type, scheduleText) {
     pill.classList.add("status-due-soon");
     pill.textContent = status.label;
     td.appendChild(pill);
-  } else if (status.state === "ok") {
+  // } else if (status.state === "ok") {
     // optional: comment out if you don't want OK pills
     pill.classList.add("status-ok");
     pill.textContent = status.label;

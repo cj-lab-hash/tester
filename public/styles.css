@@ -78,8 +78,9 @@ tr.row-due-soon {
 }
 
 /* Production status colors */
-.ps-red   { color: #c00000; font-weight: 700; } /* UMAINT / Contact Issue */
-.ps-green { color: #1a7f37; font-weight: 700; } /* PRODN */
-.ps-pink  { color: #c2185b; font-weight: 700; } /* SETUP */
-.ps-gray  { color: #6b7280; font-weight: 700; } /* SHUTDOWN / NO */
-.ps-blue  { color: #1d4ed8; font-weight: 700; } /* ENGG */
+.ps-red   { color: #a30505; font-weight: 700; } /* UMAINT / Contact Issue */
+.ps-green { color: #054a18; font-weight: 700; } /* PRODN */
+.ps-pink  { color: #e3558e; font-weight: 700; } /* SETUP */
+.ps-gray  { color: #696f7b; font-weight: 700; } /* SHUTDOWN / NO */
+.ps-blue  { color: #0b3bc0; font-weight: 700; } /* ENGG */
+.ps-violet { color: #6721e0; font-weight: 700; } /* LOT COMP */

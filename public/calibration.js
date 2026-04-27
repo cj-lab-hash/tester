@@ -152,6 +152,195 @@ async function renderSchedulesAndHighlights() {
   }
 }
 
+// ===================== PRODUCTION STATUS RENDERING =====================
+function productionStatusFromDb(stateShort, stateLong) {
+  const s = (stateShort || "").toUpperCase().trim();
+  const long = (stateLong || "").toUpperCase();
+
+  // UMAINT: show CONTACT ISSUE when present
+  if (s === "UMAINT") {
+    const label = long.includes("CONTACT ISSUE") ? "CONTACT ISSUE" : "UMAINT";
+    return { label, css: "ps-red" };
+  }
+
+  if (s === "PRODN") return { label: "PRODN", css: "ps-green" };
+  if (s === "SETUP") return { label: "SETUP", css: "ps-pink" };
+  if (s === "ENGG")  return { label: "ENGG",  css: "ps-blue" };
+
+  // Statusphere often uses "NO" for NO PRODUCT
+  if (s === "SHUTDOWN" || s === "NO") {
+    const label = (s === "NO") ? "NO PRODUCT" : "SHUTDOWN";
+    return { label, css: "ps-gray" };
+  }
+
+  // Fallback: show stateShort (or blank)
+  return { label: s || "", css: "" };
+}
+
+function normalizeId(s) {
+  return (s || "").trim().toUpperCase();
+}
+
+async function renderProductionStatusFromStatusphere() {
+  const table = document.querySelector("table");
+  if (!table) return;
+
+  const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+  // Collect tester IDs from column 0 (Tester Name)
+  const ids = rows
+    .map(tr => normalizeId(tr.cells?.[0]?.textContent))
+    .filter(Boolean);
+
+  if (!ids.length) return;
+
+  // Fetch statusphere rows in one request
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id, state_short, state_long, checked_at")
+    .in("equipment_id", ids);
+
+  if (error) {
+    console.error("Statusphere fetch error:", error.message);
+    return;
+  }
+
+  const map = new Map((data || []).map(r => [normalizeId(r.equipment_id), r]));
+
+  for (const tr of rows) {
+    const id = normalizeId(tr.cells?.[0]?.textContent);
+    const cell = tr.cells?.[2]; // PRODUCTION STATUS column
+    if (!cell) continue;
+
+    // Remove any previous color classes
+    cell.classList.remove("ps-red", "ps-green", "ps-pink", "ps-gray", "ps-blue");
+
+    const statusRow = map.get(id);
+
+    if (!statusRow) {
+      // No status in DB: keep blank or existing manual value
+      // If you want blank always:
+      // cell.textContent = "";
+      continue;
+    }
+
+    const out = productionStatusFromDb(statusRow.state_short, statusRow.state_long);
+
+    // Set text + color
+    cell.textContent = out.label;
+    if (out.css) cell.classList.add(out.css);
+
+    // Tooltip: show last update time
+    cell.title = `Updated: ${statusRow.checked_at || "N/A"}\n${statusRow.state_long || ""}`;
+  }
+}
+
+function extractIssue(stateShort, stateLong, rawTitle) {
+  const s = (stateShort || "").toUpperCase().trim();
+  const long = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
+
+  // Common patterns in raw title/state long:
+  // "UMAINT->CONTACT ISSUE->..."  or  "SETUP->RKGU FAIL->..."
+  // Try to capture the segment immediately after STATE_SHORT + "->"
+  const arrowMatch = long.match(new RegExp(`${s}\\s*->\\s*([^->]+)`, "i"));
+  if (arrowMatch && arrowMatch[1]) {
+    return arrowMatch[1].trim();
+  }
+
+  // Fallback: keyword-based matching (works even if arrows are missing)
+  // You can add more issues here anytime.
+  const known = [
+    "CONTACT ISSUE",
+    "YIELD ISSUE",
+    "RKGU FAIL",
+    "INSPECT",
+    "CLEAN",
+    "NO INVENTORY",
+    "PLANNED IDLE",
+    "INACTIVE",
+  ];
+
+  for (const k of known) {
+    if (long.includes(k)) return k;
+  }
+
+  return null;
+}
+
+async function renderProductionStatusFromStatusphere() {
+  const rows = Array.from(document.querySelectorAll("tbody tr"));
+  const ids = rows.map(tr => (tr.cells?.[0]?.textContent || "").trim().toUpperCase()).filter(Boolean);
+
+  if (!ids.length) return;
+
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id, state_short, state_long, raw_title, checked_at")
+    .in("equipment_id", ids);
+
+  if (error) {
+    console.error("Statusphere fetch error:", error.message);
+    return;
+  }
+
+  const map = new Map((data || []).map(r => [r.equipment_id.toUpperCase(), r]));
+
+  for (const tr of rows) {
+    const id = (tr.cells?.[0]?.textContent || "").trim().toUpperCase();
+    const cell = tr.cells?.[2]; // Production Status col
+    if (!cell) continue;
+
+    // Clear old color classes
+    cell.classList.remove("ps-red", "ps-green", "ps-pink", "ps-gray", "ps-blue");
+
+    const r = map.get(id);
+    if (!r) continue; // if no DB row, keep manual value
+
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+
+    cell.textContent = out.label;
+    if (out.css) cell.classList.add(out.css);
+
+    // tooltip for details (optional)
+    cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+  }
+}
+
+function productionStatusFromDb(stateShort, stateLong, rawTitle) {
+  const s = (stateShort || "").toUpperCase().trim();
+  const issue = extractIssue(s, stateLong, rawTitle); // e.g. CONTACT ISSUE, YIELD ISSUE, RKGU FAIL
+
+  // UMAINT → show the issue in RED
+  if (s === "UMAINT") {
+    return { label: issue || "UMAINT", css: "ps-red" };
+  }
+
+  // SETUP → show the issue in PINK
+  if (s === "SETUP") {
+    return { label: issue || "SETUP", css: "ps-pink" };
+  }
+
+  // PRODN → GREEN
+  if (s === "PRODN") {
+    return { label: "PRODN", css: "ps-green" };
+  }
+
+  // ENGG → BLUE
+  if (s === "ENGG") {
+    return { label: "ENGG", css: "ps-blue" };
+  }
+
+  // SHUTDOWN / NO → GRAY
+  // (NO usually means NO PRODUCT)
+  if (s === "SHUTDOWN" || s === "NO") {
+    return { label: (s === "NO" ? (issue || "NO PRODUCT") : "SHUTDOWN"), css: "ps-gray" };
+  }
+
+  // Fallback for any unexpected state:
+  // You can either show the raw state or blank.
+  return { label: issue || s || "", css: "" };
+}
+
 // ===================== SMART REFRESH (OPTION C) =====================
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
 const LAST_REFRESH_KEY = "calibration_last_refresh_ts";
@@ -164,6 +353,8 @@ function shouldRefreshNow() {
 async function refreshData() {
   try {
     await renderSchedulesAndHighlights();
+    await renderProductionStatusFromStatusphere();
+    await renderProductionStatusFromStatusphere(); // new function to fetch and render production status
     localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
     console.log("✅ Refreshed calibration data:", new Date().toLocaleString());
   } catch (err) {

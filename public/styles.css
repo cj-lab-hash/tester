@@ -76,3 +76,10 @@ tr.row-due-soon {
   background: #c9f3d1;
   color: #0b4d1a;
 }
+
+/* Production status colors */
+.ps-red   { color: #c00000; font-weight: 700; } /* UMAINT / Contact Issue */
+.ps-green { color: #1a7f37; font-weight: 700; } /* PRODN */
+.ps-pink  { color: #c2185b; font-weight: 700; } /* SETUP */
+.ps-gray  { color: #6b7280; font-weight: 700; } /* SHUTDOWN / NO */
+.ps-blue  { color: #1d4ed8; font-weight: 700; } /* ENGG */

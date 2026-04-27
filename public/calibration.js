@@ -234,16 +234,15 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
 
   // SETUP -> PINK (show issue if available)
   if (s === "SETUP") return { label: issue || "SETUP", css: "ps-pink" };
-
-
+  
   // PRODN -> GREEN (show subtype if available, e.g. QA TEST, MISMATCH RESCREEN)
   if (s === "PRODN") return { label: issue || "PRODN", css: "ps-green" };
   
-
   // ENGG -> BLUE
   if (s === "ENGG") return { label: issue || "ENGG", css: "ps-blue" };
+  // LOT COMP -> VIOLET
 
-  if (s === "LOT COMP") return { label: "LOT COMPLETION", css: "ps-violet" };
+  if (s === "LOT COMP") return { label: issue || "LOT COMPLETION", css: "ps-violet" };
 
   // SHUTDOWN/NO -> GRAY
   if (s === "SHUTDOWN" || s === "NO") {

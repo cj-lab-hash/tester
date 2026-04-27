@@ -134,6 +134,7 @@ async function setTesterTypeAllWithTab(page) {
 }
 
 
+
 async function main() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ storageState: "statusphere_auth.json" });
@@ -142,7 +143,7 @@ async function main() {
   await page.goto(STATUSPHERE_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(1500);
 
-  
+  //very helpful to debug selectors and page structure without needing to run the whole script each time
 //   const selectDump = await page.evaluate(() => {
 //   return Array.from(document.querySelectorAll("select")).map((s, i) => ({
 //     i,
@@ -165,6 +166,19 @@ async function main() {
   await page.screenshot({ path: "statusphere_debug.png", fullPage: true });
   console.log("Saved screenshot: statusphere_debug.png");
 
+  // After setting All and waiting:
+const hasTargets = await page.evaluate(() => {
+  const hrefs = Array.from(document.querySelectorAll("map area"))
+    .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
+  return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO)/i.test(h));
+});
+
+if (!hasTargets) {
+  await page.screenshot({ path: "statusphere_not_all.png", fullPage: true });
+  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO found).");
+  await browser.close();
+  process.exit(2);
+}
   // Scrape areas (main page)
   let areas = await page.$$eval("map area", els =>
     els.map(a => ({
@@ -178,6 +192,8 @@ console.log(`Scraped ${areas.length} equipment areas`);
 
 const ids = areas.map(a => normalizeEquipmentId(extractEquipmentFromHref(a.href))).filter(Boolean);
 console.log("Sample normalized IDs:", ids.slice(0, 20));
+
+
 
   // If map is in a frame, fall back
   if (areas.length === 0) {
@@ -198,6 +214,11 @@ console.log("Sample normalized IDs:", ids.slice(0, 20));
     }
   }
 
+if (!areas.length) {
+  await page.screenshot({ path: "statusphere_failed.png", fullPage: true });
+  console.error("No map areas found. Possibly logged out / session expired.");
+  process.exit(3);
+}
   console.log(`Scraped ${areas.length} equipment areas`);
   console.log("Sample href (raw):", areas[1]?.href);
   console.log("Extracted EQUIPMENT:", extractEquipmentFromHref(areas[1]?.href));

@@ -65,38 +65,32 @@ function computeStatus(dateObj) {
 }
 
 function setCellStatus(td, type, scheduleText) {
-  // Remove old classes
   td.classList.remove(`${type}-overdue`, `${type}-due-soon`);
-
-  // Reset text
   td.textContent = scheduleText || "N/A";
 
   const dateObj = parseScheduleDate(scheduleText);
   const status = computeStatus(dateObj);
 
-  // Add pill
-  const pill = document.createElement("span");
-  pill.classList.add("status-pill");
+  // Only show pill when overdue or due-soon
+  if (status.state === "overdue" || status.state === "due-soon") {
+    const pill = document.createElement("span");
+    pill.classList.add("status-pill");
 
-  if (status.state === "overdue") {
-    td.classList.add(`${type}-overdue`);
-    pill.classList.add("status-overdue");
-    pill.textContent = status.label;
-    td.appendChild(pill);
-  } else if (status.state === "due-soon") {
-    td.classList.add(`${type}-due-soon`);
-    pill.classList.add("status-due-soon");
-    pill.textContent = status.label;
-    td.appendChild(pill);
-  // } else if (status.state === "ok") {
-    // optional: comment out if you don't want OK pills
-    pill.classList.add("status-ok");
+    if (status.state === "overdue") {
+      td.classList.add(`${type}-overdue`);
+      pill.classList.add("status-overdue");
+    } else {
+      td.classList.add(`${type}-due-soon`);
+      pill.classList.add("status-due-soon");
+    }
+
     pill.textContent = status.label;
     td.appendChild(pill);
   }
 
   return status.state;
 }
+
 
 // ===================== DATA FETCH =====================
 async function fetchPlansFor(ids) {
@@ -152,124 +146,70 @@ async function renderSchedulesAndHighlights() {
   }
 }
 
-// ===================== PRODUCTION STATUS RENDERING =====================
-function productionStatusFromDb(stateShort, stateLong) {
-  const s = (stateShort || "").toUpperCase().trim();
-  const long = (stateLong || "").toUpperCase();
-
-  // UMAINT: show CONTACT ISSUE when present
-  if (s === "UMAINT") {
-    const label = long.includes("CONTACT ISSUE") ? "CONTACT ISSUE" : "UMAINT";
-    return { label, css: "ps-red" };
-  }
-
-  if (s === "PRODN") return { label: "PRODN", css: "ps-green" };
-  if (s === "SETUP") return { label: "SETUP", css: "ps-pink" };
-  if (s === "ENGG")  return { label: "ENGG",  css: "ps-blue" };
-
-  // Statusphere often uses "NO" for NO PRODUCT
-  if (s === "SHUTDOWN" || s === "NO") {
-    const label = (s === "NO") ? "NO PRODUCT" : "SHUTDOWN";
-    return { label, css: "ps-gray" };
-  }
-
-  // Fallback: show stateShort (or blank)
-  return { label: s || "", css: "" };
-}
-
-function normalizeId(s) {
-  return (s || "").trim().toUpperCase();
-}
-
-async function renderProductionStatusFromStatusphere() {
-  const table = document.querySelector("table");
-  if (!table) return;
-
-  const rows = Array.from(table.querySelectorAll("tbody tr"));
-
-  // Collect tester IDs from column 0 (Tester Name)
-  const ids = rows
-    .map(tr => normalizeId(tr.cells?.[0]?.textContent))
-    .filter(Boolean);
-
-  if (!ids.length) return;
-
-  // Fetch statusphere rows in one request
-  const { data, error } = await supabase
-    .from("statusphere_equipment")
-    .select("equipment_id, state_short, state_long, checked_at")
-    .in("equipment_id", ids);
-
-  if (error) {
-    console.error("Statusphere fetch error:", error.message);
-    return;
-  }
-
-  const map = new Map((data || []).map(r => [normalizeId(r.equipment_id), r]));
-
-  for (const tr of rows) {
-    const id = normalizeId(tr.cells?.[0]?.textContent);
-    const cell = tr.cells?.[2]; // PRODUCTION STATUS column
-    if (!cell) continue;
-
-    // Remove any previous color classes
-    cell.classList.remove("ps-red", "ps-green", "ps-pink", "ps-gray", "ps-blue");
-
-    const statusRow = map.get(id);
-
-    if (!statusRow) {
-      // No status in DB: keep blank or existing manual value
-      // If you want blank always:
-      // cell.textContent = "";
-      continue;
-    }
-
-    const out = productionStatusFromDb(statusRow.state_short, statusRow.state_long);
-
-    // Set text + color
-    cell.textContent = out.label;
-    if (out.css) cell.classList.add(out.css);
-
-    // Tooltip: show last update time
-    cell.title = `Updated: ${statusRow.checked_at || "N/A"}\n${statusRow.state_long || ""}`;
-  }
-}
-
 function extractIssue(stateShort, stateLong, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
-  const long = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
+  const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
 
-  // Common patterns in raw title/state long:
-  // "UMAINT->CONTACT ISSUE->..."  or  "SETUP->RKGU FAIL->..."
-  // Try to capture the segment immediately after STATE_SHORT + "->"
-  const arrowMatch = long.match(new RegExp(`${s}\\s*->\\s*([^->]+)`, "i"));
-  if (arrowMatch && arrowMatch[1]) {
-    return arrowMatch[1].trim();
-  }
+  if (!s) return null;
 
-  // Fallback: keyword-based matching (works even if arrows are missing)
-  // You can add more issues here anytime.
+  // Try to capture the segment immediately after "STATE->"
+  // Works for: UMAINT->CONTACT ISSUE->..., SETUP->RKGU FAIL->...
+  const m = text.match(new RegExp(`${s}\\s*->\\s*([^->]+)`, "i"));
+  if (m && m[1]) return m[1].trim();
+
+  // Fallback keyword detection (add more anytime)
   const known = [
     "CONTACT ISSUE",
     "YIELD ISSUE",
     "RKGU FAIL",
-    "INSPECT",
-    "CLEAN",
     "NO INVENTORY",
     "PLANNED IDLE",
     "INACTIVE",
+    "INSPECT",
+    "CLEAN",
   ];
 
   for (const k of known) {
-    if (long.includes(k)) return k;
+    if (text.includes(k)) return k;
   }
 
   return null;
 }
 
+// Convert DB state to label + CSS class
+function productionStatusFromDb(stateShort, stateLong, rawTitle) {
+  const s = (stateShort || "").toUpperCase().trim();
+  const issue = extractIssue(s, stateLong, rawTitle);
+
+  // UMAINT -> RED (show issue if available)
+  if (s === "UMAINT") return { label: issue || "UMAINT", css: "ps-red" };
+
+  // SETUP -> PINK (show issue if available)
+  if (s === "SETUP") return { label: issue || "SETUP", css: "ps-pink" };
+
+  // PRODN -> GREEN
+  if (s === "PRODN") return { label: "PRODN", css: "ps-green" };
+
+  // ENGG -> BLUE
+  if (s === "ENGG") return { label: "ENGG", css: "ps-blue" };
+
+  // SHUTDOWN/NO -> GRAY
+  if (s === "SHUTDOWN" || s === "NO") {
+    const label = (s === "NO") ? (issue || "NO PRODUCT") : "SHUTDOWN";
+    return { label, css: "ps-gray" };
+  }
+
+  // Fallback: show issue or stateShort
+  return { label: issue || s || "", css: "" };
+}
+
+// Fetch from statusphere_equipment and render into column 2 (Production Status)
 async function renderProductionStatusFromStatusphere() {
   const rows = Array.from(document.querySelectorAll("tbody tr"));
-  const ids = rows.map(tr => (tr.cells?.[0]?.textContent || "").trim().toUpperCase()).filter(Boolean);
+
+  const ids = rows
+    .map(tr => normalizeIdent(tr.cells?.[0]?.textContent)) // use your existing normalizeIdent()
+    .filter(Boolean);
 
   if (!ids.length) return;
 
@@ -283,62 +223,26 @@ async function renderProductionStatusFromStatusphere() {
     return;
   }
 
-  const map = new Map((data || []).map(r => [r.equipment_id.toUpperCase(), r]));
+  const map = new Map((data || []).map(r => [normalizeIdent(r.equipment_id), r]));
 
   for (const tr of rows) {
-    const id = (tr.cells?.[0]?.textContent || "").trim().toUpperCase();
-    const cell = tr.cells?.[2]; // Production Status col
+    const id = normalizeIdent(tr.cells?.[0]?.textContent);
+    const cell = tr.cells?.[2]; // PRODUCTION STATUS column
     if (!cell) continue;
 
-    // Clear old color classes
     cell.classList.remove("ps-red", "ps-green", "ps-pink", "ps-gray", "ps-blue");
 
     const r = map.get(id);
-    if (!r) continue; // if no DB row, keep manual value
+    if (!r) continue; // no DB row -> keep manual value
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 
     cell.textContent = out.label;
     if (out.css) cell.classList.add(out.css);
 
-    // tooltip for details (optional)
+    // Tooltip for detail
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
   }
-}
-
-function productionStatusFromDb(stateShort, stateLong, rawTitle) {
-  const s = (stateShort || "").toUpperCase().trim();
-  const issue = extractIssue(s, stateLong, rawTitle); // e.g. CONTACT ISSUE, YIELD ISSUE, RKGU FAIL
-
-  // UMAINT → show the issue in RED
-  if (s === "UMAINT") {
-    return { label: issue || "UMAINT", css: "ps-red" };
-  }
-
-  // SETUP → show the issue in PINK
-  if (s === "SETUP") {
-    return { label: issue || "SETUP", css: "ps-pink" };
-  }
-
-  // PRODN → GREEN
-  if (s === "PRODN") {
-    return { label: "PRODN", css: "ps-green" };
-  }
-
-  // ENGG → BLUE
-  if (s === "ENGG") {
-    return { label: "ENGG", css: "ps-blue" };
-  }
-
-  // SHUTDOWN / NO → GRAY
-  // (NO usually means NO PRODUCT)
-  if (s === "SHUTDOWN" || s === "NO") {
-    return { label: (s === "NO" ? (issue || "NO PRODUCT") : "SHUTDOWN"), css: "ps-gray" };
-  }
-
-  // Fallback for any unexpected state:
-  // You can either show the raw state or blank.
-  return { label: issue || s || "", css: "" };
 }
 
 // ===================== SMART REFRESH (OPTION C) =====================

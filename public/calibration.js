@@ -353,7 +353,6 @@ function shouldRefreshNow() {
 async function refreshData() {
   try {
     await renderSchedulesAndHighlights();
-    await renderProductionStatusFromStatusphere();
     await renderProductionStatusFromStatusphere(); // new function to fetch and render production status
     localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
     console.log("✅ Refreshed calibration data:", new Date().toLocaleString());

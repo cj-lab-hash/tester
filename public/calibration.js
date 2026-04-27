@@ -205,11 +205,16 @@ function extractIssue(stateShort, stateLong, rawTitle) {
     "CONTACT ISSUE",
     "YIELD ISSUE",
     "RKGU FAIL",
+    "QA TEST",
+    "MISMATCH RESCREEN",
+    "RESCREEN",
     "NO INVENTORY",
     "PLANNED IDLE",
     "INACTIVE",
-    "INSPECT",
-    "CLEAN",
+    "PRODUCT EVAL",
+    "INCOMPLETE RESOURCES",
+    "QA FAIL",
+
   ];
 
   for (const k of known) {
@@ -230,11 +235,15 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   // SETUP -> PINK (show issue if available)
   if (s === "SETUP") return { label: issue || "SETUP", css: "ps-pink" };
 
-  // PRODN -> GREEN
-  if (s === "PRODN") return { label: "PRODN", css: "ps-green" };
+
+  // PRODN -> GREEN (show subtype if available, e.g. QA TEST, MISMATCH RESCREEN)
+  if (s === "PRODN") return { label: issue || "PRODN", css: "ps-green" };
+  
 
   // ENGG -> BLUE
-  if (s === "ENGG") return { label: "ENGG", css: "ps-blue" };
+  if (s === "ENGG") return { label: issue || "ENGG", css: "ps-blue" };
+
+  if (s === "LOT COMP") return { label: "LOT COMPLETION", css: "ps-violet" };
 
   // SHUTDOWN/NO -> GRAY
   if (s === "SHUTDOWN" || s === "NO") {

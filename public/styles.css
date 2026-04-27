@@ -84,3 +84,4 @@ tr.row-due-soon {
 .ps-gray  { color: #696f7b; font-weight: 700; } /* SHUTDOWN / NO */
 .ps-blue  { color: #0b3bc0; font-weight: 700; } /* ENGG */
 .ps-violet { color: #6721e0; font-weight: 700; } /* LOT COMP */
+.ps-yellow { color: #f8f800; font-weight: 700; } /* STANDBY/IDLE */

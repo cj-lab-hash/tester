@@ -214,6 +214,7 @@ function extractIssue(stateShort, stateLong, rawTitle) {
     "PRODUCT EVAL",
     "INCOMPLETE RESOURCES",
     "QA FAIL",
+    "STANDBY/IDLE"
 
   ];
 
@@ -234,7 +235,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
 
   // SETUP -> PINK (show issue if available)
   if (s === "SETUP") return { label: issue || "SETUP", css: "ps-pink" };
-  
+
   // PRODN -> GREEN (show subtype if available, e.g. QA TEST, MISMATCH RESCREEN)
   if (s === "PRODN") return { label: issue || "PRODN", css: "ps-green" };
   
@@ -249,7 +250,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
     const label = (s === "NO") ? (issue || "NO PRODUCT") : "SHUTDOWN";
     return { label, css: "ps-gray" };
   }
-
+  if (s=== "IDLE") return { label: issue || "IDLE", css: "ps-yellow" };
   // Fallback: show issue or stateShort
   return { label: issue || s || "", css: "" };
 }

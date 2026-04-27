@@ -7,7 +7,48 @@ const DUE_SOON_DAYS = 10; // change to 30 if you want
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
-let lastSeenCheckedAt = null;
+let lastStatusphereCheckedAt = null;
+
+async function statusphereHasNewScrape(ids) {
+  // No ids = nothing to check
+  if (!ids || ids.length === 0) return false;
+
+  // Get the newest checked_at among the testers currently shown on the page
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("checked_at")
+    .in("equipment_id", ids)
+    .order("checked_at", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Statusphere checked_at check failed:", error.message);
+    // If check fails, fall back to updating to avoid stale UI
+    return true;
+  }
+
+  if (!data || data.length === 0) {
+    // No rows in DB yet
+    return false;
+  }
+
+  const latest = data[0].checked_at;
+
+  // First run: store and render
+  if (!lastStatusphereCheckedAt) {
+    lastStatusphereCheckedAt = latest;
+    return true;
+  }
+
+  // If changed, a new scrape happened
+  if (latest !== lastStatusphereCheckedAt) {
+    lastStatusphereCheckedAt = latest;
+    return true;
+  }
+
+  return false;
+}
+
 // ===================== HELPERS =====================
 function normalizeIdent(s) {
   return (s || "").trim().toUpperCase();
@@ -247,45 +288,7 @@ async function renderProductionStatusFromStatusphere() {
   }
 }
 
-async function statusphereHasNewScrape(ids) {
-  // No ids = nothing to check
-  if (!ids || ids.length === 0) return false;
 
-  // Get the newest checked_at among the testers currently shown on the page
-  const { data, error } = await supabase
-    .from("statusphere_equipment")
-    .select("checked_at")
-    .in("equipment_id", ids)
-    .order("checked_at", { ascending: false })
-    .limit(1);
-
-  if (error) {
-    console.error("Statusphere checked_at check failed:", error.message);
-    // If check fails, fall back to updating to avoid stale UI
-    return true;
-  }
-
-  if (!data || data.length === 0) {
-    // No rows in DB yet
-    return false;
-  }
-
-  const latest = data[0].checked_at;
-
-  // First run: store and render
-  if (!lastStatusphereCheckedAt) {
-    lastStatusphereCheckedAt = latest;
-    return true;
-  }
-
-  // If changed, a new scrape happened
-  if (latest !== lastStatusphereCheckedAt) {
-    lastStatusphereCheckedAt = latest;
-    return true;
-  }
-
-  return false;
-}
 
 // ===================== SMART REFRESH (OPTION C) =====================
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;

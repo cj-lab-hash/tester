@@ -304,8 +304,8 @@ async function refreshData() {
   try {
     // Always refresh schedules (cheap + uses your local mapping)
     await renderSchedulesAndHighlights();            // cal/pm schedule
-    await loadManualDataFromApi();                  // your /api/data fill (if you have it)
-    await renderProductionStatusFromStatusphere(); 
+                     // your /api/data fill (if you have it)
+    // await renderProductionStatusFromStatusphere(); 
 
     // Get the IDs visible in your table
     const rows = Array.from(document.querySelectorAll("tbody tr"));

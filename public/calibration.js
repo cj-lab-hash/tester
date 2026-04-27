@@ -248,6 +248,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
 
 // Fetch from statusphere_equipment and render into column 2 (Production Status)
 async function renderProductionStatusFromStatusphere() {
+  console.log("Statusphere render running...")
   const rows = Array.from(document.querySelectorAll("tbody tr"));
 
   const ids = rows
@@ -302,7 +303,9 @@ function shouldRefreshNow() {
 async function refreshData() {
   try {
     // Always refresh schedules (cheap + uses your local mapping)
-    await renderSchedulesAndHighlights();
+    await renderSchedulesAndHighlights();            // cal/pm schedule
+    await loadManualDataFromApi();                  // your /api/data fill (if you have it)
+    await renderProductionStatusFromStatusphere(); 
 
     // Get the IDs visible in your table
     const rows = Array.from(document.querySelectorAll("tbody tr"));

@@ -214,7 +214,8 @@ function extractIssue(stateShort, stateLong, rawTitle) {
     "PRODUCT EVAL",
     "INCOMPLETE RESOURCES",
     "QA FAIL",
-    "STANDBY/IDLE"
+    "STANDBY/IDLE",
+    "LOT COMPLETION",
 
   ];
 
@@ -243,7 +244,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   if (s === "ENGG") return { label: issue || "ENGG", css: "ps-blue" };
   // LOT COMP -> VIOLET
 
-  if (s === "LOT COMP") return { label: issue || "LOT COMPLETION", css: "ps-violet" };
+  if (s === "LOT") return { label: issue || "LOT COMPLETION", css: "ps-violet" };
 
   // SHUTDOWN/NO -> GRAY
   if (s === "SHUTDOWN" || s === "NO") {

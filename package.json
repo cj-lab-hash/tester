@@ -1,11 +1,10 @@
 {
   "name": "server",
   "version": "1.0.0",
-    "main": "server.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
-    
   },
   "keywords": [],
   "author": "",
@@ -16,7 +15,8 @@
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "pg": "^8.20.0",
-    "playwright": "^1.59.1"
+    "playwright": "^1.59.1",
+    "pm2": "^6.0.14"
   },
   "description": "",
   "devDependencies": {

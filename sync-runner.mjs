@@ -2,7 +2,7 @@ import "dotenv/config";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 
-const INTERVAL_MS = 60_000; // 1 minute
+const INTERVAL_MS = 300_000; // 1 minute
 const SCRIPT = "./s-sync.mjs";
 const LOCK_FILE = "./statusphere.lock";
 

@@ -284,7 +284,7 @@ async function renderProductionStatusFromStatusphere() {
     const cell = tr.cells?.[2]; // PRODUCTION STATUS column
     if (!cell) continue;
 
-    cell.classList.remove("ps-red", "ps-green", "ps-pink", "ps-gray", "ps-blue");
+    cell.classList.remove("ps-red", "ps-green", "ps-pink", "ps-gray", "ps-blue", "ps-yellow", "ps-violet");
 
     const r = map.get(id);
     if (!r) continue; // no DB row -> keep manual value

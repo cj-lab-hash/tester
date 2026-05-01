@@ -299,6 +299,20 @@ async function renderProductionStatusFromStatusphere() {
   }
 }
 
+// Compute days until the date shown in the cell
+function daysUntil(dateText) {
+  // Works best if your dateText is consistent like "May 09, 2026" or "Jul 12, 2026"
+  const d = new Date(dateText);
+  if (Number.isNaN(d.getTime())) return null;
+
+  // Use PH timezone "today" boundary roughly by using local midnight.
+  // If your server is in UTC but this is browser-rendered, local is PH anyway.
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const diffMs = d - startOfToday;
+  return Math.floor(diffMs / (24 * 60 * 60 * 1000));
+}
 
 
 // ===================== SMART REFRESH (OPTION C) =====================
@@ -313,7 +327,8 @@ function shouldRefreshNow() {
 async function refreshData() {
   try {
     // Always refresh schedules (cheap + uses your local mapping)
-    await renderSchedulesAndHighlights();            // cal/pm schedule
+    await renderSchedulesAndHighlights();     
+           // cal/pm schedule
                      // your /api/data fill (if you have it)
     // await renderProductionStatusFromStatusphere(); 
 

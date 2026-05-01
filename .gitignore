@@ -4,3 +4,4 @@ node_modules/
 *.dump
 *.png
 *.lock
+statusphere_auth.json

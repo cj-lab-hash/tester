@@ -2,14 +2,14 @@ import "dotenv/config";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 
-const INTERVAL_MS = 300_000; // 1 minute
+const INTERVAL_MS = 5 * 60_000; // 5 minutes
 const SCRIPT = "./s-sync.mjs";
 const LOCK_FILE = "./statusphere.lock";
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
-function isLockStale(lockPath, maxAgeMs = 5 * 60_000) {
+function isLockStale(lockPath, maxAgeMs = 15 * 60_000) {
   try {
     const stat = fs.statSync(lockPath);
     return (Date.now() - stat.mtimeMs) > maxAgeMs;

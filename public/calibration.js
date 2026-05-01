@@ -328,7 +328,7 @@ async function refreshData() {
 
     if (shouldUpdateProdStatus) {
       await renderProductionStatusFromStatusphere();
-      console.log("✅ Production status updated (new scrape detected).now()");
+      console.log("✅ Production status updated (new scrape detected)" + Date.now());
     } else {
       console.log("⏸ No new scrape; production status not refreshed.");
     }

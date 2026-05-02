@@ -87,3 +87,10 @@ tr.row-due-soon {
 .ps-yellow { color: #f8f800; font-weight: 700; } /* STANDBY/IDLE */
 
 
+.prod-link {
+  color: inherit;
+  text-decoration: underline;
+}
+.prod-link:hover {
+  opacity: 0.85;
+}

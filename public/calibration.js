@@ -5,6 +5,7 @@ const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_YAq1ZIeaJdjx4w0G4DwY3g_tXAZHuVk"; // publishable is OK in frontend
 const DUE_SOON_DAYS = 10; // change to 30 if you want
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
 
 
 let lastStatusphereCheckedAt = null;
@@ -52,6 +53,19 @@ async function statusphereHasNewScrape(ids) {
 // ===================== HELPERS =====================
 function normalizeIdent(s) {
   return (s || "").trim().toUpperCase();
+}
+
+function buildStatusphereUrl(href) {
+  if (!href) return null;
+
+  // Sometimes href includes &amp; (HTML encoding)
+  const cleanHref = href.replace(/&amp;/g, "&");
+
+  // If already absolute, return as is
+  if (/^https?:\/\//i.test(cleanHref)) return cleanHref;
+
+  // Join relative href to base
+  return STATUSPHERE_BASE.replace(/\/+$/, "/") + cleanHref.replace(/^\/+/, "");
 }
 
 /**
@@ -291,8 +305,31 @@ async function renderProductionStatusFromStatusphere() {
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 
-    cell.textContent = out.label;
-    if (out.css) cell.classList.add(out.css);
+   // cell.textContent = out.label;
+    // if (out.css) cell.classList.add(out.css);
+// Clear existing content
+cell.textContent = "";
+
+const linkUrl = buildStatusphereUrl(r.href); // uses the href stored in DB
+
+if (linkUrl) {
+  const a = document.createElement("a");
+  a.href = linkUrl;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.textContent = out.label;
+
+  // Make the link inherit the cell color
+  a.classList.add("prod-link");
+
+  cell.appendChild(a);
+} else {
+  // Fallback: no link available
+  cell.textContent = out.label;
+}
+
+if (out.css) cell.classList.add(out.css);
+
 
     // Tooltip for detail
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;

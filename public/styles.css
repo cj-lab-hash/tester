@@ -161,8 +161,29 @@ tr.row-due-soon {
   text-align: center;
   padding: 8px;
 }
-#uflexTable{
-  width: 60%;
+
+/* UFLEX table layout control */
+#uflexTable {
+  width: 60%;              /* overall table width - adjust 50% to 80% */
   margin: 0 auto;
   border-collapse: collapse;
+  table-layout: fixed;     /* ✅ enforces your column widths */
+}
+
+/* Column widths */
+#uflexTable th:nth-child(1),
+#uflexTable td:nth-child(1) {
+  width: 35%;
+}
+
+#uflexTable th:nth-child(2),
+#uflexTable td:nth-child(2) {
+  width: 65%;
+}
+
+/* Keep long status from stretching column */
+#uflexTable td:nth-child(2) {
+  white-space: nowrap;     /* keep in one line */
+  overflow: hidden;        /* hide overflow */
+  text-overflow: ellipsis; /* show ... */
 }

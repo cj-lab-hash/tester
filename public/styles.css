@@ -89,8 +89,15 @@ tr.row-due-soon {
 
 .prod-link {
   color: inherit;
-  text-decoration: underline;
+  text-decoration: none;
+  font-weight: inherit;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-block;
+
 }
+
 .prod-link:hover {
-  opacity: 0.85;
+  background: rgba(0,0,0,0.05);
 }

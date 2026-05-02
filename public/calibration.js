@@ -181,7 +181,7 @@ async function ensureUflexRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.IFLEX%") // also include any IFLEX variants
+    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX") // also include any IFLEX variants
     .order("equipment_id", { ascending: true });
 
   if (error) {

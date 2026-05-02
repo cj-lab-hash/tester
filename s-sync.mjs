@@ -25,14 +25,26 @@ function normalizeEquipmentId(id) {
   if (m) return `SZ${m[1].padStart(3, "0")}`;
 
   // TERCAT5/05/005 -> TERCAT005; QUARTET1 -> QUARTET001; DUO8 -> DUO008
-  m = /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX)(\d{1,3})$/.exec(s);
+  m = /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)(\d{1,3})$/.exec(s);
   if (m) return `${m[1]}${m[2].padStart(3, "0")}`;
 
+  m = /^(\d{1,3})IFLEX$/.exec(s);
+  if (m) return `${m[1].padStart(2, "0")}IFLEX`;
+  if (s.includes("IFLEX")) return s;
   return null;
 }
 
 function isTargetFamily(id) {
-  return id && /^(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX)\d{3}$/.test(id);
+  if (!id) return false;
+  const s = id.toUpperCase();
+
+  // return id && /^(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)\d{3}$/.test(id);
+return (
+  /^SZ\d{3}$/.test(s) ||
+  /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)\d{3}$/.test(s) ||
+  /^\d{2,3}IFLEX$/.test(s) ||
+  s.includes("IFLEX")
+);
 }
 
 function parseCoords(coordsStr = "") {
@@ -126,7 +138,7 @@ async function setTesterTypeAllWithTab(page) {
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX)/i.test(h));
+    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
   }, { timeout: 60000 });
 
   // Debug: confirm what is selected now
@@ -171,7 +183,7 @@ async function main() {
 const hasTargets = await page.evaluate(() => {
   const hrefs = Array.from(document.querySelectorAll("map area"))
     .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX)/i.test(h));
+   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
   
 
 
@@ -295,13 +307,15 @@ console.log("Target family counts in page:", counts);
 
   console.log("✅ Upsert success");
 
+const iflexRows = rowsRaw.filter(r => (r.equipment_id || "").includes("IFLEX"));
+console.log("IFLEX rowsRaw:", iflexRows.length, iflexRows.slice(0, 10).map(r => r.equipment_id));
+
   // Cleanup old rows (keep only latest scrape)
   const { error: delErr } = await supabase
     .from("statusphere_equipment")
     .delete()
     .lt("checked_at", runTs)
-    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.IFLEX%");
-
+    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%");
   if (delErr) console.error("❌ Cleanup delete error:", delErr);
   else console.log("🧹 Cleanup success (removed stale rows)");
 

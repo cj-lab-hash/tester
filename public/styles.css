@@ -104,6 +104,7 @@ tr.row-due-soon {
 
 .page-header {
   display: flex;
+  text-align: center;
   align-items: center;
   justify-content: space-between;
 }
@@ -124,4 +125,44 @@ tr.row-due-soon {
 }
 .prod-link:hover {
   opacity: 0.85;
+}
+
+.page-header{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.page-header h1{
+  grid-column: 2;
+  justify-self: center;
+  margin: 0;
+}
+#sectionACT h3,
+#sectionUFLEX h3{
+  text-align: center;
+}
+.view-switch{
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#editableTable th,
+#editableTable td{
+  text-align: center;      /* ✅ centers text in all cells */
+  vertical-align: middle;
+  padding: 8px;
+}
+#uflexTable th,
+#uflexTable td{
+  text-align: center;
+  padding: 8px;
+}
+#uflexTable{
+  width: 60%;
+  margin: 0 auto;
+  border-collapse: collapse;
 }

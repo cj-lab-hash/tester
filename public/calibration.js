@@ -176,7 +176,7 @@ async function renderSchedulesAndHighlights() {
   const ids = rows
     .map(tr => normalizeIdent(tr.cells?.[0]?.textContent))
     // .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT"));
-    .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT") || id.startsWith("QUARTET")|| id.startsWith("DUO"));
+    .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT") || id.startsWith("QUARTET")|| id.startsWith("DUO")|| id.startsWith("MICROFLEX")|| id.startsWith("TERFLEX"));
 
   if (!ids.length) return;
 
@@ -187,7 +187,7 @@ async function renderSchedulesAndHighlights() {
     tr.classList.remove("row-overdue", "row-due-soon");
 
     const testerName = normalizeIdent(tr.cells?.[0]?.textContent);
-    if (!(testerName.startsWith("SZ") || testerName.startsWith("TERCAT") || testerName.startsWith("QUARTET") || testerName.startsWith("DUO"))) continue;
+    if (!(testerName.startsWith("SZ") || testerName.startsWith("TERCAT") || testerName.startsWith("QUARTET") || testerName.startsWith("DUO") || testerName.startsWith("MICROFLEX") || testerName.startsWith("TERFLEX"))) continue;
 
     const plan = map.get(testerName);
 
@@ -348,6 +348,72 @@ function daysUntil(dateText) {
   return Math.floor(diffMs / (24 * 60 * 60 * 1000));
 }
 
+// Ensure all MICROFLEX and TERFLEX testers from DB have a row in the table
+async function ensureFamilyRowsExist() {
+  const tbody = document.querySelector("tbody");
+  if (!tbody) return;
+
+  // Fetch list from Supabase (only IDs)
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id")
+    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%")
+    .order("equipment_id", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load MICROFLEX/TERFLEX list:", error.message);
+    return;
+  }
+
+  const ids = (data || []).map(r => (r.equipment_id || "").toUpperCase()).filter(Boolean);
+  if (!ids.length) return;
+
+  // Existing rows in your HTML table
+  const existing = new Set(
+    Array.from(tbody.querySelectorAll("tr"))
+      .map(tr => (tr.cells?.[0]?.textContent || "").trim().toUpperCase())
+      .filter(Boolean)
+  );
+
+  // Add missing rows
+  for (const id of ids) {
+    if (existing.has(id)) continue;
+
+    const tr = document.createElement("tr");
+
+    // Column 0: TESTER NAME
+    const tdName = document.createElement("td");
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+
+    // Column 1: TESTER ID (unknown for MICROFLEX unless you have mapping)
+    const tdId = document.createElement("td");
+    tdId.textContent = ""; 
+    tr.appendChild(tdId);
+
+    // Column 2: PRODUCTION STATUS (will be filled by Statusphere renderer)
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+
+    // Column 3: DOCKING MECHANISM (manual)
+    const tdDock = document.createElement("td");
+    tr.appendChild(tdDock);
+
+    // Column 4: CAL SCHEDULE (filled from calibration_plans if exists)
+    const tdCal = document.createElement("td");
+    tdCal.classList.add("cal-status");
+    tr.appendChild(tdCal);
+
+    // Column 5: PM SCHEDULE
+    const tdPm = document.createElement("td");
+    tdPm.classList.add("pm-status");
+    tr.appendChild(tdPm);
+
+    tbody.appendChild(tr);
+    existing.add(id);
+  }
+}
+
 
 // ===================== SMART REFRESH (OPTION C) =====================
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
@@ -361,6 +427,7 @@ function shouldRefreshNow() {
 async function refreshData() {
   try {
     // Always refresh schedules (cheap + uses your local mapping)
+    await ensureFamilyRowsExist(); // Ensure all MICROFLEX/TERFLEX testers have rows before rendering
     await renderSchedulesAndHighlights();     
            // cal/pm schedule
                      // your /api/data fill (if you have it)

@@ -14,6 +14,7 @@ const supabase = createClient(process.env.SUPABASE_URL, serviceKey, {
   global: { headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey } },
 });
 
+const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX"];
 // ---------- helpers ----------
 function normalizeEquipmentId(id) {
   if (!id) return null;
@@ -24,14 +25,14 @@ function normalizeEquipmentId(id) {
   if (m) return `SZ${m[1].padStart(3, "0")}`;
 
   // TERCAT5/05/005 -> TERCAT005; QUARTET1 -> QUARTET001; DUO8 -> DUO008
-  m = /^(TERCAT|QUARTET|DUO)(\d{1,3})$/.exec(s);
+  m = /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)(\d{1,3})$/.exec(s);
   if (m) return `${m[1]}${m[2].padStart(3, "0")}`;
 
   return null;
 }
 
 function isTargetFamily(id) {
-  return id && /^(SZ|TERCAT|QUARTET|DUO)\d{3}$/.test(id);
+  return id && /^(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)\d{3}$/.test(id);
 }
 
 function parseCoords(coordsStr = "") {
@@ -125,7 +126,7 @@ async function setTesterTypeAllWithTab(page) {
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO)/i.test(h));
+    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)/i.test(h));
   }, { timeout: 60000 });
 
   // Debug: confirm what is selected now
@@ -170,12 +171,15 @@ async function main() {
 const hasTargets = await page.evaluate(() => {
   const hrefs = Array.from(document.querySelectorAll("map area"))
     .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-  return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO)/i.test(h));
+   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)/i.test(h));
+  
+
+
 });
 
 if (!hasTargets) {
   await page.screenshot({ path: "statusphere_not_all.png", fullPage: true });
-  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO found).");
+  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX found).");
   await browser.close();
   process.exit(2);
 }
@@ -231,6 +235,8 @@ const counts = ids.reduce((m, id) => {
     : id.startsWith("TERCAT") ? "TERCAT"
     : id.startsWith("QUARTET") ? "QUARTET"
     : id.startsWith("DUO") ? "DUO"
+    : id.startsWith("MICROFLEX") ? "MICROFLEX"
+    : id.startsWith("TERFLEX") ? "TERFLEX"
     : "OTHER";
   m[prefix] = (m[prefix] || 0) + 1;
   return m;

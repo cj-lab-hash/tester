@@ -55,19 +55,21 @@ function normalizeIdent(s) {
   return (s || "").trim().toUpperCase();
 }
 
-function buildStatusphereUrl(href) {
-  if (!href) return null;
+function buildStatusphereUrlFromRow(rowHref, equipmentId) {
+  // If DB stores href (recommended)
+  if (rowHref) {
+    const cleanHref = rowHref.replace(/&amp;/g, "&");
+    if (/^https?:\/\//i.test(cleanHref)) return cleanHref; // already absolute
+    return STATUSPHERE_BASE.replace(/\/+$/, "/") + cleanHref.replace(/^\/+/, "");
+  }
 
-  // Sometimes href includes &amp; (HTML encoding)
-  const cleanHref = href.replace(/&amp;/g, "&");
+  // Fallback: if href is missing, build it from tester ID
+  if (equipmentId) {
+    return `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(equipmentId)}`;
+  }
 
-  // If already absolute, return as is
-  if (/^https?:\/\//i.test(cleanHref)) return cleanHref;
-
-  // Join relative href to base
-  return STATUSPHERE_BASE.replace(/\/+$/, "/") + cleanHref.replace(/^\/+/, "");
+  return null;
 }
-
 /**
  * Parse dates like "Oct 15, 2024"
  */
@@ -271,19 +273,20 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
 }
 
 // Fetch from statusphere_equipment and render into column 2 (Production Status)
+// Fetch from statusphere_equipment and render into column 2 (Production Status)
 async function renderProductionStatusFromStatusphere() {
-  console.log("Statusphere render running...")
+  console.log("Statusphere render running...");
   const rows = Array.from(document.querySelectorAll("tbody tr"));
 
   const ids = rows
-    .map(tr => normalizeIdent(tr.cells?.[0]?.textContent)) // use your existing normalizeIdent()
+    .map(tr => normalizeIdent(tr.cells?.[0]?.textContent))
     .filter(Boolean);
 
   if (!ids.length) return;
 
   const { data, error } = await supabase
     .from("statusphere_equipment")
-    .select("equipment_id, state_short, state_long, raw_title, checked_at")
+    .select("equipment_id, state_short, state_long, raw_title, checked_at, href") // ✅ include href
     .in("equipment_id", ids);
 
   if (error) {
@@ -298,40 +301,34 @@ async function renderProductionStatusFromStatusphere() {
     const cell = tr.cells?.[2]; // PRODUCTION STATUS column
     if (!cell) continue;
 
-    cell.classList.remove("ps-red", "ps-green", "ps-pink", "ps-gray", "ps-blue", "ps-yellow", "ps-violet");
-
     const r = map.get(id);
     if (!r) continue; // no DB row -> keep manual value
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 
-   // cell.textContent = out.label;
-    // if (out.css) cell.classList.add(out.css);
-// Clear existing content
-cell.textContent = "";
+    // reset cell
+    cell.textContent = "";
+    cell.classList.remove("ps-red", "ps-green", "ps-pink", "ps-gray", "ps-blue", "ps-yellow", "ps-violet");
 
-const linkUrl = buildStatusphereUrl(r.href); // uses the href stored in DB
+    // Build link URL
+    const url = buildStatusphereUrlFromRow(r.href, id);
 
-if (linkUrl) {
-  const a = document.createElement("a");
-  a.href = linkUrl;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  a.textContent = out.label;
+    if (url) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = out.label;
+      a.classList.add("prod-link"); // link inherits the TD color
+      cell.appendChild(a);
+    } else {
+      cell.textContent = out.label; // fallback
+    }
 
-  // Make the link inherit the cell color
-  a.classList.add("prod-link");
+    // Apply color to TD
+    if (out.css) cell.classList.add(out.css);
 
-  cell.appendChild(a);
-} else {
-  // Fallback: no link available
-  cell.textContent = out.label;
-}
-
-if (out.css) cell.classList.add(out.css);
-
-
-    // Tooltip for detail
+    // Tooltip
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
   }
 }

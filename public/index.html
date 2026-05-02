@@ -8,8 +8,23 @@
     <link rel="icon" href="project.ico" type="image/x-icon">
 </head>
 <body>
-    <div id="table">
-        <h1>TESTER MONITORING</h1>
+            <div class="page-header">
+        <h2>TESTER MONITORING</h2>
+
+        <div class="view-switch">
+            <label for="viewSelect">View:</label>
+            <select id="viewSelect">
+            <option value="ACT" selected>ACT</option>
+            <option value="UFLEX">UFLEX</option>
+            </select>
+        </div>
+        </div>
+
+        <section id="sectionACT">
+        <h3>ACT CELL</h3>
+
+    <div id="actTable">
+        <!-- <h1>TESTER MONITORING</h1> -->
         <table class="dataframe" style="width:80%" id="editableTable">
             <thead>
                 <tr style="text-align: center;">
@@ -210,6 +225,23 @@
             </tbody>
         </table>
     </div>
+    </section>
+        <section id="sectionUFLEX" style="display:none;">
+        <h3>UFLEX (MICROFLEX / TERFLEX)</h3>
+
+        <table id="uflexTable">
+            <thead>
+            <tr>
+                <th>TESTER NAME</th>
+                <th>PRODUCTION STATUS</th>
+               
+            </tr>
+            </thead>
+            <tbody id="uflexTbody"></tbody>
+        </table>
+        </section>
+
+
     <div id="output"></div>
 
     <script>
@@ -221,6 +253,7 @@
                     const table = document.getElementById("editableTable");
                     const cells = table.getElementsByTagName("td");
                     for (let i = 0; i < cells.length; i++) {
+                        if (i == 2) continue; // Skip the PRODUCTION STATUS column (index 2) since it's dynamically updated
                         let index = cells[i].getAttribute('data-index'); // Get the data-index for the cell
                         if (data[`cell${index}`]) {
                             cells[i].innerHTML = data[`cell${index}`];

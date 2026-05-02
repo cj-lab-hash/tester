@@ -101,3 +101,27 @@ tr.row-due-soon {
 .prod-link:hover {
   background: rgba(0, 0, 0, 0.05);
 }
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.view-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#viewSelect {
+  padding: 4px 8px;
+}
+.prod-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.prod-link:hover {
+  opacity: 0.85;
+}

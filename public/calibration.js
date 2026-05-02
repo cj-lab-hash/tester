@@ -1,4 +1,6 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { act } from "react";
+// import { set } from "pm2";
 
 // ===================== CONFIG =====================
 const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";
@@ -51,10 +53,29 @@ async function statusphereHasNewScrape(ids) {
 }
 
 // ===================== HELPERS =====================
-function normalizeIdent(s) {
-  return (s || "").trim().toUpperCase();
+// Normalize equipment ID for consistent matching (e.g. " sz5 " -> "SZ005")
+function normalizeIdent(id) {
+  if (!id) return null;
+  const s = id.trim().toUpperCase();
+
+  let m = /^SZ(\d{1,3})$/i.exec(s);
+  if (m) return `SZ${m[1].padStart(3, "0")}`;
+  m = /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)(\d{1,3})$/i.exec(s);
+  if (m) return `${m[1]}${m[2].padStart(3, "0")}`;
+  if (s.includes("IFLEX")) return s;
+   return null;
 }
 
+// Check if the equipment ID belongs to UFLEX group based on known patterns
+function isUflexEquipment(rawId = "") {
+  const s = rawId.trim().toUpperCase();
+  // UFLEX group rules:
+  // - MICROFLEX###, TERFLEX###
+  // - anything containing IFLEX (01IFLEX, 25IFLEX_SAMPLE, etc.)
+  return s.startsWith("MICROFLEX") || s.startsWith("TERFLEX") || s.includes("IFLEX");
+}
+
+// Build Statusphere URL from DB row, with fallback to equipment ID if href is missing
 function buildStatusphereUrlFromRow(rowHref, equipmentId) {
   // If DB stores href (recommended)
   if (rowHref) {
@@ -73,6 +94,7 @@ function buildStatusphereUrlFromRow(rowHref, equipmentId) {
 /**
  * Parse dates like "Oct 15, 2024"
  */
+// Returns a Date object or null if invalid
 function parseScheduleDate(text) {
   if (!text) return null;
 
@@ -102,6 +124,7 @@ function parseScheduleDate(text) {
 /**
  * Returns status for a date relative to today (local time)
  */
+
 function computeStatus(dateObj) {
   if (!dateObj) return { state: "na", label: "N/A", days: null };
 
@@ -150,7 +173,45 @@ function setCellStatus(td, type, scheduleText) {
   return status.state;
 }
 
+// Ensure all MICROFLEX and TERFLEX testers from DB have a row in the table
+async function ensureUflexRowsExist() {
+  const tbody = document.getElementById("uflexTbody");
+  if (!tbody) return;
 
+  // Get MICROFLEX + TERFLEX equipment list from statusphere_equipment
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id")
+    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.IFLEX%") // also include any IFLEX variants
+    .order("equipment_id", { ascending: true });
+
+  if (error) {
+    console.error("UFLEX list load error:", error.message);
+    return;
+  }
+
+  const ids = (data || [])
+    .map(r => (r.equipment_id || "").trim().toUpperCase())
+    .filter(Boolean);
+
+  // rebuild every refresh (simple + avoids syncing problems)
+  tbody.innerHTML = "";
+
+  for (const id of ids) {
+    const tr = document.createElement("tr");
+
+    // 0 TESTER NAME
+    const tdName = document.createElement("td");
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+
+    // 1 PRODUCTION STATUS (filled by statusphere render)
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+
+    tbody.appendChild(tr);
+  }
+}
 // ===================== DATA FETCH =====================
 async function fetchPlansFor(ids) {
   const { data, error } = await supabase
@@ -166,17 +227,19 @@ async function fetchPlansFor(ids) {
 }
 
 // ===================== RENDER =====================
-async function renderSchedulesAndHighlights() {
-  const table = document.querySelector("table");
-  if (!table) return;
+async function renderSchedulesAndHighlights(tableEl) {
+  if (!tableEl) return;
+  // const table = document.querySelector("tbody tr");
+  // if (!table) return;
 
-  const rows = Array.from(table.querySelectorAll("tr")).slice(1);
+  // const rows = Array.from(tableEl.querySelectorAll("tbody tr")).slice(1);
+  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
 
   // collect SZ rows based on TESTER NAME column (col 0)
   const ids = rows
     .map(tr => normalizeIdent(tr.cells?.[0]?.textContent))
-    // .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT"));
-    .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT") || id.startsWith("QUARTET")|| id.startsWith("DUO")|| id.startsWith("MICROFLEX")|| id.startsWith("TERFLEX"));
+    // .filter(id => id.startsWith("SZ") || id.startsWith("TERCAT") || id.startsWith("QUARTET")|| id.startsWith("DUO")|| id.startsWith("MICROFLEX")|| id.startsWith("TERFLEX"));
+    .filter(Boolean);
 
   if (!ids.length) return;
 
@@ -187,8 +250,8 @@ async function renderSchedulesAndHighlights() {
     tr.classList.remove("row-overdue", "row-due-soon");
 
     const testerName = normalizeIdent(tr.cells?.[0]?.textContent);
-    if (!(testerName.startsWith("SZ") || testerName.startsWith("TERCAT") || testerName.startsWith("QUARTET") || testerName.startsWith("DUO") || testerName.startsWith("MICROFLEX") || testerName.startsWith("TERFLEX"))) continue;
-
+    if (!(testerName.startsWith("SZ") || testerName.startsWith("TERCAT") || testerName.startsWith("QUARTET") || testerName.startsWith("DUO") || testerName.startsWith("MICROFLEX") || testerName.startsWith("TERFLEX") || testerName.startsWith("IFLEX"))) continue;
+  
     const plan = map.get(testerName);
 
     const calTd = tr.cells[4]; // CAL SCHEDULE col
@@ -205,6 +268,7 @@ async function renderSchedulesAndHighlights() {
   }
 }
 
+// Try to extract issue type from state_long or raw_title based on known patterns
 function extractIssue(stateShort, stateLong, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
@@ -272,16 +336,16 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   return { label: issue || s || "", css: "" };
 }
 
-// Fetch from statusphere_equipment and render into column 2 (Production Status)
-// Fetch from statusphere_equipment and render into column 2 (Production Status)
-async function renderProductionStatusFromStatusphere() {
-  console.log("Statusphere render running...");
-  const rows = Array.from(document.querySelectorAll("tbody tr"));
 
+// Fetch from statusphere_equipment and render into column 2 (Production Status)
+async function renderProductionStatusFromStatusphere(tableEl) {
+  console.log("Statusphere render running...");
+  if (!tableEl) return;
+
+  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
   const ids = rows
     .map(tr => normalizeIdent(tr.cells?.[0]?.textContent))
     .filter(Boolean);
-
   if (!ids.length) return;
 
   const { data, error } = await supabase
@@ -298,7 +362,10 @@ async function renderProductionStatusFromStatusphere() {
 
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
-    const cell = tr.cells?.[2]; // PRODUCTION STATUS column
+
+    const prodColIndex = (tableEl.id === "uflexTable") ? 1 : 2;
+
+    const cell = tr.cells?.[prodColIndex]; // PRODUCTION STATUS column
     if (!cell) continue;
 
     const r = map.get(id);
@@ -349,69 +416,73 @@ function daysUntil(dateText) {
 }
 
 // Ensure all MICROFLEX and TERFLEX testers from DB have a row in the table
-async function ensureFamilyRowsExist() {
-  const tbody = document.querySelector("tbody");
-  if (!tbody) return;
+// async function ensureFamilyRowsExist() {
+//   const tbody = document.querySelector("tbody");
+//   if (!tbody) return;
 
-  // Fetch list from Supabase (only IDs)
-  const { data, error } = await supabase
-    .from("statusphere_equipment")
-    .select("equipment_id")
-    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%")
-    .order("equipment_id", { ascending: true });
+//   // Fetch list from Supabase (only IDs)
+//   const { data, error } = await supabase
+//     .from("statusphere_equipment")
+//     .select("equipment_id")
+//     .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%")
+//     .order("equipment_id", { ascending: true });
 
-  if (error) {
-    console.error("Failed to load MICROFLEX/TERFLEX list:", error.message);
-    return;
-  }
+//   if (error) {
+//     console.error("Failed to load MICROFLEX/TERFLEX list:", error.message);
+//     return;
+//   }
 
-  const ids = (data || []).map(r => (r.equipment_id || "").toUpperCase()).filter(Boolean);
-  if (!ids.length) return;
+//   const ids = (data || []).map(r => (r.equipment_id || "").toUpperCase()).filter(Boolean);
+//   if (!ids.length) return;
 
-  // Existing rows in your HTML table
-  const existing = new Set(
-    Array.from(tbody.querySelectorAll("tr"))
-      .map(tr => (tr.cells?.[0]?.textContent || "").trim().toUpperCase())
-      .filter(Boolean)
-  );
+//   // Existing rows in your HTML table
+//   const existing = new Set(
+//     Array.from(tbody.querySelectorAll("tr"))
+//       .map(tr => (tr.cells?.[0]?.textContent || "").trim().toUpperCase())
+//       .filter(Boolean)
+//   );
 
-  // Add missing rows
-  for (const id of ids) {
-    if (existing.has(id)) continue;
+//   // Add missing rows
+//   for (const id of ids) {
+//     if (existing.has(id)) continue;
 
-    const tr = document.createElement("tr");
+//     const tr = document.createElement("tr");
 
-    // Column 0: TESTER NAME
-    const tdName = document.createElement("td");
-    tdName.textContent = id;
-    tr.appendChild(tdName);
+//     // Column 0: TESTER NAME
+//     const tdName = document.createElement("td");
+//     tdName.textContent = id;
+//     tr.appendChild(tdName);
 
-    // Column 1: TESTER ID (unknown for MICROFLEX unless you have mapping)
-    const tdId = document.createElement("td");
-    tdId.textContent = ""; 
-    tr.appendChild(tdId);
+//     // Column 1: TESTER ID (unknown for MICROFLEX unless you have mapping)
+//     const tdId = document.createElement("td");
+//     tdId.textContent = ""; 
+//     tr.appendChild(tdId);
 
-    // Column 2: PRODUCTION STATUS (will be filled by Statusphere renderer)
-    const tdProd = document.createElement("td");
-    tr.appendChild(tdProd);
+//     // Column 2: PRODUCTION STATUS (will be filled by Statusphere renderer)
+//     const tdProd = document.createElement("td");
+//     tr.appendChild(tdProd);
 
-    // Column 3: DOCKING MECHANISM (manual)
-    const tdDock = document.createElement("td");
-    tr.appendChild(tdDock);
+//     // Column 3: DOCKING MECHANISM (manual)
+//     const tdDock = document.createElement("td");
+//     tr.appendChild(tdDock);
 
-    // Column 4: CAL SCHEDULE (filled from calibration_plans if exists)
-    const tdCal = document.createElement("td");
-    tdCal.classList.add("cal-status");
-    tr.appendChild(tdCal);
+//     // Column 4: CAL SCHEDULE (filled from calibration_plans if exists)
+//     const tdCal = document.createElement("td");
+//     tdCal.classList.add("cal-status");
+//     tr.appendChild(tdCal);
 
-    // Column 5: PM SCHEDULE
-    const tdPm = document.createElement("td");
-    tdPm.classList.add("pm-status");
-    tr.appendChild(tdPm);
+//     // Column 5: PM SCHEDULE
+//     const tdPm = document.createElement("td");
+//     tdPm.classList.add("pm-status");
+//     tr.appendChild(tdPm);
 
-    tbody.appendChild(tr);
-    existing.add(id);
-  }
+//     tbody.appendChild(tr);
+//     existing.add(id);
+//   }
+// }
+
+function getCurrentView() {
+  return document.getElementById("viewSelect")?.value || "ACT";
 }
 
 
@@ -426,15 +497,22 @@ function shouldRefreshNow() {
 
 async function refreshData() {
   try {
-    // Always refresh schedules (cheap + uses your local mapping)
-    await ensureFamilyRowsExist(); // Ensure all MICROFLEX/TERFLEX testers have rows before rendering
-    await renderSchedulesAndHighlights();     
-           // cal/pm schedule
-                     // your /api/data fill (if you have it)
-    // await renderProductionStatusFromStatusphere(); 
+    const view = getCurrentView();
+    const actTable = document.getElementById("editableTable")
+    const uflexTable = document.getElementById("uflexTable");
+    
+    if(view === "UFLEX") {
+      await ensureUflexRowsExist();
+      // await renderSchedulesAndHighlights(uflexTable);
+      await renderProductionStatusFromStatusphere(uflexTable);
+   return;
+    }
+    // await ensureFamilyRowsExist(); // Ensure all MICROFLEX/TERFLEX testers have rows before rendering
+    await renderSchedulesAndHighlights(actTable);     
+    
 
     // Get the IDs visible in your table
-    const rows = Array.from(document.querySelectorAll("tbody tr"));
+    const rows = Array.from(actTable.querySelectorAll("tbody tr"));
     const ids = rows
       .map(tr => normalizeIdent(tr.cells?.[0]?.textContent))
       .filter(Boolean);
@@ -443,7 +521,7 @@ async function refreshData() {
     const shouldUpdateProdStatus = await statusphereHasNewScrape(ids);
 
     if (shouldUpdateProdStatus) {
-      await renderProductionStatusFromStatusphere();
+      await renderProductionStatusFromStatusphere(actTable);
       console.log("✅ Production status updated (new scrape detected)" + new Date().toLocaleTimeString());
     } else {
       console.log("⏸ No new scrape; production status not refreshed.");
@@ -455,20 +533,62 @@ async function refreshData() {
     console.error("❌ Refresh failed:", err);
   }
 }
-const UI_REFRESH_MS = 60 * 1000; // 1 minute
+// ===================== VIEW SWITCHING =====================
+function setView(view) {
+  const act = document.getElementById("sectionACT");
+  const uflex = document.getElementById("sectionUFLEX");
+
+  if (view === "UFLEX") {
+    act.style.display = "none";
+    uflex.style.display = "block";
+  } else {
+    act.style.display = "block";
+    uflex.style.display = "none";
+  }
+}
+
+// Optional: if you want to auto-detect view based on URL hash or something
+
+
+
+
+// const UI_REFRESH_MS = 60 * 1000; // 1 minute
+// window.addEventListener("DOMContentLoaded", () => {
+//   const sel=document.getElementById("viewSelect");
+//   setView(sel?.value || "ACT");
+
+//   sel?.addEventListener("change", () => {
+//     setView(sel.value);
+//     // Optionally refresh immediately on view change
+//     refreshData();
+//   });
+//   refreshData();
+//   setInterval(refreshData, UI_REFRESH_MS)
+// });
+
+// document.addEventListener("visibilitychange", () => {
+//   if (document.visibilityState === "visible" && shouldRefreshNow()) {
+//     refreshData();
+//   }
+// });
+
+// window.addEventListener("focus", () => {
+//   if (shouldRefreshNow()) {
+//     refreshData();
+//   }
+// });
+
+const UI_REFRESH_MS = 60 * 1000;
+
 window.addEventListener("DOMContentLoaded", () => {
+  const sel = document.getElementById("viewSelect");
+  setView(sel?.value || "ACT");
+
+  sel?.addEventListener("change", () => {
+    setView(sel.value);
+    refreshData();
+  });
+
   refreshData();
-  setInterval(refreshData, UI_REFRESH_MS)
-});
-
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && shouldRefreshNow()) {
-    refreshData();
-  }
-});
-
-window.addEventListener("focus", () => {
-  if (shouldRefreshNow()) {
-    refreshData();
-  }
+  setInterval(refreshData, UI_REFRESH_MS);
 });

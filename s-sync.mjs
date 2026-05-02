@@ -14,7 +14,7 @@ const supabase = createClient(process.env.SUPABASE_URL, serviceKey, {
   global: { headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey } },
 });
 
-const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX"];
+const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX"];
 // ---------- helpers ----------
 function normalizeEquipmentId(id) {
   if (!id) return null;
@@ -25,14 +25,14 @@ function normalizeEquipmentId(id) {
   if (m) return `SZ${m[1].padStart(3, "0")}`;
 
   // TERCAT5/05/005 -> TERCAT005; QUARTET1 -> QUARTET001; DUO8 -> DUO008
-  m = /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)(\d{1,3})$/.exec(s);
+  m = /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX)(\d{1,3})$/.exec(s);
   if (m) return `${m[1]}${m[2].padStart(3, "0")}`;
 
   return null;
 }
 
 function isTargetFamily(id) {
-  return id && /^(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)\d{3}$/.test(id);
+  return id && /^(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX)\d{3}$/.test(id);
 }
 
 function parseCoords(coordsStr = "") {
@@ -126,7 +126,7 @@ async function setTesterTypeAllWithTab(page) {
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)/i.test(h));
+    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX)/i.test(h));
   }, { timeout: 60000 });
 
   // Debug: confirm what is selected now
@@ -171,7 +171,7 @@ async function main() {
 const hasTargets = await page.evaluate(() => {
   const hrefs = Array.from(document.querySelectorAll("map area"))
     .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)/i.test(h));
+   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX)/i.test(h));
   
 
 
@@ -179,7 +179,7 @@ const hasTargets = await page.evaluate(() => {
 
 if (!hasTargets) {
   await page.screenshot({ path: "statusphere_not_all.png", fullPage: true });
-  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX found).");
+  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX/IFLEX found).");
   await browser.close();
   process.exit(2);
 }
@@ -237,6 +237,7 @@ const counts = ids.reduce((m, id) => {
     : id.startsWith("DUO") ? "DUO"
     : id.startsWith("MICROFLEX") ? "MICROFLEX"
     : id.startsWith("TERFLEX") ? "TERFLEX"
+    : id.startsWith("IFLEX") ? "IFLEX"
     : "OTHER";
   m[prefix] = (m[prefix] || 0) + 1;
   return m;
@@ -299,7 +300,7 @@ console.log("Target family counts in page:", counts);
     .from("statusphere_equipment")
     .delete()
     .lt("checked_at", runTs)
-    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%");
+    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.IFLEX%");
 
   if (delErr) console.error("❌ Cleanup delete error:", delErr);
   else console.log("🧹 Cleanup success (removed stale rows)");

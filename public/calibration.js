@@ -284,7 +284,7 @@ function getSetupPhase(rawTitle) {
 
   // no 2nd string (detail2) => WAITING
   // detail2 exists => STARTED
-  return detail2 ? "STARTED" : "WAITING";
+  return detail2 ? "ATTENDED" : "WAITING";
 }
 function getUmaintPhase(rawTitle) {
   const seg = getEqpStatesSegments(rawTitle);
@@ -296,7 +296,7 @@ function getUmaintPhase(rawTitle) {
   const detail1 = seg[idx + 1] || null;
   const detail2 = seg[idx + 2] || null;
 
-  return detail2 ? "STARTED" : "WAITING"; // e.g. "CONTACT ISSUE", "YIELD ISSUE", "RKGU FAIL", etc.
+  return detail2 ? "ATTENDED" : "WAITING"; // e.g. "CONTACT ISSUE", "YIELD ISSUE", "RKGU FAIL", etc.
 }
 
 // ===================== DATA FETCH =====================
@@ -410,7 +410,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
        label: issue || "UMAINT",
        css: "ps-red",
        pillText:phase,
-       pillCss: phase === "STARTED" ? "phase-pill pill-started" : "phase-pill pill-waiting"
+       pillCss: phase === "ATTENDED" ? "phase-pill pill-attended" : "phase-pill pill-waiting"
       };
   }
   // SETUP -> PINK (show issue if available)
@@ -422,7 +422,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
        label: issue || "SETUP",
        css: "ps-pink",
        pillText:phase,
-       pillCss: phase === "STARTED" ? "phase-pill pill-started" : "phase-pill pill-waiting"
+       pillCss: phase === "ATTENDED" ? "phase-pill pill-attended" : "phase-pill pill-waiting"
       };
   }
 

@@ -212,7 +212,7 @@ tr.row-due-soon {
   color: #374151;        /* dark gray */
 }
 
-.phase-started {
+.phase-attended {
   background: #ffd1e6;   /* light pink */
   color: #8a0f4c;        /* dark pink */
 }

@@ -301,18 +301,26 @@ function getUmaintPhase(rawTitle) {
 }
 
 let lastSyncShownAt = null;
+let lastSyncFetchedAtMs = 0;
 
 // Fetch the latest checked_at from statusphere_equipment and update the "Last Sync" indicator in the header
 async function updateLastSyncIndicator() {
   const el = document.getElementById("lastSync");
   if (!el) return;
 
+  const nowMs = Date.now();
+  const shouldFetch = (nowMs - lastSyncFetchedAtMs > 60 * 1000);
+  
+  if (shouldFetch) {
+    lastSyncFetchedAtMs = nowMs;
+  
+  // fetch at most once per minute
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("checked_at")
     .order("checked_at", { ascending: false })
     .limit(1);
-    console.log("Last Sync fetch result:", { data, error });
+    
 
 
   if (error) {
@@ -327,17 +335,21 @@ async function updateLastSyncIndicator() {
     return;
   }
 
-  // ✅ Only skip update if it hasn't changed
-  if (latest === lastSyncShownAt) return;
   lastSyncShownAt = latest;
+  } 
+
+  if (!lastSyncShownAt) {
+    el.textContent = "Last Sync: --";
+    return;
+  } 
+  // ✅ Only skip update if it hasn't changed
 
   const dt = new Date(latest);
   const pretty = dt.toLocaleString("en-US", {
-    year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit"
   });
-
-  el.textContent = `Last Sync: ${pretty}`;
+  const ageMin = Math.floor((Date.now() - dt.getTime()) / (60 * 1000));
+  el.textContent = `Last Sync: ${pretty} (${ageMin} min ago)`;
 }
 
 //===================END OF HELPERS ====================
@@ -655,7 +667,8 @@ function shouldRefreshNow() {
 
 async function refreshData() {
   try {
-    await updateLastSyncIndicator();
+     await updateLastSyncIndicator();
+    
     
     const view = getCurrentView();
     const actTable = document.getElementById("editableTable")
@@ -758,4 +771,5 @@ window.addEventListener("DOMContentLoaded", () => {
 
   refreshData();
   setInterval(refreshData, UI_REFRESH_MS);
+  setInterval(updateLastSyncIndicator, 15_000);
 });

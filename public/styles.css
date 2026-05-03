@@ -216,3 +216,20 @@ tr.row-due-soon {
   background: #ffd1e6;   /* light pink */
   color: #8a0f4c;        /* dark pink */
 }
+
+.header-right{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.last-sync{
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid rgba(0,0,0,0.12);
+  padding: 4px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+}

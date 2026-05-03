@@ -10,6 +10,33 @@ const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
 
 
 let lastStatusphereCheckedAt = null;
+let lastSyncShownAt = null;
+
+async function updateLastSyncIndicator() {
+  const el = document.getElementById("lastSync");
+  if (!el) return;
+  const {data, error} = await supabase
+    .from("statusphere_equipment")
+    .select("checked_at")
+    .order("checked_at", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Failed to fetch last sync time:", error.message);
+    return;
+  }
+  const latest = data?.[0]?.checked_at;
+  if (!latest) {
+    el.textContent = "Last Sync: --";
+    return;
+  }
+  if (latest !== lastSyncShownAt) return;
+    lastSyncShownAt = latest;
+    const dt = new Date(latest);
+    const pretty = dt.toLocaleString("en-US", {hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    el.textContent = `Last Sync: ${pretty}`;
+  
+}
 
 async function statusphereHasNewScrape(ids) {
   // No ids = nothing to check
@@ -613,6 +640,7 @@ function shouldRefreshNow() {
 
 async function refreshData() {
   try {
+    await updateLastSyncIndicator(); // Update last sync time at the start of refresh
     const view = getCurrentView();
     const actTable = document.getElementById("editableTable")
     const uflexTable = document.getElementById("uflexTable");

@@ -10,7 +10,6 @@ const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
 
 
 let lastStatusphereCheckedAt = null;
-let lastSyncShownAt = null;
 
 
 async function statusphereHasNewScrape(ids) {
@@ -314,6 +313,7 @@ async function updateLastSyncIndicator() {
     .order("checked_at", { ascending: false })
     .limit(1);
     console.log("Last Sync fetch result:", { data, error });
+
 
   if (error) {
     console.error("Last Sync fetch error:", error.message);

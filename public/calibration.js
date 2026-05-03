@@ -502,20 +502,19 @@ async function renderProductionStatusFromStatusphere(tableEl) {
       span.textContent = out.label;
       cell.appendChild(span);
     }
+    
+     if (out.pillText) {
+      const pill = document.createElement("span");
+      pill.textContent = out.pillText;      // "WAITING" or "STARTED"
+      pill.className = out.pillCss;         // e.g. "phase-pill phase-waiting"
+      cell.appendChild(pill);
+    }
 
     // Apply color to TD
        if (out.css) cell.classList.add(out.css);
 
           // Tooltip
-
           title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
-
-      if (out.pillText) {
-      const pill = document.createElement("span")
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-      }
     }
   }
 

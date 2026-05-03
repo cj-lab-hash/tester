@@ -12,31 +12,6 @@ const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
 let lastStatusphereCheckedAt = null;
 let lastSyncShownAt = null;
 
-async function updateLastSyncIndicator() {
-  const el = document.getElementById("lastSync");
-  if (!el) return;
-  const {data, error} = await supabase
-    .from("statusphere_equipment")
-    .select("checked_at")
-    .order("checked_at", { ascending: false })
-    .limit(1);
-
-  if (error) {
-    console.error("Failed to fetch last sync time:", error.message);
-    return;
-  }
-  const latest = data?.[0]?.checked_at;
-  if (!latest) {
-    el.textContent = "Last Sync: --";
-    return;
-  }
-  if (latest !== lastSyncShownAt) return;
-    lastSyncShownAt = latest;
-    const dt = new Date(latest);
-    const pretty = dt.toLocaleString("en-US", {hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    el.textContent = `Last Sync: ${pretty}`;
-  
-}
 
 async function statusphereHasNewScrape(ids) {
   // No ids = nothing to check
@@ -326,6 +301,46 @@ function getUmaintPhase(rawTitle) {
   return detail2 ? "ATTENDED" : "WAITING"; // e.g. "CONTACT ISSUE", "YIELD ISSUE", "RKGU FAIL", etc.
 }
 
+let lastSyncShownAt = null;
+
+// Fetch the latest checked_at from statusphere_equipment and update the "Last Sync" indicator in the header
+async function updateLastSyncIndicator() {
+  const el = document.getElementById("lastSync");
+  if (!el) return;
+
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("checked_at")
+    .order("checked_at", { ascending: false })
+    .limit(1);
+    console.log("Last Sync fetch result:", { data, error });
+
+  if (error) {
+    console.error("Last Sync fetch error:", error.message);
+    el.textContent = "Last Sync: (error)";
+    return;
+  }
+
+  const latest = data?.[0]?.checked_at;
+  if (!latest) {
+    el.textContent = "Last Sync: --";
+    return;
+  }
+
+  // ✅ Only skip update if it hasn't changed
+  if (latest === lastSyncShownAt) return;
+  lastSyncShownAt = latest;
+
+  const dt = new Date(latest);
+  const pretty = dt.toLocaleString("en-US", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit"
+  });
+
+  el.textContent = `Last Sync: ${pretty}`;
+}
+
+//===================END OF HELPERS ====================
 // ===================== DATA FETCH =====================
 async function fetchPlansFor(ids) {
   const { data, error } = await supabase
@@ -640,7 +655,7 @@ function shouldRefreshNow() {
 
 async function refreshData() {
   try {
-    await updateLastSyncIndicator(); 
+    await updateLastSyncIndicator();
     console.log("✅ Last sync indicator updated " + new Date().toLocaleTimeString());
     const view = getCurrentView();
     const actTable = document.getElementById("editableTable")

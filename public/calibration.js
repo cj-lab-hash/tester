@@ -656,7 +656,7 @@ function shouldRefreshNow() {
 async function refreshData() {
   try {
     await updateLastSyncIndicator();
-    console.log("✅ Last sync indicator updated " + new Date().toLocaleTimeString());
+    
     const view = getCurrentView();
     const actTable = document.getElementById("editableTable")
     const uflexTable = document.getElementById("uflexTable");

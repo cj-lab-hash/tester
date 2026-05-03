@@ -504,19 +504,23 @@ async function renderProductionStatusFromStatusphere(tableEl) {
     }
 
     // Apply color to TD
-    if (out.css) cell.classList.add(out.css);
+       if (out.css) cell.classList.add(out.css);
 
-    // Tooltip
-    cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+          // Tooltip
+
+          title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+
+      if (out.pillText) {
+      const pill = document.createElement("span")
+      pill.textContent = out.pillText;
+      pill.className = out.pillCss;
+      cell.appendChild(pill);
+      }
+    }
   }
 
-  if (out.pillText) {
-    const pill = document.createElement("span")
-    pill.textContent = out.pillText;
-    pill.className = out.pillCss;
-    cell.appendChild(pill);
-  }
-}
+
+  
 
 // Compute days until the date shown in the cell
 function daysUntil(dateText) {

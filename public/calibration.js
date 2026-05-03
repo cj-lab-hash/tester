@@ -344,7 +344,7 @@ async function updateLastSyncIndicator() {
   } 
   // ✅ Only skip update if it hasn't changed
 
-  const dt = new Date(latest);
+  const dt = new Date(lastSyncShownAt);
   const pretty = dt.toLocaleString("en-US", {
     hour: "2-digit", minute: "2-digit", second: "2-digit"
   });

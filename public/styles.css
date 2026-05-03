@@ -140,7 +140,8 @@ tr.row-due-soon {
   margin: 0;
 }
 #sectionACT h3,
-#sectionUFLEX h3{
+#sectionUFLEX h3,
+#sectionEAGLE h3{
   text-align: center;
 }
 .view-switch{

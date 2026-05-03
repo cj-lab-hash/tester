@@ -62,6 +62,7 @@ function normalizeIdent(id) {
   m = /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)(\d{1,3})$/i.exec(s);
   if (m) return `${m[1]}${m[2].padStart(3, "0")}`;
   if (s.includes("IFLEX")) return s;
+  if (/^EAGLE88[0-9A-Z]+$/.test(s)) return s;
    return null;
 }
 
@@ -71,7 +72,7 @@ function isUflexEquipment(rawId = "") {
   // UFLEX group rules:
   // - MICROFLEX###, TERFLEX###
   // - anything containing IFLEX (01IFLEX, 25IFLEX_SAMPLE, etc.)
-  return s.startsWith("MICROFLEX") || s.startsWith("TERFLEX") || s.includes("IFLEX");
+  return s.startsWith("MICROFLEX") || s.startsWith("TERFLEX") || s.includes("IFLEX") || s.startsWith("EAGLE88");
 }
 
 // Build Statusphere URL from DB row, with fallback to equipment ID if href is missing
@@ -171,6 +172,42 @@ function setCellStatus(td, type, scheduleText) {
 
   return status.state;
 }
+//ensure EAGLE testers from DB have a row in the table
+async function ensureEagleRowsExist() {
+  const tbody = document.getElementById("eagleTbody");
+  if (!tbody) return;
+
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id")
+    .ilike("equipment_id", "EAGLE88%")
+    .order("equipment_id", { ascending: true });
+
+  if (error) {
+    console.error("EAGLE list load error:", error.message);
+    return;
+  }
+
+  const ids = (data || []).map(r=> normalizeIdent(r.equipment_id)).filter(Boolean);
+  
+  // rebuild every refresh (simple + avoids syncing problems)
+  tbody.innerHTML = "";
+
+  for (const id of ids) {
+    const tr = document.createElement("tr");
+
+    // 0 TESTER NAME
+    const tdName = document.createElement("td");
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+
+    // 1 PRODUCTION STATUS (filled by statusphere render)
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+
+    tbody.appendChild(tr);
+  }
+}
 
 // Ensure all MICROFLEX and TERFLEX testers from DB have a row in the table
 async function ensureUflexRowsExist() {
@@ -181,7 +218,7 @@ async function ensureUflexRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX") // also include any IFLEX variants
+    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%") // also include any IFLEX and EAGLE variants
     .order("equipment_id", { ascending: true });
 
   if (error) {
@@ -249,7 +286,7 @@ async function renderSchedulesAndHighlights(tableEl) {
     tr.classList.remove("row-overdue", "row-due-soon");
 
     const testerName = normalizeIdent(tr.cells?.[0]?.textContent);
-    if (!(testerName.startsWith("SZ") || testerName.startsWith("TERCAT") || testerName.startsWith("QUARTET") || testerName.startsWith("DUO") || testerName.startsWith("MICROFLEX") || testerName.startsWith("TERFLEX") || testerName.startsWith("IFLEX"))) continue;
+    if (!(testerName.startsWith("SZ") || testerName.startsWith("TERCAT") || testerName.startsWith("QUARTET") || testerName.startsWith("DUO") || testerName.startsWith("MICROFLEX") || testerName.startsWith("TERFLEX") || testerName.startsWith("IFLEX") || testerName.startsWith("EAGLE"))) continue;
   
     const plan = map.get(testerName);
 
@@ -345,6 +382,7 @@ async function renderProductionStatusFromStatusphere(tableEl) {
   const ids = rows
     .map(tr => normalizeIdent(tr.cells?.[0]?.textContent))
     .filter(Boolean);
+
   if (!ids.length) return;
 
   const { data, error } = await supabase
@@ -359,11 +397,10 @@ async function renderProductionStatusFromStatusphere(tableEl) {
 
   const map = new Map((data || []).map(r => [normalizeIdent(r.equipment_id), r]));
 
+  const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
+ 
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
-
-    const prodColIndex = (tableEl.id === "uflexTable") ? 1 : 2;
-
     const cell = tr.cells?.[prodColIndex]; // PRODUCTION STATUS column
     if (!cell) continue;
 
@@ -480,9 +517,6 @@ function daysUntil(dateText) {
 //   }
 // }
 
-function getCurrentView() {
-  return document.getElementById("viewSelect")?.value || "ACT";
-}
 
 
 // ===================== SMART REFRESH (OPTION C) =====================
@@ -499,14 +533,20 @@ async function refreshData() {
     const view = getCurrentView();
     const actTable = document.getElementById("editableTable")
     const uflexTable = document.getElementById("uflexTable");
+    const eagleTable = document.getElementById("eagleTable");
+
     
     if(view === "UFLEX") {
       await ensureUflexRowsExist();
-      // await renderSchedulesAndHighlights(uflexTable);
       await renderProductionStatusFromStatusphere(uflexTable);
    return;
     }
     // await ensureFamilyRowsExist(); // Ensure all MICROFLEX/TERFLEX testers have rows before rendering
+    if(view === "EAGLE") {
+      await ensureEagleRowsExist();
+      await renderProductionStatusFromStatusphere(eagleTable);
+      return;
+    }
     await renderSchedulesAndHighlights(actTable);     
     
 
@@ -521,11 +561,11 @@ async function refreshData() {
 
     if (shouldUpdateProdStatus) {
       await renderProductionStatusFromStatusphere(actTable);
-      console.log("✅ Production status updated (new scrape detected)" + new Date().toLocaleTimeString());
+      console.log("✅ ACT production status updated " + new Date().toLocaleTimeString());
     } else {
       console.log("⏸ No new scrape; production status not refreshed.");
     }
-
+    
     // Keep your 12-hour tracking if you still want it
     localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
   } catch (err) {
@@ -536,16 +576,17 @@ async function refreshData() {
 function setView(view) {
   const act = document.getElementById("sectionACT");
   const uflex = document.getElementById("sectionUFLEX");
+  const eagle = document.getElementById("sectionEAGLE");
 
-  if (view === "UFLEX") {
-    act.style.display = "none";
-    uflex.style.display = "block";
-  } else {
-    act.style.display = "block";
-    uflex.style.display = "none";
-  }
+  if (act) act.style.display = (view === "ACT") ? "block" : "none";
+  if (uflex) uflex.style.display = (view === "UFLEX") ? "block" : "none";
+  if (eagle) eagle.style.display = (view === "EAGLE") ? "block" : "none";
 }
 
+function getCurrentView() {
+  return document.getElementById("viewSelect")?.value || "ACT";
+}
+ 
 // Optional: if you want to auto-detect view based on URL hash or something
 
 

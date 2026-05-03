@@ -16,6 +16,7 @@
             <select id="viewSelect">
             <option value="ACT" selected>ACT</option>
             <option value="UFLEX">UFLEX</option>
+            <option value="EAGLE">EAGLE</option>
             </select>
         </div>
         </div>
@@ -25,7 +26,7 @@
 
     <div id="table">
         <!-- <h1>TESTER MONITORING</h1> -->
-        <table class="dataframe" style="width:80%" id="editableTable">
+        <table class="dataframe" style="width:80%" id="editableTable" data-prod-col="2">
             <thead>
                 <tr style="text-align: center;">
                     <th>TESTER NAME</th>
@@ -227,9 +228,9 @@
     </div>
     </section>
         <section id="sectionUFLEX" style="display:none;">
-        <h3>UFLEX (MICROFLEX / TERFLEX)</h3>
+        <h3>UFLEX (MICROFLEX / TERFLEX / IFLEX )</h3>
 
-        <table id="uflexTable">
+        <table id="uflexTable" data-prod-col="1">
             <thead>
             <tr>
                 <th>TESTER NAME</th>
@@ -240,7 +241,19 @@
             <tbody id="uflexTbody"></tbody>
         </table>
         </section>
-
+        <section id="sectionEAGLE" style="display: none;">
+            <h3>EAGLE</h3>
+                <table id="eagleTable" data-prod-col="1">
+                    <thead>
+                    <tr>
+                        <th>TESTER NAME</th>
+                        <th>PRODUCTION STATUS</th>
+                       
+                    </tr>
+                    </thead>
+                    <tbody id="eagleTbody"></tbody>
+                </table>
+        </section>
 
     <div id="output"></div>
 

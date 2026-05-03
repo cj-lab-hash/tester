@@ -209,6 +209,7 @@ async function ensureEagleRowsExist() {
   }
 }
 
+
 // Ensure all MICROFLEX and TERFLEX testers from DB have a row in the table
 async function ensureUflexRowsExist() {
   const tbody = document.getElementById("uflexTbody");
@@ -248,6 +249,56 @@ async function ensureUflexRowsExist() {
     tbody.appendChild(tr);
   }
 }
+
+function getEqpStatesSegments(rawTitle) {
+  if (!rawTitle) return [];
+  
+  const line = rawTitle
+  .split(/\r?\n/)
+    .find(l => l.toLowerCase().includes("eqpt state"));
+
+  if (!line) return [];
+
+  // Example line formats:
+  // "Eqpt State.: UMAINT->HANDLER PROBLEM->SINGULATOR JAM->"
+  // "Eqpt State.: SETUP->RKGU FAIL->"
+  const afterColon = line.split(":").slice(1).join(":").trim();
+
+  // Split chain by "->" and remove empty parts
+  return afterColon
+    .split("->")
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => s.toUpperCase());
+}
+
+function getSetupPhase(rawTitle) {
+  const seg = getEqpStatesSegments(rawTitle);
+
+  // Find "SETUP" in the chain
+  const idx = seg.indexOf("SETUP");
+  if (idx === -1) return null;
+
+  const detail1 = seg[idx + 1] || null;
+  const detail2 = seg[idx + 2] || null;
+
+  // no 2nd string (detail2) => WAITING
+  // detail2 exists => STARTED
+  return detail2 ? "STARTED" : "WAITING";
+}
+function getUmaintPhase(rawTitle) {
+  const seg = getEqpStatesSegments(rawTitle);
+
+  // Find "UMAINT" in the chain
+  const idx = seg.indexOf("UMAINT");
+  if (idx === -1) return null; 
+
+  const detail1 = seg[idx + 1] || null;
+  const detail2 = seg[idx + 2] || null;
+
+  return detail2 ? "STARTED" : "WAITING"; // e.g. "CONTACT ISSUE", "YIELD ISSUE", "RKGU FAIL", etc.
+}
+
 // ===================== DATA FETCH =====================
 async function fetchPlansFor(ids) {
   const { data, error } = await supabase
@@ -342,16 +393,38 @@ function extractIssue(stateShort, stateLong, rawTitle) {
   return null;
 }
 
+
+
 // Convert DB state to label + CSS class
 function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
   const issue = extractIssue(s, stateLong, rawTitle);
 
   // UMAINT -> RED (show issue if available)
-  if (s === "UMAINT") return { label: issue || "UMAINT", css: "ps-red" };
-
+  // if (s === "UMAINT") return { label: issue || "UMAINT", css: "ps-red" };
+  if (s === "UMAINT") {
+    const phase = getUmaintPhase(rawTitle);
+    const labelBase = issue || "UMAINT";
+    const label = phase ? `${labelBase} (${phase})` : labelBase;
+    return {
+       label: issue || "UMAINT",
+       css: "ps-red",
+       pillText:phase,
+       pillCss: phase === "STARTED" ? "phase-pill pill-started" : "phase-pill pill-waiting"
+      };
+  }
   // SETUP -> PINK (show issue if available)
-  if (s === "SETUP") return { label: issue || "SETUP", css: "ps-pink" };
+  if (s === "SETUP") {
+    const phase = getSetupPhase(rawTitle);
+    const labelBase = issue || "SETUP";
+    const label = phase ? `${labelBase} (${phase})` : labelBase;
+    return {
+       label: issue || "SETUP",
+       css: "ps-pink",
+       pillText:phase,
+       pillCss: phase === "STARTED" ? "phase-pill pill-started" : "phase-pill pill-waiting"
+      };
+  }
 
   // PRODN -> GREEN (show subtype if available, e.g. QA TEST, MISMATCH RESCREEN)
   if (s === "PRODN") return { label: issue || "PRODN", css: "ps-green" };

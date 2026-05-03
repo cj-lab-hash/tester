@@ -498,7 +498,9 @@ async function renderProductionStatusFromStatusphere(tableEl) {
       a.classList.add("prod-link"); // link inherits the TD color
       cell.appendChild(a);
     } else {
-      cell.textContent = out.label; // fallback
+      const span = document.createElement("span");
+      span.textContent = out.label;
+      cell.appendChild(span);
     }
 
     // Apply color to TD
@@ -506,6 +508,13 @@ async function renderProductionStatusFromStatusphere(tableEl) {
 
     // Tooltip
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+  }
+
+  if (out.pillText) {
+    const pill = document.createElement("span")
+    pill.textContent = out.pillText;
+    pill.className = out.pillCss;
+    cell.appendChild(pill);
   }
 }
 

@@ -221,7 +221,8 @@ async function ensureUflexRowsExist() {
     .from("statusphere_equipment")
     .select("equipment_id")
     .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%") // also include any IFLEX and EAGLE variants
-    .order("equipment_id", { ascending: true });
+    // .order("equipment_id", { ascending: true });
+    .order("state_long", { ascending: false });     // sort by state_long to group by status in the table
 
   if (error) {
     console.error("UFLEX list load error:", error.message);

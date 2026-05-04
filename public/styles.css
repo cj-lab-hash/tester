@@ -179,7 +179,26 @@ tr.row-due-soon {
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
 }
+/* ✅ Mobile: full width + smaller text */
+@media (max-width: 600px){
+  #uflexTable, #eagleTable{
+    width: 100%;
+    margin: 0;               /* let it fill container */
+  }
+  
+  #uflexTable th, #uflexTable td,
+  #eagleTable th, #eagleTable td{
+    font-size: 12px;
+    padding: 6px;
+  }
 
+  /* Allow wrapping if you prefer full text */
+  #uflexTable td:nth-child(2),
+  #eagleTable td:nth-child(2){
+    white-space: normal;     /* change to nowrap if you want ellipsis */
+    word-break: break-word;
+  }
+}
 /* SETUP phase pill */
 .phase-pill {
   display: inline-block;
@@ -224,4 +243,31 @@ tr.row-due-soon {
   border-radius: 6px;
   white-space: nowrap;
   text-align: center;
+}
+.table-wrap{
+  width: 100%;
+  overflow-x: auto;                 /* ✅ allow sideways scroll on small screens */
+  -webkit-overflow-scrolling: touch;/* ✅ smooth scrolling on iOS */
+}
+@media (max-width: 600px){
+  .page-header{
+    grid-template-columns: 1fr;   /* stack */
+    gap: 8px;
+  }
+
+  .page-header h1{
+    grid-column: 1;
+    justify-self: center;
+    text-align: center;
+  }
+
+  .header-right{
+    grid-column: 1;
+    justify-self: center;         /* center the controls */
+    align-items: center;
+  }
+
+  .view-switch{
+    justify-content: center;
+  }
 }

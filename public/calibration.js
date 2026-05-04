@@ -768,7 +768,7 @@ async function refreshData() {
       await ensureUflexRowsExist();
       await renderProductionStatusFromStatusphere(uflexTable);
       
-const alerts = collectIssueAlerts(activeTable);
+const alerts = collectIssueAlerts(uflexTable);
 for (const a of alerts) {
   showToast({
     type: a.type,
@@ -793,7 +793,7 @@ for (const a of alerts) {
       await ensureEagleRowsExist();
       await renderProductionStatusFromStatusphere(eagleTable);
       
-const alerts = collectIssueAlerts(activeTable);
+const alerts = collectIssueAlerts(eagleTable);
 for (const a of alerts) {
   showToast({
     type: a.type,
@@ -813,8 +813,7 @@ for (const a of alerts) {
       return;
     }
     await renderSchedulesAndHighlights(actTable);     
-    
-const alerts = collectIssueAlerts(activeTable);
+const alerts = collectIssueAlerts(actTable);
 for (const a of alerts) {
   showToast({
     type: a.type,

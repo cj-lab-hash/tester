@@ -225,7 +225,7 @@ async function ensureUflexRowsExist() {
     .order("state_long", { ascending: false });     // sort by state_long to group by status in the table
 
   if (error) {
-    console.error("UFLEX list load error:", error.message);
+    console.error("UFLEX list load error:", error.message);f
     return;
   }
 
@@ -351,6 +351,93 @@ async function updateLastSyncIndicator() {
   });
   const ageMin = Math.floor((Date.now() - dt.getTime()) / (60 * 1000));
   el.textContent = `Last Sync: ${pretty} (${ageMin} min ago)`;
+}
+
+// Simple toast notification helper 
+function showToast({ type = "gray", title, message, onClick }) {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+
+  // remove existing toast of same title (optional)
+  const existing = Array.from(container.querySelectorAll(".toast"))
+    .find(t => t.dataset.title === title);
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.dataset.title = title;
+
+  const badge = document.createElement("span");
+  badge.className = "toast-badge";
+  badge.textContent = "ALERT";
+
+  const body = document.createElement("div");
+
+  const t = document.createElement("div");
+  t.className = "toast-title";
+  t.textContent = title;
+
+  const m = document.createElement("div");
+  m.className = "toast-sub";
+  m.textContent = message;
+
+  body.appendChild(t);
+  body.appendChild(m);
+
+  toast.appendChild(badge);
+  toast.appendChild(body);
+
+  if (onClick) {
+    toast.addEventListener("click", onClick);
+  }
+
+  container.appendChild(toast);
+
+  // auto-remove after 8 seconds
+  setTimeout(() => toast.remove(), 10000);
+}
+// Scan the table for known issue keywords and collect testers with issues for summary alerts
+function collectIssueAlerts(tableEl) {
+  if (!tableEl) return [];
+
+  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
+
+  const alerts = {
+    YIELD: [],
+    CONTACT: [],
+    RKGU: [],
+    SYSTEM: [],
+  };
+
+  for (const tr of rows) {
+    const tester = (tr.cells?.[0]?.textContent || "").trim();
+    if (!tester) continue;
+
+    // production status column index comes from data-prod-col
+    const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
+    const cell = tr.cells?.[prodColIndex];
+    if (!cell) continue;
+
+    const text = (cell.textContent || "").toUpperCase();
+
+    if (text.includes("YIELD ISSUE")) alerts.YIELD.push(tester);
+    if (text.includes("CONTACT ISSUE")) alerts.CONTACT.push(tester);
+    if (text.includes("RKGU FAIL")) alerts.RKGU.push(tester);
+
+    // SYSTEM ISSUE (support multiple words)
+    if (text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM")) {
+      // Avoid double-counting "SYSTEM" if it appears in something else you don't want
+      alerts.SYSTEM.push(tester);
+    }
+  }
+
+  const result = [];
+  if (alerts.CONTACT.length) result.push({ key:"CONTACT", list: alerts.CONTACT, type:"red", label:"CONTACT ISSUE" });
+  if (alerts.YIELD.length)   result.push({ key:"YIELD",   list: alerts.YIELD,   type:"red", label:"YIELD ISSUE" });
+  if (alerts.RKGU.length)    result.push({ key:"RKGU",    list: alerts.RKGU,    type:"pink", label:"RKGU FAIL" });
+  if (alerts.SYSTEM.length)  result.push({ key:"SYSTEM",  list: alerts.SYSTEM,  type:"red", label:"SYSTEM ISSUE" });
+
+  return result;
 }
 
 //===================END OF HELPERS ====================
@@ -680,16 +767,70 @@ async function refreshData() {
     if(view === "UFLEX") {
       await ensureUflexRowsExist();
       await renderProductionStatusFromStatusphere(uflexTable);
+      
+const alerts = collectIssueAlerts(activeTable);
+for (const a of alerts) {
+  showToast({
+    type: a.type,
+    title: `${a.label}: ${a.list.length}`,
+    message: a.list.slice(0, 6).join(", ") + (a.list.length > 6 ? " ..." : ""),
+    onClick: () => {
+      // Optional: jump to ACT view automatically
+      // document.getElementById("viewSelect").value = "ACT";
+      // setView("ACT");
+      // refreshData();
+      // Or open the first tester’s statusphere link:
+      // (You can implement custom behavior here)
+    }
+  });
+}
+
+      
    return;
     }
     // await ensureFamilyRowsExist(); // Ensure all MICROFLEX/TERFLEX testers have rows before rendering
     if(view === "EAGLE") {
       await ensureEagleRowsExist();
       await renderProductionStatusFromStatusphere(eagleTable);
+      
+const alerts = collectIssueAlerts(activeTable);
+for (const a of alerts) {
+  showToast({
+    type: a.type,
+    title: `${a.label}: ${a.list.length}`,
+    message: a.list.slice(0, 6).join(", ") + (a.list.length > 6 ? " ..." : ""),
+    onClick: () => {
+      // Optional: jump to ACT view automatically
+      // document.getElementById("viewSelect").value = "ACT";
+      // setView("ACT");
+      // refreshData();
+      // Or open the first tester’s statusphere link:
+      // (You can implement custom behavior here)
+    }
+  });
+}
+
       return;
     }
     await renderSchedulesAndHighlights(actTable);     
     
+const alerts = collectIssueAlerts(activeTable);
+for (const a of alerts) {
+  showToast({
+    type: a.type,
+    title: `${a.label}: ${a.list.length}`,
+    message: a.list.slice(0, 6).join(", ") + (a.list.length > 6 ? " ..." : ""),
+    onClick: () => {
+      // Optional: jump to ACT view automatically
+      // document.getElementById("viewSelect").value = "ACT";
+      // setView("ACT");
+      // refreshData();
+      // Or open the first tester’s statusphere link:
+      // (You can implement custom behavior here)
+    }
+  });
+}
+
 
     // Get the IDs visible in your table
     const rows = Array.from(actTable.querySelectorAll("tbody tr"));

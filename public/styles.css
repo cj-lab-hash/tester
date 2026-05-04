@@ -271,3 +271,44 @@ tr.row-due-soon {
     justify-content: center;
   }
 }
+.toast-container{
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Toast pill */
+.toast{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  max-width: 360px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Small badge in toast */
+.toast-badge{
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+/* Types */
+.toast-red .toast-badge{ background:#fee2e2; color:#991b1b; }     /* contact/yield/system issue */
+.toast-pink .toast-badge{ background:#fce7f3; color:#9d174d; }    /* rkgu fail */
+.toast-gray .toast-badge{ background:#e5e7eb; color:#374151; }    /* generic */
+.toast-title{ font-weight: 800; }
+.toast-sub{ color:#4b5563; }

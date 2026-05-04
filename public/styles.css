@@ -225,13 +225,13 @@ tr.row-due-soon {
 
 .last-sync {
   display: inline-block;              /* ensures padding/border show properly */
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #374151;
 
   background: #f3f4f6;                /* makes the badge visible */
   border: 1px solid rgba(0, 0, 0, 0.10);
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 6px;
 
   white-space: nowrap;

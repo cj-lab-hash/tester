@@ -182,8 +182,8 @@ async function ensureEagleRowsExist() {
     .from("statusphere_equipment")
     .select("equipment_id")
     .ilike("equipment_id", "EAGLE88%")
-    .order("equipment_id", { ascending: true });
-
+    // .order("equipment_id", { ascending: true });
+      .order("state_long", { ascending: false });     // sort by state_long to group by status in the table
   if (error) {
     console.error("EAGLE list load error:", error.message);
     return;

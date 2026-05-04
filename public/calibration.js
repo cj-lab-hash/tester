@@ -407,6 +407,8 @@ function collectIssueAlerts(tableEl) {
     CONTACT: [],
     RKGU: [],
     SYSTEM: [],
+    QUALIFICATION: [],
+    HW CHECKER: [],
   };
 
   for (const tr of rows) {
@@ -423,6 +425,8 @@ function collectIssueAlerts(tableEl) {
     if (text.includes("YIELD ISSUE")) alerts.YIELD.push(tester);
     if (text.includes("CONTACT ISSUE")) alerts.CONTACT.push(tester);
     if (text.includes("RKGU FAIL")) alerts.RKGU.push(tester);
+    if (text.includes("QUALIFICATION ISSUE") || text.includes("QUALIFICATION")) alerts.QUALIFICATION.push(tester);
+    if (text.includes("HW CHECKER ISSUE") || text.includes("HW CHECKER")) alerts.HW_CHECKER.push(tester);
 
     // SYSTEM ISSUE (support multiple words)
     if (text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM")) {
@@ -436,6 +440,8 @@ function collectIssueAlerts(tableEl) {
   if (alerts.YIELD.length)   result.push({ key:"YIELD",   list: alerts.YIELD,   type:"red", label:"YIELD ISSUE" });
   if (alerts.RKGU.length)    result.push({ key:"RKGU",    list: alerts.RKGU,    type:"pink", label:"RKGU FAIL" });
   if (alerts.SYSTEM.length)  result.push({ key:"SYSTEM",  list: alerts.SYSTEM,  type:"red", label:"SYSTEM ISSUE" });
+  if (alerts.QUALIFICATION.length) result.push({ key:"QUALIFICATION", list: alerts.QUALIFICATION, type:"red", label:"QUALIFICATION ISSUE" });
+  if (alerts.HW_CHECKER.length) result.push({ key:"HW CHECKER", list: alerts.HW_CHECKER, type:"red", label:"HW CHECKER ISSUE" });
 
   return result;
 }

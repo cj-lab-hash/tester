@@ -409,6 +409,7 @@ function collectIssueAlerts(tableEl) {
     SYSTEM: [],
     QUALIFICATION: [],
     CHECKER: [],
+    QA: [],
   };
 
   for (const tr of rows) {
@@ -427,7 +428,7 @@ function collectIssueAlerts(tableEl) {
     if (text.includes("RKGU FAIL")) alerts.RKGU.push(tester);
     if (text.includes("QUALIFICATION ISSUE") || text.includes("QUALIFICATION FAIL")) alerts.QUALIFICATION.push(tester);
     if (text.includes("HW CHECKER PROBLEM") || text.includes("HW CHECKER")) alerts.CHECKER.push(tester);
-
+    if (text.includes("QA FAIL")) alerts.QA.push(tester);
     // SYSTEM ISSUE (support multiple words)
     if (text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM")) {
       // Avoid double-counting "SYSTEM" if it appears in something else you don't want
@@ -439,10 +440,10 @@ function collectIssueAlerts(tableEl) {
   if (alerts.CONTACT.length) result.push({ key:"CONTACT", list: alerts.CONTACT, type:"red", label:"CONTACT ISSUE" });
   if (alerts.YIELD.length)   result.push({ key:"YIELD",   list: alerts.YIELD,   type:"red", label:"YIELD ISSUE" });
   if (alerts.RKGU.length)    result.push({ key:"RKGU",    list: alerts.RKGU,    type:"pink", label:"RKGU FAIL" });
-  if (alerts.SYSTEM.length)  result.push({ key:"SYSTEM",  list: alerts.SYSTEM,  type:"red", label:"SYSTEM ISSUE" });
-  if (alerts.QUALIFICATION.length) result.push({ key:"QUALIFICATION", list: alerts.QUALIFICATION, type:"red", label:"QUALIFICATION FAILURE" });
+  if (alerts.SYSTEM.length)  result.push({ key:"SYSTEM",  list: alerts.SYSTEM,  type:"yellow", label:"SYSTEM ISSUE" });
+  if (alerts.QUALIFICATION.length) result.push({ key:"QUALIFICATION", list: alerts.QUALIFICATION, type:"pink", label:"QUALIFICATION FAILURE" });
   if (alerts.CHECKER.length) result.push({ key:"CHECKER", list: alerts.CHECKER, type:"red", label:"HW CHECKER ISSUE" });
-
+  if (alerts.QA.length) result.push({ key:"QA", list: alerts.QA, type:"red", label:"QA FAILURE" });
   return result;
 }
 

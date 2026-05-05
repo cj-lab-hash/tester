@@ -425,8 +425,8 @@ function collectIssueAlerts(tableEl) {
     if (text.includes("YIELD ISSUE")) alerts.YIELD.push(tester);
     if (text.includes("CONTACT ISSUE")) alerts.CONTACT.push(tester);
     if (text.includes("RKGU FAIL")) alerts.RKGU.push(tester);
-    if (text.includes("QUALIFICATION ISSUE") || text.includes("QUALIFICATION")) alerts.QUALIFICATION.push(tester);
-    if (text.includes("HW CHECKER PROBLEM") || text.includes("CHECKER")) alerts.CHECKER.push(tester);
+    if (text.includes("QUALIFICATION ISSUE") || text.includes("QUALIFICATION FAIL")) alerts.QUALIFICATION.push(tester);
+    if (text.includes("HW CHECKER PROBLEM") || text.includes("HW CHECKER")) alerts.CHECKER.push(tester);
 
     // SYSTEM ISSUE (support multiple words)
     if (text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM")) {

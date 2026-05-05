@@ -1,4 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { set } from "pm2";
 
 
 // ===================== CONFIG =====================
@@ -393,7 +394,7 @@ function showToast({ type = "gray", title, message, onClick }) {
 
   container.appendChild(toast);
 
-  // auto-remove after 8 seconds
+  // auto-remove after 10 seconds
   setTimeout(() => toast.remove(), 10000);
 }
 // Scan the table for known issue keywords and collect testers with issues for summary alerts
@@ -446,7 +447,80 @@ function collectIssueAlerts(tableEl) {
   if (alerts.QA.length) result.push({ key:"QA", list: alerts.QA, type:"red", label:"QA FAILURE" });
   return result;
 }
+let lastAlertScrapeTs = null;
 
+async function alertIssuesAllGroupsIfNewScrape() {
+  // 1) Get latest scrape timestamp
+  const { data: d1, error: e1 } = await supabase
+    .from("statusphere_equipment")
+    .select("checked_at")
+    .order("checked_at", { ascending: false })
+    .limit(1);
+
+  if (e1) {
+    console.error("Alert check failed:", e1.message);
+    return;
+  }
+
+  const latestTs = d1?.[0]?.checked_at;
+  if (!latestTs) return;
+
+  // Only alert if NEW scrape happened
+  if (latestTs === lastAlertScrapeTs) return;
+  lastAlertScrapeTs = latestTs;
+
+  // 2) Fetch ALL rows from the latest scrape
+  const { data: rows, error: e2 } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id, state_long, raw_title, href")
+    .eq("checked_at", latestTs);
+
+  if (e2) {
+    console.error("Alert rows fetch failed:", e2.message);
+    return;
+  }
+
+  // 3) Build issue buckets
+  const buckets = {
+    "CONTACT ISSUE": [],
+    "YIELD ISSUE": [],
+    "RKGU FAIL": [],
+    "SYSTEM ISSUE": [],
+    "QUALIFICATION FAIL": [],
+    "HW CHECKER PROBLEM": [],
+    "QA FAIL": [],
+  };
+
+  for (const r of (rows || [])) {
+    const issue = classifyIssue(r.state_long, r.raw_title);
+    if (!issue) continue;
+
+    buckets[issue].push({
+      id: r.equipment_id,
+      href: r.href,
+    });
+  }
+
+  // 4) Show toast per issue type
+  for (const [issueName, list] of Object.entries(buckets)) {
+    if (!list.length) continue;
+
+    const type = (issueName === "RKGU FAIL") ? "pink" : "red";
+    const preview = list.slice(0, 6).map(x => x.id).join(", ") + (list.length > 6 ? " ..." : "");
+
+    showToast({
+      type,
+      title: `${issueName}: ${list.length}`,
+      message: preview,
+      onClick: () => {
+        // Open first tester in Statusphere (optional)
+        const first = list[0];
+        const url = buildStatusphereUrlFromRow(first.href, first.id);
+        if (url) window.open(url, "_blank", "noopener");
+      }
+    });
+  }
+}
 //===================END OF HELPERS ====================
 // ===================== DATA FETCH =====================
 async function fetchPlansFor(ids) {
@@ -751,6 +825,7 @@ function daysUntil(dateText) {
 
 
 
+
 // ===================== SMART REFRESH (OPTION C) =====================
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
 const LAST_REFRESH_KEY = "calibration_last_refresh_ts";
@@ -920,4 +995,6 @@ window.addEventListener("DOMContentLoaded", () => {
   refreshData();
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);
+  alertIssuesAllGroupsIfNewScrape(); // check for issues on load
+  setInterval(alertIssuesAllGroupsIfNewScrape, 60 * 1000); // check for issues every minute
 });

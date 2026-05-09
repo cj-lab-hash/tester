@@ -14,7 +14,7 @@ const supabase = createClient(process.env.SUPABASE_URL, serviceKey, {
   global: { headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey } },
 });
 
-const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE"];
+const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE", "MAV10"];
 // ---------- helpers ----------
 function normalizeEquipmentId(id) {
   if (!id) return null;
@@ -32,6 +32,7 @@ function normalizeEquipmentId(id) {
   if (m) return `${m[1].padStart(2, "0")}IFLEX`;
   if (s.includes("IFLEX")) return s;
   if (/^EAGLE88[0-9A-Z]+$/.test(s)) return s;
+  if (/^MAV10[0-9A-Z]+$/.test(s)) return s;
   return null;
 }
 
@@ -45,7 +46,8 @@ return (
   /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)\d{3}$/.test(s) ||
   /^\d{2,3}IFLEX$/.test(s) ||
   s.includes("IFLEX") ||
-  /^EAGLE88[0-9A-Z]+$/.test(s)
+  /^EAGLE88[0-9A-Z]+$/.test(s) || 
+  /^MAV10[0-9A-Z]+$/.test(s)
 );
 }
 

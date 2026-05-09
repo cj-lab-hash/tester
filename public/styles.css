@@ -223,6 +223,12 @@ tr.row-due-soon {
   color: #8a0f4c;        /* dark pink */
 }
 
+.phase-duration {
+  background: #f0f9ff;   /* light blue/cyan */
+  color: #0369a1;        /* dark blue */
+  margin-left: 4px;
+}
+
 .header-right{
   display: flex;
   grid-column: 3;

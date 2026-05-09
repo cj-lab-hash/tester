@@ -447,6 +447,52 @@ function collectIssueAlerts(tableEl) {
   if (alerts.QA.length) result.push({ key:"QA", list: alerts.QA, type:"red", label:"QA FAILURE" });
   return result;
 }
+
+// Extract duration in seconds from Statusphere strings.
+// Prefers the "Duration:" line in raw_title, but falls back to any "xx hrs/min/sec/day" text.
+function extractDurationSeconds(stateShort, stateLong, rawTitle) {
+  const text = `${stateShort || ""}\n${stateLong || ""}\n${rawTitle || ""}`.trim();
+  if (!text) return null;
+
+  // 1) Prefer a "Duration:" line (most reliable)
+  // Examples: "Duration: 6.00 Hrs.", "Duration: 18.6 hrs", "Duration: 35 mins"
+  const durLine = text.split(/\r?\n/).find(l => /duration\s*:/i.test(l)) || "";
+  let m = durLine.match(/duration\s*:\s*([\d.]+)\s*(days?|d|hrs?|hours?|h|mins?|minutes?|m|secs?|seconds?|s)\b/i);
+
+  // 2) Fallback: any occurrence in the whole text
+  if (!m) {
+    m = text.match(/([\d.]+)\s*(days?|d|hrs?|hours?|h|mins?|minutes?|m|secs?|seconds?|s)\b/i);
+  }
+
+  if (!m) return null;
+
+  const value = parseFloat(m[1]);
+  if (Number.isNaN(value)) return null;
+
+  const unit = m[2].toLowerCase();
+
+  // Convert to seconds
+  if (unit.startsWith("d")) return Math.round(value * 86400);
+  if (unit.startsWith("h")) return Math.round(value * 3600);
+  if (unit.startsWith("m") && unit !== "ms") return Math.round(value * 60);
+  if (unit.startsWith("s")) return Math.round(value);
+
+  return null;
+}
+
+// Format seconds to hh:mm:ss (supports >24h too)
+function formatHMS(totalSeconds) {
+  if (totalSeconds == null) return "";
+
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const seconds = s % 60;
+
+  const pad = n => String(n).padStart(2, "0");
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
 // let lastAlertScrapeTs = null;
 
 // async function alertIssuesAllGroupsIfNewScrape() {
@@ -628,26 +674,53 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   if (s === "UMAINT") {
     const phase = getUmaintPhase(rawTitle);
     const labelBase = issue || "UMAINT";
-    const label = phase ? `${labelBase} (${phase})` : labelBase;
+
+    let pillText =phase;
+    if (phase==="WAITING"){
+      const durSec = extractDurationSeconds(s,statelong,rawtitle);
+      const hms =formatHMS(durSec);
+      if (hms) pillText = `WAITING $ {hms}`;
+
+    }
     return {
-       label: issue || "UMAINT",
-       css: "ps-red",
-       pillText:phase,
-       pillCss: phase === "ATTENDED" ? "phase-pill pill-attended" : "phase-pill pill-waiting"
-      };
+    label,
+    css: "ps-red",
+    pillText,
+    pillCss: phase === "ATTENDED"
+      ? "phase-pill phase-started"
+      : "phase-pill phase-waiting"
+  };
+    // const label = phase ? `${labelBase} (${phase})` : labelBase;
+    // return {
+    //    label: issue || "UMAINT",
+    //    css: "ps-red",
+    //    pillText:phase,
+    //    pillCss: phase === "ATTENDED" ? "phase-pill pill-attended" : "phase-pill pill-waiting"
+    //   };
   }
   // SETUP -> PINK (show issue if available)
   if (s === "SETUP") {
-    const phase = getSetupPhase(rawTitle);
-    const labelBase = issue || "SETUP";
-    const label = phase ? `${labelBase} (${phase})` : labelBase;
-    return {
-       label: issue || "SETUP",
-       css: "ps-pink",
-       pillText:phase,
-       pillCss: phase === "ATTENDED" ? "phase-pill pill-attended" : "phase-pill pill-waiting"
-      };
+  const phase = getSetupPhase(rawTitle); // "WAITING" or "STARTED"
+  const label = issue || "SETUP";
+
+  // Only show timer when WAITING (your requirement)
+  let pillText = phase;
+  if (phase === "WAITING") {
+    const durSec = extractDurationSeconds(s, stateLong, rawTitle);
+    const hms = formatHMS(durSec);
+    if (hms) pillText = `WAITING ${hms}`;
   }
+
+  return {
+    label,
+    css: "ps-pink",
+    pillText,
+    pillCss: phase === "ATTENDED"
+      ? "phase-pill phase-started"
+      : "phase-pill phase-waiting"
+  };
+}
+
 
   // PRODN -> GREEN (show subtype if available, e.g. QA TEST, MISMATCH RESCREEN)
   if (s === "PRODN") return { label: issue || "PRODN", css: "ps-green" };

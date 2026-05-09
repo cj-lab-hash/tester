@@ -307,8 +307,9 @@ tr.row-due-soon {
 }
 
 /* Types */
-.toast-red .toast-badge{ background:#fee2e2; color:#991b1b; }     /* contact/yield/system issue */
+.toast-red .toast-badge{ background:#fee2e2; color:#3128e3; }     /* yield */
 .toast-pink .toast-badge{ background:#fce7f3; color:#9d174d; }    /* rkgu fail */
-.toast-gray .toast-badge{ background:#e5e7eb; color:#374151; }    /* generic */
+.toast-gray .toast-badge{ background:#e5e7eb; color:#e80808; }   /* checker/qa fail/contact issue */
+.toast-yellow .toast-badge{background:#fef3c7; color:#eadd27;}    /* system problem */
 .toast-title{ font-weight: 800; }
 .toast-sub{ color:#4b5563; }

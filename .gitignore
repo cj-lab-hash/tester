@@ -5,3 +5,6 @@ node_modules/
 *.png
 *.lock
 statusphere_auth.json
+.pm2/
+click_here.bat
+module_conf.json

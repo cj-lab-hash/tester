@@ -69,7 +69,7 @@ async function updateLastSyncIndicator() {
     const { data, error } = await supabase
       .from("statusphere_equipment")
       .select("checked_at")
-      .order("checked_at", { ascending: false })
+      .order("checked_at", { ascending: true })
       .limit(1);
 
     if (error) {
@@ -107,7 +107,7 @@ async function statusphereHasNewScrape(ids) {
     .from("statusphere_equipment")
     .select("checked_at")
     .in("equipment_id", ids)
-    .order("checked_at", { ascending: false })
+    .order("checked_at", { ascending: true })
     .limit(1);
 
   if (error) {
@@ -194,7 +194,7 @@ async function alertIssuesAllGroupsIfNewScrape() {
   const { data: d1, error: e1 } = await supabase
     .from("statusphere_equipment")
     .select("checked_at")
-    .order("checked_at", { ascending: false })
+    .order("checked_at", { ascending: true })
     .limit(1);
 
   if (e1) {

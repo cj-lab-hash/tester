@@ -374,7 +374,7 @@ async function ensureUflexRowsExist() {
     .from("statusphere_equipment")
     .select("equipment_id")
     .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%")
-    .order("equipment_id", { ascending: true });
+    .order("equipment_id", { ascending: false });
 
   if (error) {
     console.error("UFLEX list load error:", error.message);
@@ -405,7 +405,7 @@ async function ensureEagleRowsExist() {
     .from("statusphere_equipment")
     .select("equipment_id")
     .ilike("equipment_id", "EAGLE88%")
-    .order("equipment_id", { ascending: true });
+    .order("equipment_id", { ascending: false });
 
   if (error) {
     console.error("EAGLE list load error:", error.message);

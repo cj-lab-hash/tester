@@ -532,6 +532,9 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   } else if (s === "IDLE") result = { label: issue || "IDLE", css: "ps-yellow" };
   else result = { label: issue || s || "", css: "" };
 
+  const PILL_ALLOWED_STATES = new Set(["UMAINT", "SETUP"]);
+  if (!PILL_ALLOWED_STATES.has(s)) return result;
+
   const phase = getPhaseForState(s, rawTitle);
 
   if (phase === "WAITING") {
@@ -539,11 +542,16 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
     const hms = formatHMS(durSecs);
     result.pillText = hms ? `WAITING ${hms}` : "WAITING";
     result.pillCss = "phase-pill pill-waiting";
-  } else if (phase === "ATTENDED") {
+    return result;
+  }
+  // } else if (phase === "ATTENDED") {
+  //   result.pillText = "ATTENDED";
+  //   result.pillCss = "phase-pill pill-attended";
+  // }
+if (phase === "ATTENDED") {
     result.pillText = "ATTENDED";
     result.pillCss = "phase-pill pill-attended";
   }
-
   return result;
 }
 

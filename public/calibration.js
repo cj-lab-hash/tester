@@ -42,7 +42,7 @@ function normalizeIdent(id) {
 // TERMAG variants like TERMAG20XX
   if (/^TERMAG20\d{2}$/i.test(s)) return s;
   // LTX variants like LTX20XX
-  if (/^LTX=\d{3}$/i.test(s)) return s;
+  if (/^LTX\d{3}$/i.test(s)) return s;
   return null;
 }
 

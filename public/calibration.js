@@ -557,6 +557,48 @@ if (phase === "ATTENDED") {
   }
   return result;
 }
+function collectIssueAlerts(tableEl) {
+  if (!tableEl) return [];
+  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
+  const alerts = {
+  YIELD: [],
+  CONTACT: [],
+  RKGU: [],
+  SYSTEM: [],
+  QUALIFICATION: [],
+  HW_CHECKER: [],
+  QA: [],
+};
+for (const tr of rows) {
+  const tester =(tr.cells?.[0]?.textContent || "").trim();
+  if(!tester) continue;
+  const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
+  const cell = tr.cells?.[prodColIndex];
+  if (!cell) continue;
+  const text =(cell.textContent || "").toUpperCase();
+
+  if (text.includes("YIELD ISSUE")) alerts.YIELD.push(tester);
+  if (text.includes("CONTACT ISSUE")) alerts.CONTACT.push(tester);
+  if (text.includes("RKGU FAIL")) alerts.RKGU.push(tester);
+  if (text.includes("SYSTEM ISSUE")) alerts.SYSTEM.push(tester);
+  if (text.includes("QUALIFICATION FAILURE")) alerts.QUALIFICATION.push(tester);
+  if (text.includes("HW CHECKER ISSUE")) alerts.HW_CHECKER.push(tester);
+  if (text.includes("QA FAILURE")) alerts.QA.push(tester);
+  if (text.includes("SYSTEM PROBLEM")) alerts.SYSTEM.push(tester);
+  
+}
+
+const result = [];
+if (alerts.YIELD.length) result.push({key:"YIELD", list: alerts.YIELD, type:"blue", label:"YIELD ISSUE"});
+if (alerts.CONTACT.length) result.push({key:"CONTACT", list: alerts.CONTACT, type:"red", label:"CONTACT ISSUE"});
+if (alerts.RKGU.length) result.push({key:"RKGU", list: alerts.RKGU, type:"pink", label:"RKGU FAIL"});
+if (alerts.SYSTEM.length) result.push({key:"SYSTEM", list: alerts.SYSTEM, type:"yellow", label:"SYSTEM ISSUE"});
+if (alerts.QUALIFICATION.length) result.push({key:"QUALIFICATION", list: alerts.QUALIFICATION, type:"pink", label:"QUALIFICATION FAILURE"});
+if (alerts.HW_CHECKER.length) result.push({key:"HW_CHECKER", list: alerts.HW_CHECKER, type:"pink", label:"HW CHECKER ISSUE"});
+if (alerts.QA.length) result.push({key:"QA", list: alerts.QA, type:"red", label:"QA FAILURE"});
+return result;
+}
+
 function showViewAlertsOncePerChange(viewName, tableEl, scrapeTs) {
   // scrapeTs = latest checked_at you already fetched for Last Sync (or pass null)
   const alerts = collectIssueAlerts(tableEl);

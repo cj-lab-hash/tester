@@ -37,6 +37,11 @@ function normalizeIdent(id) {
   // EAGLE variants like EAGLE88159AB
   if (/^EAGLE88[0-9A-Z]+$/.test(s)) return s;
 
+  // MAV variants like MAV10XX / MAV20XX
+  if (/^MAV(10|20)\d{2}$/i.test(s)) return s;
+// TERMAG variants like TERMAG20XX
+  if (/^TERMAG20\d{2}$/i.test(s)) return s;
+
   return null;
 }
 
@@ -398,7 +403,7 @@ async function ensureUflexRowsExist() {
     tbody.appendChild(tr);
   }
 }
-
+//---------- EAGLE ROWS ----------
 async function ensureEagleRowsExist() {
   const tbody = document.getElementById("eagleTbody");
   if (!tbody) return;
@@ -430,7 +435,38 @@ async function ensureEagleRowsExist() {
     tbody.appendChild(tr);
   }
 }
+// ---------- MAV ROWS ----------
+async function ensureMAVRowsExist() {
+  const tbody = document.getElementById("mavTbody");
+  if (!tbody) return;
 
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id")
+    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%")
+    // .order("equipment_id", { ascending: false });
+    .order("state_long", { ascending: false });
+
+  if (error) {
+    console.error("MAV list load error:", error.message);
+    return;
+  }
+
+  const ids = (data || []).map(r => normalizeIdent(r.equipment_id)).filter(Boolean);
+
+  tbody.innerHTML = "";
+  for (const id of ids) {
+    const tr = document.createElement("tr");
+    const tdName = document.createElement("td");
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+
+    tbody.appendChild(tr);
+  }
+}
 // ---------- WAITING/ATTENDED + TIMER FOR ANY STATE ----------
 function getEqptStateSegments(rawTitle) {
   if (!rawTitle) return [];

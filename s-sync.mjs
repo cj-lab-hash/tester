@@ -14,7 +14,7 @@ const supabase = createClient(process.env.SUPABASE_URL, serviceKey, {
   global: { headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey } },
 });
 
-const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE", "MAV10"];
+const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE", "MAV10", "MAV20", "TERMAG20"];
 // ---------- helpers ----------
 function normalizeEquipmentId(id) {
   if (!id) return null;
@@ -33,6 +33,8 @@ function normalizeEquipmentId(id) {
   if (s.includes("IFLEX")) return s;
   if (/^EAGLE88[0-9A-Z]+$/.test(s)) return s;
   if (/^MAV10[0-9A-Z]+$/.test(s)) return s;
+  if(/^MAV20[0-9A-Z]+$/.test(s)) return s;
+  if(/^TERMAG20\d{3}$/.test(s)) return s;
   return null;
 }
 
@@ -47,7 +49,9 @@ return (
   /^\d{2,3}IFLEX$/.test(s) ||
   s.includes("IFLEX") ||
   /^EAGLE88[0-9A-Z]+$/.test(s) || 
-  /^MAV10[0-9A-Z]+$/.test(s)
+  /^MAV10[0-9A-Z]+$/.test(s) ||
+  /^MAV20[0-9A-Z]+$/.test(s) ||
+  /^TERMAG20\d{3}$/.test(s)
 );
 }
 
@@ -142,7 +146,7 @@ async function setTesterTypeAllWithTab(page) {
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
+    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
   }, { timeout: 60000 });
 
   // Debug: confirm what is selected now
@@ -187,15 +191,14 @@ async function main() {
 const hasTargets = await page.evaluate(() => {
   const hrefs = Array.from(document.querySelectorAll("map area"))
     .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
+   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
   
-
 
 });
 
 if (!hasTargets) {
   await page.screenshot({ path: "statusphere_not_all.png", fullPage: true });
-  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX/IFLEX/EAGLE found).");
+  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX/IFLEX/EAGLE/MAV10/MAV20/TERMAG20 found).");
   await browser.close();
   process.exit(2);
 }
@@ -255,6 +258,9 @@ const counts = ids.reduce((m, id) => {
     : id.startsWith("TERFLEX") ? "TERFLEX"
     : id.startsWith("IFLEX") ? "IFLEX"
     : id.startsWith("EAGLE") ? "EAGLE"
+    : id.startsWith("MAV10") ? "MAV10"
+    : id.startsWith("MAV20") ? "MAV20"
+    : id.startsWith("TERMAG20") ? "TERMAG20"
     : "OTHER";
   m[prefix] = (m[prefix] || 0) + 1;
   return m;
@@ -320,7 +326,7 @@ console.log("IFLEX rowsRaw:", iflexRows.length, iflexRows.slice(0, 10).map(r => 
     .from("statusphere_equipment")
     .delete()
     .lt("checked_at", runTs)
-    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%,equipment_id.ilike.EAGLE%");
+    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%,equipment_id.ilike.EAGLE%,equipment_id.ilike.MAV10%,equipment_id.ilike.MAV20%,equipment_id.ilike.TERMAG20%");
   if (delErr) console.error("❌ Cleanup delete error:", delErr);
   else console.log("🧹 Cleanup success (removed stale rows)");
 

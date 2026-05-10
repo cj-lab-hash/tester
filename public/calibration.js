@@ -41,7 +41,8 @@ function normalizeIdent(id) {
   if (/^MAV(10|20)\d{2}$/i.test(s)) return s;
 // TERMAG variants like TERMAG20XX
   if (/^TERMAG20\d{2}$/i.test(s)) return s;
-
+  // LTX variants like LTX20XX
+  if (/^LTX=\d{3}$/i.test(s)) return s;
   return null;
 }
 
@@ -815,7 +816,7 @@ async function refreshData() {
       return;
     } 
 
-    
+
     // ACT view
     await renderSchedulesAndHighlights(actTable);
 

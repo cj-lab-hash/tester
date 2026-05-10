@@ -443,7 +443,7 @@ async function ensureMAVRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%")
+    .or("equipment_id.ilike.MAV1%,equipment_id.ilike.MAV2%,equipment_id.ilike.TERMAG20%")
     // .order("equipment_id", { ascending: false });
     .order("state_long", { ascending: false });
 

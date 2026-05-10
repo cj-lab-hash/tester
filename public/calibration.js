@@ -443,7 +443,7 @@ async function ensureMAVRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.MAV1%,equipment_id.ilike.MAV2%,equipment_id.ilike.TERMAG20%")
+    .or("equipment_id.ilike.MAV10%,equipment_id.ilike.MAV20%,equipment_id.ilike.TERMAG20%")
     // .order("equipment_id", { ascending: false });
     .order("state_long", { ascending: false });
 
@@ -725,10 +725,12 @@ function setView(view) {
   const act = document.getElementById("sectionACT");
   const uflex = document.getElementById("sectionUFLEX");
   const eagle = document.getElementById("sectionEAGLE");
+  const mav = document.getElementById("sectionMAV");
 
   if (act) act.style.display = (view === "ACT") ? "block" : "none";
   if (uflex) uflex.style.display = (view === "UFLEX") ? "block" : "none";
   if (eagle) eagle.style.display = (view === "EAGLE") ? "block" : "none";
+  if (mav) mav.style.display = (view === "MAV") ? "block" : "none";
 }
 
 function getCurrentView() {

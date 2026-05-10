@@ -467,6 +467,38 @@ async function ensureMAVRowsExist() {
     tbody.appendChild(tr);
   }
 }
+//---------- LTX ROWS ----------
+async function ensureLTXRowsExist() {
+  const tbody = document.getElementById("ltxTbody");
+  if (!tbody) return;
+
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id")
+    .or("equipment_id.ilike.LTX%")
+    // .order("equipment_id", { ascending: false });
+    .order("state_long", { ascending: false });
+
+  if (error) {
+    console.error("LTX list load error:", error.message);
+    return;
+  }
+
+  const ids = (data || []).map(r => normalizeIdent(r.equipment_id)).filter(Boolean);
+
+  tbody.innerHTML = "";
+  for (const id of ids) {
+    const tr = document.createElement("tr");
+    const tdName = document.createElement("td");
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+
+    tbody.appendChild(tr);
+  }
+}
 // ---------- WAITING/ATTENDED + TIMER FOR ANY STATE ----------
 function getEqptStateSegments(rawTitle) {
   if (!rawTitle) return [];
@@ -726,11 +758,13 @@ function setView(view) {
   const uflex = document.getElementById("sectionUFLEX");
   const eagle = document.getElementById("sectionEAGLE");
   const mav = document.getElementById("sectionMAV");
-
+  const ltx = document.getElementById("sectionLTX");
+  
   if (act) act.style.display = (view === "ACT") ? "block" : "none";
   if (uflex) uflex.style.display = (view === "UFLEX") ? "block" : "none";
   if (eagle) eagle.style.display = (view === "EAGLE") ? "block" : "none";
   if (mav) mav.style.display = (view === "MAV") ? "block" : "none";
+  if (ltx) ltx.style.display = (view === "LTX") ? "block" : "none";
 }
 
 function getCurrentView() {
@@ -748,6 +782,7 @@ async function refreshData() {
     const uflexTable = document.getElementById("uflexTable");
     const eagleTable = document.getElementById("eagleTable");
     const mavTable = document.getElementById("mavTable");
+    const ltxTable = document.getElementById("ltxTable");
 
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
@@ -772,7 +807,15 @@ async function refreshData() {
       showViewAlertsOncePerChange("MAV", mavTable, lastSyncShownAt);
       return;
     }
+    if (view === "LTX") {
+      await ensureLTXRowsExist();
+      await renderProductionStatusFromStatusphere(ltxTable);
 
+      showViewAlertsOncePerChange("LTX", ltxTable, lastSyncShownAt);
+      return;
+    } 
+
+    
     // ACT view
     await renderSchedulesAndHighlights(actTable);
 

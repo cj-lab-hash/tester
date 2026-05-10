@@ -745,6 +745,7 @@ async function refreshData() {
     const actTable = document.getElementById("editableTable");
     const uflexTable = document.getElementById("uflexTable");
     const eagleTable = document.getElementById("eagleTable");
+    const mavTable = document.getElementById("mavTable");
 
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
@@ -759,6 +760,14 @@ async function refreshData() {
       await renderProductionStatusFromStatusphere(eagleTable);
 
       showViewAlertsOncePerChange("EAGLE", eagleTable, lastSyncShownAt);
+      return;
+    }
+
+    if (view === "MAV") {
+      await ensureMAVRowsExist();
+      await renderProductionStatusFromStatusphere(mavTable);
+
+      showViewAlertsOncePerChange("MAV", mavTable, lastSyncShownAt);
       return;
     }
 

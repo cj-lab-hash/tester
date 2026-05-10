@@ -18,6 +18,7 @@ let lastSyncFetchedAtMs = 0;
 // global alerts (all groups)
 let lastAlertScrapeTs = null;
 
+const lastViewToastKey = new Map(); // key: viewName -> lastKey string
 // ===================== HELPERS =====================
 
 function normalizeIdent(id) {
@@ -556,7 +557,28 @@ if (phase === "ATTENDED") {
   }
   return result;
 }
+function showViewAlertsOncePerChange(viewName, tableEl, scrapeTs) {
+  // scrapeTs = latest checked_at you already fetched for Last Sync (or pass null)
+  const alerts = collectIssueAlerts(tableEl);
 
+  // Build a signature so we only toast when content changes
+  const signature = JSON.stringify({
+    scrapeTs: scrapeTs || "",
+    alerts: alerts.map(a => ({ label: a.label, count: a.list.length }))
+  });
+
+  if (lastViewToastKey.get(viewName) === signature) return;
+  lastViewToastKey.set(viewName, signature);
+
+  // Show toasts for this view
+  for (const a of alerts) {
+    showToast({
+      type: a.type,
+      title: `[${viewName}] ${a.label}: ${a.list.length}`,
+      message: a.list.slice(0, 6).join(", ") + (a.list.length > 6 ? " ..." : ""),
+    });
+  }
+}
 // ---------- RENDER PRODUCTION STATUS ----------
 async function renderProductionStatusFromStatusphere(tableEl) {
   if (!tableEl) return;
@@ -649,12 +671,16 @@ async function refreshData() {
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
       await renderProductionStatusFromStatusphere(uflexTable);
+
+      showViewAlertsOncePerChange("UFLEX", uflexTable, lastSyncShownAt);
       return;
     }
 
     if (view === "EAGLE") {
       await ensureEagleRowsExist();
       await renderProductionStatusFromStatusphere(eagleTable);
+
+      showViewAlertsOncePerChange("EAGLE", eagleTable, lastSyncShownAt);
       return;
     }
 
@@ -669,7 +695,7 @@ async function refreshData() {
       await renderProductionStatusFromStatusphere(actTable);
       console.log("✅ ACT updated " + new Date().toLocaleTimeString());
     }
-
+    showViewAlertsOncePerChange("ACT", actTable, lastSyncShownAt);
     localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
   } catch (err) {
     console.error("❌ Refresh failed:", err);

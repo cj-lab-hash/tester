@@ -34,7 +34,7 @@ function normalizeEquipmentId(id) {
   if (/^EAGLE88[0-9A-Z]+$/.test(s)) return s;
   if (/^MAV10[0-9A-Z]+$/.test(s)) return s;
   if(/^MAV20[0-9A-Z]+$/.test(s)) return s;
-  if(/^TERMAG20\d{3}$/.test(s)) return s;
+  if(/^TERMAG20\d{2}$/.test(s)) return s;
   return null;
 }
 
@@ -51,7 +51,7 @@ return (
   /^EAGLE88[0-9A-Z]+$/.test(s) || 
   /^MAV10[0-9A-Z]+$/.test(s) ||
   /^MAV20[0-9A-Z]+$/.test(s) ||
-  /^TERMAG20\d{3}$/.test(s)
+  /^TERMAG20\d{2}$/.test(s)
 );
 }
 

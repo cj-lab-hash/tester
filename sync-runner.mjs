@@ -32,7 +32,7 @@ async function runOnce() {
   fs.writeFileSync(LOCK_FILE, String(Date.now()));
 
   try {
-    console.log("▶ Starting s-sync.mjs at", new Date().toISOString());
+    console.log("▶ Starting s-sync.mjs at", new Date().toLocaleTimeString());
 
     await new Promise((resolve) => {
       const child = spawn(process.execPath, [SCRIPT], {

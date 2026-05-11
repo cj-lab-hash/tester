@@ -47,6 +47,18 @@ function normalizeIdent(id) {
   if (/^ASL1K\d{3}$/i.test(s)) return s;
   // ASL4K variants like ASL4K123
   if (/^ASL4K\d{3}$/i.test(s)) return s;
+  // STS50 variants like STS50XXXXX
+  if (/^STS50\d{5}$/i.test(s)) return s;
+  // SC212 variants like SC212XXX
+  if (/^SC212\d{3}$/i.test(s)) return s;
+  // KTS variants like KTS123
+  if (/^KTS\d{3}$/.test(s)) return s;
+  // MPS variants like MPS123
+  if (/^MPS\d{3}$/.test(s)) return s;
+  // NOISE variants like NOISE123
+  if (/^NOISE\d{3}$/.test(s)) return s;
+  // TERA360Z variants like TERA360Z123
+  if (/^TERA360Z\d{3}$/.test(s)) return s;
   return null;
 }
 
@@ -529,7 +541,31 @@ async function ensureTMTRowsExist() {
     tbody.appendChild(tr);
   }
 }
-
+//----------OTHER LEGACY ROWS (KTS/MPS/NOISE/TERA360Z/SC212) ----------
+async function ensureLegacyRowsExist() {
+  const tbody = document.getElementById("legacyTbody");
+  if (!tbody) return;
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id")
+    .or("equipment_id.ilike.KTS%", "equipment_id.ilike.STS50%", "equipment_id.ilike.MPS%", "equipment_id.ilike.NOISE%", "equipment_id.ilike.TERA360Z%", "equipment_id.ilike.SC212%")
+  .order("state_long", { ascending: false });
+  if (error) {
+    console.error("Legacy list load error:", error.message);
+    return;
+  }
+  const ids = (data || []).map(r => normalizeIdent(r.equipment_id)).filter(Boolean);
+  tbody.innerHTML = "";
+  for (const id of ids) {
+    const tr = document.createElement("tr");
+    const tdName = document.createElement("td");
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+    tbody.appendChild(tr);
+  }
+}
 // ---------- WAITING/ATTENDED + TIMER FOR ANY STATE ----------
 function getEqptStateSegments(rawTitle) {
   if (!rawTitle) return [];
@@ -791,6 +827,7 @@ function setView(view) {
   const mav = document.getElementById("sectionMAV");
   const ltx = document.getElementById("sectionLTX");
   const tmt = document.getElementById("sectionTMT");
+  const legacy = document.getElementById("sectionLegacy");
 
   if (act) act.style.display = (view === "ACT") ? "block" : "none";
   if (uflex) uflex.style.display = (view === "UFLEX") ? "block" : "none";
@@ -798,6 +835,7 @@ function setView(view) {
   if (mav) mav.style.display = (view === "MAV") ? "block" : "none";
   if (ltx) ltx.style.display = (view === "LTX") ? "block" : "none";
   if (tmt) tmt.style.display = (view === "TMT") ? "block" : "none";
+  if (legacy) legacy.style.display = (view === "LEGACY") ? "block" : "none";
 }
 
 function getCurrentView() {
@@ -817,6 +855,7 @@ async function refreshData() {
     const mavTable = document.getElementById("mavTable");
     const ltxTable = document.getElementById("ltxTable");
     const tmtTable = document.getElementById("tmtTable");
+    const legacyTable = document.getElementById("legacyTable");
 
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
@@ -844,7 +883,7 @@ async function refreshData() {
     if (view === "TMT") {
       await ensureTMTRowsExist();
       await renderProductionStatusFromStatusphere(tmtTable);
-      
+
       showViewAlertsOncePerChange("TMT", tmtTable, lastSyncShownAt);
       return;
     }
@@ -855,7 +894,13 @@ async function refreshData() {
       showViewAlertsOncePerChange("LTX", ltxTable, lastSyncShownAt);
       return;
     } 
+    if (view === "LEGACY") {
+      await ensureLegacyRowsExist();
+      await renderProductionStatusFromStatusphere(legacyTable);
 
+      showViewAlertsOncePerChange("LEGACY", legacyTable, lastSyncShownAt);
+      return;
+    }
 
     // ACT view
     await renderSchedulesAndHighlights(actTable);

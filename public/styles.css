@@ -133,7 +133,8 @@ tr.row-due-soon {
 #sectionEAGLE h3,
 #sectionMAV h3,
 #sectionLTX h3,
-#sectionTMT h3 {
+#sectionTMT h3,
+#sectionLegacy h3 {
   text-align: center;
 }
 
@@ -144,13 +145,13 @@ tr.row-due-soon {
   padding: 8px;
 }
 #uflexTable th,
-#uflexTable td,#eagleTable th,#eagleTable td,#mavTable th,#mavTable td,#ltxTable th,#ltxTable td,#tmtTable th,#tmtTable td {
+#uflexTable td,#eagleTable th,#eagleTable td,#mavTable th,#mavTable td,#ltxTable th,#ltxTable td,#tmtTable th,#tmtTable td,#legacyTable th,#legacyTable td {
   text-align: center;
   padding: 8px;
 }
 
 /* UFLEX table layout control */
-#uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable {
+#uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable {
   width: 60%;              /* overall table width - adjust 50% to 80% */
   margin: 0 auto;
   border-collapse: collapse;
@@ -167,7 +168,9 @@ tr.row-due-soon {
 #ltxTable th:nth-child(1),
 #ltxTable td:nth-child(1),
 #tmtTable th:nth-child(1),
-#tmtTable td:nth-child(1) {
+#tmtTable td:nth-child(1),
+#legacyTable th:nth-child(1),
+#legacyTable td:nth-child(1) {
   width: 35%;
 }
 
@@ -180,19 +183,21 @@ tr.row-due-soon {
 #ltxTable th:nth-child(2),
 #ltxTable td:nth-child(2),
 #tmtTable th:nth-child(2),
-#tmtTable td:nth-child(2) {
+#tmtTable td:nth-child(2),
+#legacyTable th:nth-child(2),
+#legacyTable td:nth-child(2) {
   width: 65%;
 }
 
 /* Keep long status from stretching column */
-#uflexTable td:nth-child(2),#eagleTable td:nth-child(2),#mavTable td:nth-child(2),#ltxTable td:nth-child(2),#tmtTable td:nth-child(2) {
+#uflexTable td:nth-child(2),#eagleTable td:nth-child(2),#mavTable td:nth-child(2),#ltxTable td:nth-child(2),#tmtTable td:nth-child(2),#legacyTable td:nth-child(2) {
   white-space: nowrap;     /* keep in one line */
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
 }
 /* ✅ Mobile: full width + smaller text */
 @media (max-width: 600px){
-  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable{
+  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable{
     width: 100%;
     margin: 0;               /* let it fill container */
   }
@@ -201,7 +206,8 @@ tr.row-due-soon {
   #eagleTable th, #eagleTable td,
   #mavTable th, #mavTable td,
   #ltxTable th, #ltxTable td,
-  #tmtTable th, #tmtTable td{
+  #tmtTable th, #tmtTable td,
+  #legacyTable th, #legacyTable td{
     font-size: 12px;
     padding: 6px;
   }
@@ -211,7 +217,8 @@ tr.row-due-soon {
   #eagleTable td:nth-child(2),
   #mavTable td:nth-child(2),
   #ltxTable td:nth-child(2),
-  #tmtTable td:nth-child(2){
+  #tmtTable td:nth-child(2),
+  #legacyTable td:nth-child(2){
     white-space: normal;     /* change to nowrap if you want ellipsis */
     word-break: break-word;
   }

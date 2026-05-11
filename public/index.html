@@ -21,6 +21,7 @@
             <option value="EAGLE">EAGLE</option>
             <OPTION value="MAV">MAV</OPTION>
             <option value="TMT">TMT</option>
+            <option value="Legacy">LEGACY</option>
             <option value="LTX">LTX</option>
             </select>
             </div>
@@ -307,7 +308,21 @@
                 </table>
             </div>
             </section>
-
+            <section id="sectionLegacy" style="display: none;">
+            <h3>LEGACY (KTS / MPS / NOISE / TERA360Z / SC212)</h3>
+            <div class="table-wrap">
+                <table id="legacyTable" data-prod-col="1">
+                    <thead> 
+                    <tr>
+                        <th>TESTER NAME</th>
+                        <th>PRODUCTION STATUS</th>
+                       
+                    </tr>
+                    </thead>
+                    <tbody id="legacyTbody"></tbody>
+                </table>
+            </div>
+        </section>
     <div id="output"></div>
     <div id="toastContainer" class="toast-container"></div>
 

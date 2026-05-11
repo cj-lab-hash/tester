@@ -14,7 +14,7 @@ const supabase = createClient(process.env.SUPABASE_URL, serviceKey, {
   global: { headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey } },
 });
 
-const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE", "MAV10", "MAV20", "TERMAG20","LTX"];
+const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE", "MAV10", "MAV20", "TERMAG20","LTX","ASL1K","ASL4K","STS50", "KTS", "MPS","NOISE","TERA360Z","SC212"];
 // ---------- helpers ----------
 function normalizeEquipmentId(id) {
   if (!id) return null;
@@ -38,6 +38,13 @@ function normalizeEquipmentId(id) {
   if(/^LTX\d{3}$/.test(s)) return s;
   if(/^ASL1K\d{3}$/.test(s)) return s;
   if(/^ASL4K\d{3}$/.test(s)) return s;
+  if(/^STS50\d{5}$/.test(s)) return s;
+  if (/^KTS\d{3}$/.test(s)) return s;
+  if (/^MPS\d{3}$/.test(s)) return s;
+  if (/^NOISE\d{3}$/.test(s)) return s;
+  if (/^TERA360Z\d{3}$/.test(s)) return s;
+  if (/^SC212\d{3}$/.test(s)) return s;
+
   return null;
 }
 
@@ -57,7 +64,14 @@ return (
   /^TERMAG20\d{2}$/.test(s) ||
   /^LTX\d{3}$/.test(s) ||
   /^ASL1K\d{3}$/.test(s) ||
-  /^ASL4K\d{3}$/.test(s)
+  /^ASL4K\d{3}$/.test(s) ||
+  /^STS50\d{5}$/.test(s) ||
+  /^KTS\d{3}$/.test(s) ||
+  /^MPS\d{3}$/.test(s) ||
+  /^NOISE\d{3}$/.test(s) ||
+  /^TERA360Z\d{3}$/.test(s) ||
+  /^SC212\d{3}$/.test(s) 
+    // include all the above as valid IDs
 );
 }
 
@@ -136,7 +150,8 @@ function extractEquipmentFromHref(href = "") {
 
 async function setTesterTypeAllWithTab(page) {
   const sel = page.locator('select[name="RESOURCEFAMILY"]'); // ✅ correct tester type dropdown
-  await sel.waitFor({ timeout: 30000 });
+  //
+  await sel.waitFor({ timeout: 50000 });
 
   // Select All
   await sel.selectOption({ label: "All" });
@@ -146,14 +161,14 @@ async function setTesterTypeAllWithTab(page) {
   await page.keyboard.press("Tab");
 
   // You said it takes ~15 seconds, so give it 20 seconds
-  await page.waitForTimeout(20000);
+  await page.waitForTimeout(30000);
 
   // Verify that targets exist in the map after refresh
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
-  }, { timeout: 60000 });
+    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
+  }, { timeout: 70000 });
 
   // Debug: confirm what is selected now
   const selected = await sel.evaluate(el => el.options[el.selectedIndex]?.textContent?.trim());
@@ -167,8 +182,8 @@ async function main() {
   const context = await browser.newContext({ storageState: "statusphere_auth.json" });
   const page = await context.newPage();
 
-  await page.goto(STATUSPHERE_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.waitForTimeout(1500);
+  await page.goto(STATUSPHERE_URL, { waitUntil: "domcontentloaded", timeout: 70000 });
+  await page.waitForTimeout(2500);
 
   //very helpful to debug selectors and page structure without needing to run the whole script each time
 //   const selectDump = await page.evaluate(() => {
@@ -197,14 +212,14 @@ async function main() {
 const hasTargets = await page.evaluate(() => {
   const hrefs = Array.from(document.querySelectorAll("map area"))
     .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
+   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
   
 
 });
 
 if (!hasTargets) {
   await page.screenshot({ path: "statusphere_not_all.png", fullPage: true });
-  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX/IFLEX/EAGLE/MAV10/MAV20/TERMAG20/LTX/ASL1K/ASL4K found).");
+  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX/IFLEX/EAGLE/MAV10/MAV20/TERMAG20/LTX/ASL1K/ASL4K/STS50/KTS/MPS/NOISE/TERA360Z/SC212 found).");
   await browser.close();
   process.exit(2);
 }
@@ -217,10 +232,10 @@ if (!hasTargets) {
     }))
   );
 
-console.log(`Scraped ${areas.length} equipment areas`);
+// console.log(`Scraped ${areas.length} equipment areas`);
 
 const ids = areas.map(a => normalizeEquipmentId(extractEquipmentFromHref(a.href))).filter(Boolean);
-console.log("Sample normalized IDs:", ids.slice(0, 20));
+// console.log("Sample normalized IDs:", ids.slice(0, 20));
 
 
 
@@ -249,8 +264,8 @@ if (!areas.length) {
   process.exit(3);
 }
   console.log(`Scraped ${areas.length} equipment areas`);
-  console.log("Sample href (raw):", areas[1]?.href);
-  console.log("Extracted EQUIPMENT:", extractEquipmentFromHref(areas[1]?.href));
+  // console.log("Sample href (raw):", areas[1]?.href);
+  // console.log("Extracted EQUIPMENT:", extractEquipmentFromHref(areas[1]?.href));
 // const ids = areas
 //   .map(a => normalizeEquipmentId(extractEquipmentFromHref(a.href)))
 //   .filter(Boolean);
@@ -270,6 +285,12 @@ const counts = ids.reduce((m, id) => {
     : id.startsWith("LTX") ? "LTX"
     : id.startsWith("ASL1K") ? "ASL1K"
     : id.startsWith("ASL4K") ? "ASL4K"
+    : id.startsWith("STS50") ? "STS"
+    :id.startsWith("KTS") ? "KTS"
+    :id.startsWith("MPS") ? "MPS"
+    :id.startsWith("NOISE") ? "NOISE"
+    :id.startsWith("TERA360Z") ? "TERA360Z"
+    :id.startsWith("SC212") ? "SC212"
     : "OTHER";
   m[prefix] = (m[prefix] || 0) + 1;
   return m;
@@ -327,18 +348,21 @@ console.log("Target family counts in page:", counts);
 
   console.log("✅ Upsert success");
 
-const iflexRows = rowsRaw.filter(r => (r.equipment_id || "").includes("IFLEX"));
-console.log("IFLEX rowsRaw:", iflexRows.length, iflexRows.slice(0, 10).map(r => r.equipment_id));
+const noiseRows = rowsRaw.filter(r => (r.equipment_id || "").includes("NOISE"));
+console.log("NOISE rowsRaw:", noiseRows.length, noiseRows.slice(0, 10).map(r => r.equipment_id));
 
-const ltxRows = rowsRaw.filter(r => (r.equipment_id || "").includes("LTX"));
-console.log("LTX rowsRaw:", ltxRows.length, ltxRows.slice(0, 10).map(r => r.equipment_id));
+const sc212Rows = rowsRaw.filter(r => (r.equipment_id || "").includes("SC212"));
+console.log("SC212 rowsRaw:", sc212Rows.length, sc212Rows.slice(0, 10).map(r => r.equipment_id));
+  // const mpsRows = rowsRaw.filter(r => (r.equipment_id || "").includes("MPS"));
+  // console.log("MPS rowsRaw:", mpsRows.length, mpsRows.slice(0, 10).map(r => r.equipment_id));
 
   // Cleanup old rows (keep only latest scrape)
   const { error: delErr } = await supabase
     .from("statusphere_equipment")
     .delete()
     .lt("checked_at", runTs)
-    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%,equipment_id.ilike.EAGLE%,equipment_id.ilike.MAV10%,equipment_id.ilike.MAV20%,equipment_id.ilike.TERMAG20%,equipment_id.ilike.LTX%,equipment_id.ilike.ASL1K%,equipment_id.ilike.ASL4K%");
+    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%,equipment_id.ilike.EAGLE%,equipment_id.ilike.MAV10%,equipment_id.ilike.MAV20%,equipment_id.ilike.TERMAG20%,equipment_id.ilike.LTX%,equipment_id.ilike.ASL1K%,equipment_id.ilike.ASL4K%,equipment_id.ilike.STS50%,equipment_id.ilike.KTS%,equipment_id.ilike.MPS%,equipment_id.ilike.NOISE%,equipment_id.ilike.TERA360Z%,equipment_id.ilike.SC212%")
+;
   if (delErr) console.error("❌ Cleanup delete error:", delErr);
   else console.log("🧹 Cleanup success (removed stale rows)");
 

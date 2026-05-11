@@ -550,7 +550,7 @@ async function ensureLegacyRowsExist() {
     .from("statusphere_equipment")
     .select("equipment_id")
     // .or("equipment_id.ilike.KTS%")
-     .or("equipment_id.ilike.KTS%", "equipment_id.ilike.STS50%", "equipment_id.ilike.MPS%", "equipment_id.ilike.NOISE%", "equipment_id.ilike.TERA360Z%", "equipment_id.ilike.SC212%")
+     .or("equipment_id.ilike.KTS%","equipment_id.ilike.STS50%","equipment_id.ilike.MPS%","equipment_id.ilike.NOISE%","equipment_id.ilike.TERA360Z%","equipment_id.ilike.SC212%")
   .order("state_long", { ascending: false })
   if (error) {
     console.error("Legacy list load error:", error.message);
@@ -830,7 +830,7 @@ function setView(view) {
   const mav = document.getElementById("sectionMAV");
   const ltx = document.getElementById("sectionLTX");
   const tmt = document.getElementById("sectionTMT");
-  const legacy = document.getElementById("sectionLegacy");
+  const legacy = document.getElementById("sectionLEGACY");
 
   if (act) act.style.display = (view === "ACT") ? "block" : "none";
   if (uflex) uflex.style.display = (view === "UFLEX") ? "block" : "none";

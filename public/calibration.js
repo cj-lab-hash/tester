@@ -790,12 +790,14 @@ function setView(view) {
   const eagle = document.getElementById("sectionEAGLE");
   const mav = document.getElementById("sectionMAV");
   const ltx = document.getElementById("sectionLTX");
-  
+  const tmt = document.getElementById("sectionTMT");
+
   if (act) act.style.display = (view === "ACT") ? "block" : "none";
   if (uflex) uflex.style.display = (view === "UFLEX") ? "block" : "none";
   if (eagle) eagle.style.display = (view === "EAGLE") ? "block" : "none";
   if (mav) mav.style.display = (view === "MAV") ? "block" : "none";
   if (ltx) ltx.style.display = (view === "LTX") ? "block" : "none";
+  if (tmt) tmt.style.display = (view === "TMT") ? "block" : "none";
 }
 
 function getCurrentView() {
@@ -814,6 +816,7 @@ async function refreshData() {
     const eagleTable = document.getElementById("eagleTable");
     const mavTable = document.getElementById("mavTable");
     const ltxTable = document.getElementById("ltxTable");
+    const tmtTable = document.getElementById("tmtTable");
 
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
@@ -836,6 +839,13 @@ async function refreshData() {
       await renderProductionStatusFromStatusphere(mavTable);
 
       showViewAlertsOncePerChange("MAV", mavTable, lastSyncShownAt);
+      return;
+    }
+    if (view === "TMT") {
+      await ensureTMTRowsExist();
+      await renderProductionStatusFromStatusphere(tmtTable);
+      
+      showViewAlertsOncePerChange("TMT", tmtTable, lastSyncShownAt);
       return;
     }
     if (view === "LTX") {

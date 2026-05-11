@@ -549,8 +549,8 @@ async function ensureLegacyRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.KTS%")
-    // .or("equipment_id.ilike.KTS%", "equipment_id.ilike.STS50%", "equipment_id.ilike.MPS%", "equipment_id.ilike.NOISE%", "equipment_id.ilike.TERA360Z%", "equipment_id.ilike.SC212%")
+    // .or("equipment_id.ilike.KTS%")
+     .or("equipment_id.ilike.KTS%", "equipment_id.ilike.STS50%", "equipment_id.ilike.MPS%", "equipment_id.ilike.NOISE%", "equipment_id.ilike.TERA360Z%", "equipment_id.ilike.SC212%")
   .order("state_long", { ascending: false })
   if (error) {
     console.error("Legacy list load error:", error.message);

@@ -46,7 +46,6 @@ function normalizeEquipmentId(id) {
   if (/^SC212\d{3}$/.test(s)) return s;
   if (/^STS50\d{5}$/.test(s)) return s;
 
-
   return null;
 }
 
@@ -74,6 +73,7 @@ return (
   /^TERA360Z\d{3}$/.test(s) ||
   /^SC212\d{3}$/.test(s) ||
   /^STS50\d{5}$/.test(s)
+
     // include all the above as valid IDs
 );
 }

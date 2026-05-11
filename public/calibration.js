@@ -541,7 +541,7 @@ async function ensureTMTRowsExist() {
     tbody.appendChild(tr);
   }
 }
-//----------OTHER LEGACY ROWS (KTS/MPS/NOISE/TERA360Z/SC212) ----------
+//----------OTHER LEGACY ROWS (STS50/KTS/MPS/NOISE/TERA360Z/SC212) ----------
 async function ensureLegacyRowsExist() {
   const tbody = document.getElementById("legacyTbody");
   if (!tbody) return;
@@ -549,7 +549,12 @@ async function ensureLegacyRowsExist() {
     .from("statusphere_equipment")
     .select("equipment_id")
     .or("equipment_id.ilike.KTS%", "equipment_id.ilike.STS50%", "equipment_id.ilike.MPS%", "equipment_id.ilike.NOISE%", "equipment_id.ilike.TERA360Z%", "equipment_id.ilike.SC212%")
-  .order("state_long", { ascending: false });
+  .order("state_long", { ascending: false })
+  console.log("Legacy rows fetched:", data?.length ?? 0);
+  if (data?.length === 0) {
+    console.warn("No legacy rows found in DB.");
+    return;
+  }
   if (error) {
     console.error("Legacy list load error:", error.message);
     return;
@@ -564,6 +569,7 @@ async function ensureLegacyRowsExist() {
     const tdProd = document.createElement("td");
     tr.appendChild(tdProd);
     tbody.appendChild(tr);
+    console.log("Added legacy row for:", id);
   }
 }
 // ---------- WAITING/ATTENDED + TIMER FOR ANY STATE ----------

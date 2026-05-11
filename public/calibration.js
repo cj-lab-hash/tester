@@ -543,7 +543,7 @@ async function ensureTMTRowsExist() {
   }
 }
 //----------OTHER LEGACY ROWS (STS50/KTS/MPS/NOISE/TERA360Z/SC212) ----------
-async function ensureLEGACYRowsExist() {
+async function ensureLegacyRowsExist() {
   const tbody = document.getElementById("legacyTbody");
   if (!tbody) return;
   const { data, error } = await supabase

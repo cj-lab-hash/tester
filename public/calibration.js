@@ -524,7 +524,7 @@ async function ensureTMTRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.ASL1K%","equipment_id.ilike.ASL4K%")
+    .or("equipment_id.ilike.ASL1K%,equipment_id.ilike.ASL4K%")
   .order("state_long", { ascending: false });
   if (error) {
     console.error("TMT list load error:", error.message);
@@ -549,21 +549,25 @@ async function ensureLegacyRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.KTS%","equipment_id.ilike.STS50%","equipment_id.ilike.MPS%","equipment_id.ilike.NOISE%","equipment_id.ilike.TERA360Z%","equipment_id.ilike.SC212%")
+    .or("equipment_id.ilike.KTS%,equipment_id.ilike.STS50%,equipment_id.ilike.MPS%,equipment_id.ilike.NOISE%,equipment_id.ilike.TERA360Z%,equipment_id.ilike.SC212%")
   .order("state_long", { ascending: false });
   if (error) {
     console.error("TMT list load error:", error.message);
     return;
   }
+
   const ids = (data || []).map(r => normalizeIdent(r.equipment_id)).filter(Boolean);
   tbody.innerHTML = "";
+
   for (const id of ids) {
     const tr = document.createElement("tr");
     const tdName = document.createElement("td");
     tdName.textContent = id;
     tr.appendChild(tdName);
+
     const tdProd = document.createElement("td");
     tr.appendChild(tdProd);
+
     tbody.appendChild(tr);
   }
 }
@@ -861,7 +865,7 @@ async function refreshData() {
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
       await renderProductionStatusFromStatusphere(uflexTable);
-
+        console.log("UFLEX production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("UFLEX", uflexTable, lastSyncShownAt);
       return;
     }
@@ -869,7 +873,7 @@ async function refreshData() {
     if (view === "EAGLE") {
       await ensureEagleRowsExist();
       await renderProductionStatusFromStatusphere(eagleTable);
-
+        console.log("EAGLE production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("EAGLE", eagleTable, lastSyncShownAt);
       return;
     }
@@ -877,29 +881,29 @@ async function refreshData() {
     if (view === "MAV") {
       await ensureMAVRowsExist();
       await renderProductionStatusFromStatusphere(mavTable);
-
+        console.log("MAV production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("MAV", mavTable, lastSyncShownAt);
       return;
     }
     if (view === "TMT") {
       await ensureTMTRowsExist();
       await renderProductionStatusFromStatusphere(tmtTable);
-
+        console.log("TMT production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("TMT", tmtTable, lastSyncShownAt);
       return;
     }
     if (view === "LTX") {
       await ensureLTXRowsExist();
       await renderProductionStatusFromStatusphere(ltxTable);
-
+        console.log("LTX production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("LTX", ltxTable, lastSyncShownAt);
       return;
     } 
     if (view === "LEGACY") {
       await ensureLegacyRowsExist();
-      console.log("Legacy rows ensured, now rendering production status...");
+      // console.log("Legacy rows ensured, now rendering production status...");
       await renderProductionStatusFromStatusphere(legacyTable);
-      console.log("Legacy production status rendered.");
+       console.log("Legacy production status rendered. " + new Date().toLocaleTimeString());
 
       showViewAlertsOncePerChange("LEGACY", legacyTable, lastSyncShownAt);
       return;

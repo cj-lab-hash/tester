@@ -906,14 +906,6 @@ async function refreshData() {
       console.log("Legacy rows ensured, now rendering production status...");
       await renderProductionStatusFromStatusphere(legacyTable);
       console.log("Legacy production status rendered.");
-     try {
-        if (legacyTable) {
-          const legacyRows = Array.from(legacyTable.querySelectorAll("tbody tr"));
-          console.log("Legacy rows in table:", legacyRows.length);
-        }
-      } catch (err) {
-        console.error("Error during legacy table processing:", err);
-      }
 
       showViewAlertsOncePerChange("LEGACY", legacyTable, lastSyncShownAt);
       return;

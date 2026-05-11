@@ -1,5 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-// import { error } from "node:console";
+
 
 // ===================== CONFIG =====================
 const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";
@@ -549,13 +549,9 @@ async function ensureLegacyRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.KTS%", "equipment_id.ilike.STS50%", "equipment_id.ilike.MPS%", "equipment_id.ilike.NOISE%", "equipment_id.ilike.TERA360Z%", "equipment_id.ilike.SC212%")
+    .or("equipment_id.ilike.KTS%")
+    // .or("equipment_id.ilike.KTS%", "equipment_id.ilike.STS50%", "equipment_id.ilike.MPS%", "equipment_id.ilike.NOISE%", "equipment_id.ilike.TERA360Z%", "equipment_id.ilike.SC212%")
   .order("state_long", { ascending: false })
-  console.log("Legacy rows fetched:", data?.length ?? 0);
-  if (data?.length === 0) {
-    console.warn("No legacy rows found in DB.");
-    return;
-  }
   if (error) {
     console.error("Legacy list load error:", error.message);
     return;

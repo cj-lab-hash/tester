@@ -1,5 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-import { error } from "node:console";
+// import { error } from "node:console";
 
 // ===================== CONFIG =====================
 const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";

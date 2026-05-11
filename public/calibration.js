@@ -865,7 +865,7 @@ async function refreshData() {
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
       await renderProductionStatusFromStatusphere(uflexTable);
-        console.log("UFLEX production status rendered. " + new Date().toLocaleTimeString());
+        // console.log("UFLEX production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("UFLEX", uflexTable, lastSyncShownAt);
       return;
     }
@@ -873,7 +873,7 @@ async function refreshData() {
     if (view === "EAGLE") {
       await ensureEagleRowsExist();
       await renderProductionStatusFromStatusphere(eagleTable);
-        console.log("EAGLE production status rendered. " + new Date().toLocaleTimeString());
+        // console.log("EAGLE production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("EAGLE", eagleTable, lastSyncShownAt);
       return;
     }
@@ -881,21 +881,21 @@ async function refreshData() {
     if (view === "MAV") {
       await ensureMAVRowsExist();
       await renderProductionStatusFromStatusphere(mavTable);
-        console.log("MAV production status rendered. " + new Date().toLocaleTimeString());
+        // console.log("MAV production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("MAV", mavTable, lastSyncShownAt);
       return;
     }
     if (view === "TMT") {
       await ensureTMTRowsExist();
       await renderProductionStatusFromStatusphere(tmtTable);
-        console.log("TMT production status rendered. " + new Date().toLocaleTimeString());
+        // console.log("TMT production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("TMT", tmtTable, lastSyncShownAt);
       return;
     }
     if (view === "LTX") {
       await ensureLTXRowsExist();
       await renderProductionStatusFromStatusphere(ltxTable);
-        console.log("LTX production status rendered. " + new Date().toLocaleTimeString());
+        // console.log("LTX production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("LTX", ltxTable, lastSyncShownAt);
       return;
     } 
@@ -903,7 +903,7 @@ async function refreshData() {
       await ensureLegacyRowsExist();
       // console.log("Legacy rows ensured, now rendering production status...");
       await renderProductionStatusFromStatusphere(legacyTable);
-       console.log("Legacy production status rendered. " + new Date().toLocaleTimeString());
+      //  console.log("Legacy production status rendered. " + new Date().toLocaleTimeString());
 
       showViewAlertsOncePerChange("LEGACY", legacyTable, lastSyncShownAt);
       return;
@@ -918,7 +918,7 @@ async function refreshData() {
     const shouldUpdate = await statusphereHasNewScrape(ids);
     if (shouldUpdate) {
       await renderProductionStatusFromStatusphere(actTable);
-      console.log("✅ ACT updated " + new Date().toLocaleTimeString());
+      console.log("✅ ACT updated and other tables. " + new Date().toLocaleTimeString());
     }
     showViewAlertsOncePerChange("ACT", actTable, lastSyncShownAt);
     localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));

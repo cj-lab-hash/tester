@@ -44,7 +44,7 @@ function normalizeEquipmentId(id) {
   if (/^NOISE\d{3}$/.test(s)) return s;
   if (/^TERA360Z\d{3}$/.test(s)) return s;
   if (/^SC212\d{3}$/.test(s)) return s;
-  if (/^STS50\d{5}$/.test(s)) return s;
+  
 
   return null;
 }
@@ -71,8 +71,8 @@ return (
   /^MPS\d{3}$/.test(s) ||
   /^NOISE\d{3}$/.test(s) ||
   /^TERA360Z\d{3}$/.test(s) ||
-  /^SC212\d{3}$/.test(s) ||
-  /^STS50\d{5}$/.test(s)
+  /^SC212\d{3}$/.test(s)
+  
 
     // include all the above as valid IDs
 );
@@ -288,13 +288,12 @@ const counts = ids.reduce((m, id) => {
     : id.startsWith("LTX") ? "LTX"
     : id.startsWith("ASL1K") ? "ASL1K"
     : id.startsWith("ASL4K") ? "ASL4K"
-    : id.startsWith("STS50") ? "STS"
+    : id.startsWith("STS50") ? "STS50"
     :id.startsWith("KTS") ? "KTS"
     :id.startsWith("MPS") ? "MPS"
     :id.startsWith("NOISE") ? "NOISE"
     :id.startsWith("TERA360Z") ? "TERA360Z"
     :id.startsWith("SC212") ? "SC212"
-    :id.startsWith("STS50") ? "STS"
     : "OTHER";
   m[prefix] = (m[prefix] || 0) + 1;
   return m;
@@ -352,13 +351,9 @@ console.log("Target family counts in page:", counts);
 
   console.log("✅ Upsert success");
 
-const stsRows = rowsRaw.filter(r => (r.equipment_id || "").includes("STS50"));
-console.log("STS50 rowsRaw:", stsRows.length, stsRows.slice(0, 10).map(r => r.equipment_id));
+// const stsRows = rowsRaw.filter(r => (r.equipment_id || "").includes("STS50"));
+// console.log("STS50 rowsRaw:", stsRows.length, stsRows.slice(0, 10).map(r => r.equipment_id));
 
-// const sc212Rows = rowsRaw.filter(r => (r.equipment_id || "").includes("SC212"));
-// console.log("SC212 rowsRaw:", sc212Rows.length, sc212Rows.slice(0, 10).map(r => r.equipment_id));
-  // const mpsRows = rowsRaw.filter(r => (r.equipment_id || "").includes("MPS"));
-  // console.log("MPS rowsRaw:", mpsRows.length, mpsRows.slice(0, 10).map(r => r.equipment_id));
 
   // Cleanup old rows (keep only latest scrape)
   const { error: delErr } = await supabase

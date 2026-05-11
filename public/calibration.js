@@ -51,15 +51,15 @@ function normalizeIdent(id) {
   // STS50 variants like STS50XXXXX
   if (/^STS50\d{5}$/i.test(s)) return s;
   // SC212 variants like SC212XXX
-  if (/^SC212\d{3}$/i.test(s)) return s;
-  // KTS variants like KTS123
-  if (/^KTS\d{3}$/.test(s)) return s;
-  // MPS variants like MPS123
-  if (/^MPS\d{3}$/.test(s)) return s;
-  // NOISE variants like NOISE123
-  if (/^NOISE\d{3}$/.test(s)) return s;
-  // TERA360Z variants like TERA360Z123
-  if (/^TERA360Z\d{3}$/.test(s)) return s;
+  if (/^(SC212|KTS|MPS|NOISE|TERA360Z)\d{3}$/i.test(s)) return s;
+  // // KTS variants like KTS123
+  // if (/^KTS\d{3}$/.test(s)) return s;
+  // // MPS variants like MPS123
+  // if (/^MPS\d{3}$/.test(s)) return s;
+  // // NOISE variants like NOISE123
+  // if (/^NOISE\d{3}$/.test(s)) return s;
+  // // TERA360Z variants like TERA360Z123
+  // if (/^TERA360Z\d{3}$/.test(s)) return s;
   return null;
 }
 

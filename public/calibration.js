@@ -1,4 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { error } from "node:console";
 
 // ===================== CONFIG =====================
 const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";
@@ -902,7 +903,15 @@ async function refreshData() {
     } 
     if (view === "LEGACY") {
       await ensureLegacyRowsExist();
+      console.log("Legacy rows ensured, now rendering production status...");
       await renderProductionStatusFromStatusphere(legacyTable);
+      console.log("Legacy production status rendered.");
+      if (legacyTable) {
+        const legacyRows = Array.from(legacyTable.querySelectorAll("tbody tr"));
+        console.log("Legacy rows in table:", legacyRows.length);
+      } catch (err) {
+        console.error("Error during legacy table processing:", err);
+      }
 
       showViewAlertsOncePerChange("LEGACY", legacyTable, lastSyncShownAt);
       return;

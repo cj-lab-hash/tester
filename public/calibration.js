@@ -43,6 +43,10 @@ function normalizeIdent(id) {
   if (/^TERMAG20\d{2}$/i.test(s)) return s;
   // LTX variants like LTX20XX
   if (/^LTX\d{3}$/i.test(s)) return s;
+  // ASL1K variants like ASL1K123
+  if (/^ASL1K\d{3}$/i.test(s)) return s;
+  // ASL4K variants like ASL4K123
+  if (/^ASL4K\d{3}$/i.test(s)) return s;
   return null;
 }
 
@@ -500,6 +504,32 @@ async function ensureLTXRowsExist() {
     tbody.appendChild(tr);
   }
 }
+//---------- TMT ROWS ----------
+async function ensureTMTRowsExist() {
+  const tbody = document.getElementById("tmtTbody");
+  if (!tbody) return;
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id")
+    .or("equipment_id.ilike.ASL1K%","equipment_id.ilike.ASL4K%")
+  .order("state_long", { ascending: false });
+  if (error) {
+    console.error("TMT list load error:", error.message);
+    return;
+  }
+  const ids = (data || []).map(r => normalizeIdent(r.equipment_id)).filter(Boolean);
+  tbody.innerHTML = "";
+  for (const id of ids) {
+    const tr = document.createElement("tr");
+    const tdName = document.createElement("td");
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+    tbody.appendChild(tr);
+  }
+}
+
 // ---------- WAITING/ATTENDED + TIMER FOR ANY STATE ----------
 function getEqptStateSegments(rawTitle) {
   if (!rawTitle) return [];

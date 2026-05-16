@@ -54,7 +54,9 @@ tr.row-overdue {
 tr.row-due-soon {
   background: #fff8dc; /* row yellow tint */
 }
-
+tr.row-due-soon1 {
+  background: #fbe5d6; /* row orange tint */
+}
 .status-pill {
   display: inline-block;
   margin-left: 8px;
@@ -72,6 +74,11 @@ tr.row-due-soon {
 
 .status-due-soon {
   background: #ffe08a;
+  color: #5a3d00;
+}
+
+.status-due-soon1 {
+  background: #e09034;
   color: #5a3d00;
 }
 

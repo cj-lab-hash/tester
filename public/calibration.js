@@ -4,8 +4,8 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // ===================== CONFIG =====================
 const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_YAq1ZIeaJdjx4w0G4DwY3g_tXAZHuVk";
+const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
-const DUE_SOON_DAYS1 = 3;
 const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -319,29 +319,29 @@ function computeStatus(dateObj) {
   const diffDays = Math.ceil((due - today) / msPerDay);
 
   if (diffDays < 0) return { state: "overdue", label: `OVERDUE ${Math.abs(diffDays)}d`, days: diffDays };
-  if (diffDays <= DUE_SOON_DAYS1) return { state: "due-soon1", label: `DUE IN ${diffDays}d`, days: diffDays };
+  if (diffDays <= CRITICAL) return { state: "critical", label: `DUE IN ${diffDays}d`, days: diffDays };
   if (diffDays <= DUE_SOON_DAYS) return { state: "due-soon", label: `DUE IN ${diffDays}d`, days: diffDays };
 
   return { state: "ok", label: `IN ${diffDays}d`, days: diffDays };
 }
 
 function setCellStatus(td, type, scheduleText) {
-  td.classList.remove(`${type}-overdue`, `${type}-due-soon`, `${type}-due-soon1`);
+  td.classList.remove(`${type}-overdue`, `${type}-due-soon`, `${type}-critical`);
   td.textContent = scheduleText || "N/A";
 
   const dateObj = parseScheduleDate(scheduleText);
   const status = computeStatus(dateObj);
 
-  if (status.state === "overdue" || status.state === "due-soon" || status.state === "due-soon1") {
+  if (status.state === "overdue" || status.state === "due-soon" || status.state === "critical") {
     const pill = document.createElement("span");
     pill.classList.add("status-pill");
 
     if (status.state === "overdue") {
       td.classList.add(`${type}-overdue`);
       pill.classList.add("status-overdue");
-    } else if (status.state === "due-soon1") {
-      td.classList.add(`${type}-due-soon1`);
-      pill.classList.add("status-due-soon1");
+    } else if (status.state === "critical") {
+      td.classList.add(`${type}-critical`);
+      pill.classList.add("status-critical");
     } else {
       td.classList.add(`${type}-due-soon`);
       pill.classList.add("status-due-soon");
@@ -378,7 +378,7 @@ async function renderSchedulesAndHighlights(tableEl) {
   const map = new Map(plans.map(p => [normalizeIdent(p.identification), p]));
 
   for (const tr of rows) {
-    tr.classList.remove("row-overdue", "row-due-soon");
+    tr.classList.remove("row-overdue", "row-due-soon", "row-critical");
 
     const testerName = normalizeIdent(tr.cells?.[0]?.textContent);
     const plan = map.get(testerName);
@@ -390,8 +390,9 @@ async function renderSchedulesAndHighlights(tableEl) {
     const pmState  = setCellStatus(pmTd, "pm",  plan?.pm_schedule ?? null);
 
     if (calState === "overdue" || pmState === "overdue") tr.classList.add("row-overdue");
+    else if (calState === "critical" || pmState === "critical") tr.classList.add("row-critical");
     else if (calState === "due-soon" || pmState === "due-soon") tr.classList.add("row-due-soon");
-    else if (calState === "due-soon1" || pmState === "due-soon1") tr.classList.add("row-due-soon1");
+    
   }
 }
 

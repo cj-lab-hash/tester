@@ -38,12 +38,13 @@ td.cal-overdue, td.pm-overdue {
   background: #ffd6d6; /* light red */
   font-weight: 700;
 }
-td.cal-due-soon1, td.pm-due-soon1 {
-  background: #e09034; /* light yellow */
-  font-weight: 700;
-}
+
 td.cal-due-soon, td.pm-due-soon {
   background: #fff2c2; /* light yellow */
+  font-weight: 700;
+}
+td.cal-critical, td.pm-critical {
+  background: #e09034; /* critical yellow */
   font-weight: 700;
 }
 
@@ -51,12 +52,14 @@ tr.row-overdue {
   background: #ffeaea; /* row red tint */
 }
 
+tr.row-critical {
+  background: #fbe5d6; /* row orange tint */
+}
+
 tr.row-due-soon {
   background: #fff8dc; /* row yellow tint */
 }
-tr.row-due-soon1 {
-  background: #fbe5d6; /* row orange tint */
-}
+
 .status-pill {
   display: inline-block;
   margin-left: 8px;
@@ -77,7 +80,7 @@ tr.row-due-soon1 {
   color: #5a3d00;
 }
 
-.status-due-soon1 {
+.status-critical {
   background: #e09034;
   color: #5a3d00;
 }

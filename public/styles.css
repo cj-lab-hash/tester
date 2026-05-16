@@ -44,17 +44,17 @@ td.cal-due-soon, td.pm-due-soon {
   font-weight: 700;
 }
 td.cal-critical, td.pm-critical {
-  background: #ffeabf; /* critical yellow */
+  background: #f1ca7b; /* critical yellow */
   font-weight: 700;
 }
 
 /*tr.row-overdue {
   background: #ffeaea; /* row red tint */
-/*}
+/*} */
 
 /* tr.row-critical {
   background: #ffeabf; /* row orange tint */
-/* }
+/* } */
 
 /* tr.row-due-soon {
   background: #fff8dc; /* row yellow tint */

@@ -53,7 +53,7 @@ tr.row-overdue {
 }
 
 tr.row-critical {
-  background: #fbe5d6; /* row orange tint */
+  background: #dea57f; /* row orange tint */
 }
 
 tr.row-due-soon {

@@ -319,6 +319,7 @@ function computeStatus(dateObj) {
   const diffDays = Math.ceil((due - today) / msPerDay);
 
   if (diffDays < 0) return { state: "overdue", label: `OVERDUE ${Math.abs(diffDays)}d`, days: diffDays };
+  // if (diffDays === 0) return { state: "critical", label: `DUE TODAY`, days: diffDays };
   if (diffDays <= CRITICAL) return { state: "critical", label: `DUE IN ${diffDays}d`, days: diffDays };
   if (diffDays <= DUE_SOON_DAYS) return { state: "due-soon", label: `DUE IN ${diffDays}d`, days: diffDays };
 

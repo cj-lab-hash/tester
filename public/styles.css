@@ -38,7 +38,10 @@ td.cal-overdue, td.pm-overdue {
   background: #ffd6d6; /* light red */
   font-weight: 700;
 }
-
+td.cal-due-soon1, td.pm-due-soon1 {
+  background: #e09034; /* light yellow */
+  font-weight: 700;
+}
 td.cal-due-soon, td.pm-due-soon {
   background: #fff2c2; /* light yellow */
   font-weight: 700;
@@ -233,7 +236,7 @@ tr.row-due-soon {
   font-weight:700;
   border:1px solid rgba(0,0,0,0.15);
 }
-.pill-waiting{ background:#e5e7eb; color:#374151; }
+.pill-waiting{ background:#e5e7eb; color:#ce8a37; }
 .pill-attended{ background:#ffd1e6; color:#8a0f4c; }
 /* Waiting vs Started styles */
 .phase-waiting {

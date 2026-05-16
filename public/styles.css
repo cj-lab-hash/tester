@@ -48,17 +48,17 @@ td.cal-critical, td.pm-critical {
   font-weight: 700;
 }
 
-tr.row-overdue {
+/*tr.row-overdue {
   background: #ffeaea; /* row red tint */
-}
+/*}
 
-tr.row-critical {
+/* tr.row-critical {
   background: #ffeabf; /* row orange tint */
-}
+/* }
 
-tr.row-due-soon {
+/* tr.row-due-soon {
   background: #fff8dc; /* row yellow tint */
-}
+/* } */
 
 .status-pill {
   display: inline-block;

@@ -44,7 +44,7 @@ td.cal-due-soon, td.pm-due-soon {
   font-weight: 700;
 }
 td.cal-critical, td.pm-critical {
-  background: #e09034; /* critical yellow */
+  background: #ffeabf; /* critical yellow */
   font-weight: 700;
 }
 
@@ -53,7 +53,7 @@ tr.row-overdue {
 }
 
 tr.row-critical {
-  background: #dea57f; /* row orange tint */
+  background: #ffeabf; /* row orange tint */
 }
 
 tr.row-due-soon {
@@ -81,7 +81,7 @@ tr.row-due-soon {
 }
 
 .status-critical {
-  background: #e09034;
+  background: #ffeabf;
   color: #5a3d00;
 }
 

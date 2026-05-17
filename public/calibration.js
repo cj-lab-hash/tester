@@ -52,7 +52,7 @@ function normalizeIdent(id) {
   // STS50 variants like STS50XXXXX
   if (/^STS50\d{5}$/i.test(s)) return s;
   // SC212 variants like SC212XXX
-  if (/^(SC212|KTS|MPS|NOISE|TERA360Z)\d{3}$/i.test(s)) return s;
+  if (/^(SC212|KTS|MPS|NOISE|TERA360Z|DOT400)\d{3}$/i.test(s)) return s;
   // // KTS variants like KTS123
   // if (/^KTS\d{3}$/.test(s)) return s;
   // // MPS variants like MPS123
@@ -583,6 +583,32 @@ async function ensureLegacyRowsExist() {
     tbody.appendChild(tr);
   }
 }
+//--------SPEA ROWS--------//
+async function ensureSPEARowsExist() {
+  const tbody = document.getElementById("speaTbody");
+  if (!tbody) return;
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id")
+    .ilike("equipment_id", "DOT400%")
+  .order("state_long", { ascending: false });
+  if (error) {
+    console.error("SPEA list load error:", error.message);
+    return;
+  }
+  const ids = (data || []).map(r => normalizeIdent(r.equipment_id)).filter(Boolean);
+  tbody.innerHTML = "";
+  for (const id of ids) {
+    const tr = document.createElement("tr");
+    const tdName = document.createElement("td");
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+    tbody.appendChild(tr);
+  }
+}
+
 // ---------- WAITING/ATTENDED + TIMER FOR ANY STATE ----------
 function getEqptStateSegments(rawTitle) {
   if (!rawTitle) return [];
@@ -845,6 +871,7 @@ function setView(view) {
   const ltx = document.getElementById("sectionLTX");
   const tmt = document.getElementById("sectionTMT");
   const legacy = document.getElementById("sectionLEGACY");
+  const spea = document.getElementById("sectionSPEA");
 
   if (act) act.style.display = (view === "ACT") ? "block" : "none";
   if (uflex) uflex.style.display = (view === "UFLEX") ? "block" : "none";
@@ -853,6 +880,7 @@ function setView(view) {
   if (ltx) ltx.style.display = (view === "LTX") ? "block" : "none";
   if (tmt) tmt.style.display = (view === "TMT") ? "block" : "none";
   if (legacy) legacy.style.display = (view === "LEGACY") ? "block" : "none";
+  if (spea) spea.style.display = (view === "SPEA") ? "block" : "none";
 }
 
 function getCurrentView() {
@@ -873,6 +901,7 @@ async function refreshData() {
     const ltxTable = document.getElementById("ltxTable");
     const tmtTable = document.getElementById("tmtTable");
     const legacyTable = document.getElementById("legacyTable");
+    const speaTable = document.getElementById("speaTable");
 
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
@@ -920,7 +949,12 @@ async function refreshData() {
       showViewAlertsOncePerChange("LEGACY", legacyTable, lastSyncShownAt);
       return;
     }
-
+    if (view === "SPEA") {
+      await ensureSPEARowsExist();
+      await renderProductionStatusFromStatusphere(speaTable);
+      showViewAlertsOncePerChange("SPEA", speaTable, lastSyncShownAt);
+      return;
+    }
     // ACT view
     await renderSchedulesAndHighlights(actTable);
 

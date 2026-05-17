@@ -19,7 +19,8 @@
             <option value="ACT" selected>ACT</option>
             <option value="UFLEX">UFLEX</option>
             <option value="EAGLE">EAGLE</option>
-            <OPTION value="MAV">MAV</OPTION>
+            <option value="SPEA">SPEA</option>
+            <option value="MAV">MAV</OPTION>
             <option value="TMT">TMT</option>
             <option value="LEGACY">LEGACY</option>
             <option value="LTX">LTX</option>
@@ -325,6 +326,21 @@
         </section>
     <div id="output"></div>
     <div id="toastContainer" class="toast-container"></div>
+    <section id="sectionSPEA" style="display: none;">
+        <h3>SPEA</h3>
+        <div class="table-wrap">
+            <table id="speaTable" data-prod-col="1">
+                <thead> 
+                <tr>
+                    <th>TESTER NAME</th>
+                    <th>PRODUCTION STATUS</th>
+                   
+                </tr>
+                </thead>
+                <tbody id="speaTbody"></tbody>
+            </table>
+        </div>
+    </section>
 
     <script>
         // Function to load saved data from the server when the page loads

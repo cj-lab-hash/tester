@@ -24,7 +24,7 @@ async function runOnce() {
     console.log("🧹 Stale lock detected. Removing lock.");
     try { fs.unlinkSync(LOCK_FILE); } catch {}
   } else {
-    console.log("🔒 Lock exists, skipping this cycle.");
+    console.log("🔒 Lock exists, skipping this cycle.Please delete", LOCK_FILE, "if you think it's stale.");
     return;
   }
 }

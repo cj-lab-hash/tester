@@ -8,3 +8,4 @@ statusphere_auth.json
 .pm2/
 click_here.bat
 module_conf.json
+sync-runner.mjs

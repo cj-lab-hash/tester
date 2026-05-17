@@ -20,6 +20,7 @@
             <option value="UFLEX">UFLEX</option>
             <option value="EAGLE">EAGLE</option>
             <option value="SPEA">SPEA</option>
+            <option value="LTXMX">LTXMX</option>
             <option value="MAV">MAV</OPTION>
             <option value="TMT">TMT</option>
             <option value="LEGACY">LEGACY</option>
@@ -341,7 +342,21 @@
             </table>
         </div>
     </section>
-
+    <section id="sectionLTXMX" style="display: none;">
+        <h3>LTXMX</h3>
+        <div class="table-wrap">
+            <table id="ltxmxTable" data-prod-col="1">
+                <thead>
+                <tr>
+                    <th>TESTER NAME</th>
+                    <th>PRODUCTION STATUS</th>
+                   
+                </tr>
+                </thead>
+                <tbody id="ltxmxTbody"></tbody>
+            </table>
+        </div>
+    </section>
     <script>
         // Function to load saved data from the server when the page loads
         function loadData() {

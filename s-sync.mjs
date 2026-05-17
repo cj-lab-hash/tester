@@ -354,8 +354,8 @@ console.log("Target family counts in page:", counts);
 
   console.log("✅ Upsert success");
 
- const dot400Rows = rowsRaw.filter(r => (r.equipment_id || "").includes("DOT400"));
- console.log("DOT400 rowsRaw:", dot400Rows.length, dot400Rows.slice(0, 10).map(r => r.equipment_id));
+//  const dot400Rows = rowsRaw.filter(r => (r.equipment_id || "").includes("DOT400"));
+//  console.log("DOT400 rowsRaw:", dot400Rows.length, dot400Rows.slice(0, 10).map(r => r.equipment_id));
 
 
   // Cleanup old rows (keep only latest scrape)

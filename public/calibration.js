@@ -321,7 +321,8 @@ function computeStatus(dateObj) {
   if (diffDays < 0) return { state: "overdue", label: `OVERDUE ${Math.abs(diffDays)}d`, days: diffDays };
   // if (diffDays === 0) return { state: "critical", label: `DUE TODAY`, days: diffDays };
   if (diffDays <= CRITICAL) return { state: "critical", label: `DUE IN ${diffDays}d`, days: diffDays };
-  if (diffDays <= DUE_SOON_DAYS) return { state: "due-soon", label: `DUE IN ${diffDays}d`, days: diffDays };
+  if (diffDays < DUE_SOON_DAYS) return { state: "due-soon", label: `DUE IN ${diffDays}d`, days: diffDays };
+  if (diffDays === DUE_SOON_DAYS) return { state: "due", label: `DUE IN TODAY`, days: diffDays };
 
   return { state: "ok", label: `IN ${diffDays}d`, days: diffDays };
 }
@@ -333,7 +334,7 @@ function setCellStatus(td, type, scheduleText) {
   const dateObj = parseScheduleDate(scheduleText);
   const status = computeStatus(dateObj);
 
-  if (status.state === "overdue" || status.state === "due-soon" || status.state === "critical") {
+  if (status.state === "overdue" || status.state === "due-soon" || status.state === "critical" || status.state === "due") {
     const pill = document.createElement("span");
     pill.classList.add("status-pill");
 
@@ -343,6 +344,9 @@ function setCellStatus(td, type, scheduleText) {
     } else if (status.state === "critical") {
       td.classList.add(`${type}-critical`);
       pill.classList.add("status-critical");
+    } else if (status.state === "due") {
+      td.classList.add(`${type}-due`);
+      pill.classList.add("status-due");
     } else {
       td.classList.add(`${type}-due-soon`);
       pill.classList.add("status-due-soon");
@@ -379,7 +383,7 @@ async function renderSchedulesAndHighlights(tableEl) {
   const map = new Map(plans.map(p => [normalizeIdent(p.identification), p]));
 
   for (const tr of rows) {
-    tr.classList.remove("row-overdue", "row-due-soon", "row-critical");
+    tr.classList.remove("row-overdue", "row-due-soon", "row-critical", "row-due");
 
     const testerName = normalizeIdent(tr.cells?.[0]?.textContent);
     const plan = map.get(testerName);
@@ -393,7 +397,7 @@ async function renderSchedulesAndHighlights(tableEl) {
     if (calState === "overdue" || pmState === "overdue") tr.classList.add("row-overdue");
     else if (calState === "critical" || pmState === "critical") tr.classList.add("row-critical");
     else if (calState === "due-soon" || pmState === "due-soon") tr.classList.add("row-due-soon");
-    
+    else if (calState === "due" || pmState === "due") tr.classList.add("row-due");
   }
 }
 

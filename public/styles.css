@@ -47,7 +47,10 @@ td.cal-critical, td.pm-critical {
   background: #f1ca7b; /* critical yellow */
   font-weight: 700;
 }
-
+td.cal-due, td.pm-due {
+  background: #f16562; /* due today orange */
+  font-weight: 700;
+}
 /*tr.row-overdue {
   background: #ffeaea; /* row red tint */
 /*} */
@@ -84,7 +87,10 @@ td.cal-critical, td.pm-critical {
   background: #e09034;
   color: #5a3d00;
 }
-
+.statuss-due {
+  background: #f16562;
+  color: #5a3d00;
+}
 .status-ok {
   background: #c9f3d1;
   color: #0b4d1a;

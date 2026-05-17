@@ -322,7 +322,7 @@ function computeStatus(dateObj) {
   // if (diffDays === 0) return { state: "critical", label: `DUE TODAY`, days: diffDays };
   if (diffDays <= CRITICAL) return { state: "critical", label: `DUE IN ${diffDays}d`, days: diffDays };
   if (diffDays <= DUE_SOON_DAYS) return { state: "due-soon", label: `DUE IN ${diffDays}d`, days: diffDays };
-  // if (diffDays === DUE_SOON_DAYS) return { state: "due", label: `DUE TODAY`, days: diffDays };
+  if (diffDays === 0) return { state: "due", label: `DUE TODAY`, days: diffDays };
 
   return { state: "ok", label: `IN ${diffDays}d`, days: diffDays };
 }

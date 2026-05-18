@@ -157,18 +157,25 @@ function extractEquipmentFromHref(href = "") {
 
 async function setTesterTypeAllWithTab(page) {
   const sel = page.locator('select[name="RESOURCEFAMILY"]'); // ✅ correct tester type dropdown
+  const loc = page.locator('select[name="RESOURCELOCATION"]'); // ✅ correct resource location dropdown
   //
-  await sel.waitFor({ timeout: 50000 });
 
+  await sel.waitFor({ timeout: 50000 });
+  await loc.waitFor({ timeout: 50000 });
   // Select All
   await sel.selectOption({ label: "All" });
+  await loc.selectOption({ label: "FT" });
+
 
   // Mimic your manual action: Tab triggers submit/refresh
   await sel.focus();
   await page.keyboard.press("Tab");
+  await loc.focus();
+  await page.keyboard.press("Tab");
 
   // You said it takes ~15 seconds, so give it 20 seconds
-  await page.waitForTimeout(30000);
+  await page.waitForTimeout(40000);
+
 
   // Verify that targets exist in the map after refresh
   await page.waitForFunction(() => {
@@ -180,6 +187,9 @@ async function setTesterTypeAllWithTab(page) {
   // Debug: confirm what is selected now
   const selected = await sel.evaluate(el => el.options[el.selectedIndex]?.textContent?.trim());
   console.log("Tester Type selected (RESOURCEFAMILY):", selected);
+
+  const selectedLoc = await loc.evaluate(el => el.options[el.selectedIndex]?.textContent?.trim());
+  console.log("Resource Location selected (RESOURCELOCATION):", selectedLoc);
 }
 
 

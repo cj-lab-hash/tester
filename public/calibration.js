@@ -319,10 +319,10 @@ function computeStatus(dateObj) {
   const diffDays = Math.ceil((due - today) / msPerDay);
 
   if (diffDays < 0) return { state: "overdue", label: `OVERDUE ${Math.abs(diffDays)}d`, days: diffDays };
-  // if (diffDays === 0) return { state: "critical", label: `DUE TODAY`, days: diffDays };
+   if (diffDays === 0) return { state: "critical", label: `DUE TODAY`, days: diffDays };
   if (diffDays <= CRITICAL) return { state: "critical", label: `DUE IN ${diffDays}d`, days: diffDays };
   if (diffDays <= DUE_SOON_DAYS) return { state: "due-soon", label: `DUE IN ${diffDays}d`, days: diffDays };
-  if (diffDays === 0) return { state: "due", label: `DUE TODAY`, days: diffDays };
+  //if (diffDays === 0) return { state: "due", label: `DUE TODAY`, days: diffDays };
 
   return { state: "ok", label: `IN ${diffDays}d`, days: diffDays };
 }
@@ -852,7 +852,28 @@ async function renderProductionStatusFromStatusphere(tableEl) {
     if (!r) continue;
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
-
+    
+    const HIDE_LABELS = new Set([
+      "PRODN",
+      "ENGG",
+      "LOT COMPLETION",
+      "NO PRODUCT",
+      "SHUTDOWN"
+    ]);
+    const labelUpper = (out.label || "").toUpperCase();
+    if (HIDE_LABELS.has(labelUpper)) {
+      tr.hidden = true;
+      continue;
+    } else {
+      tr.hidden = false;
+    } 
+    // if (out.css === "ps-green") {
+    //   tr.style.display = "none";
+    //   continue;
+    //   } else {
+    //   tr.style.display = "";
+    // }
+  
     cell.textContent = "";
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet");
 
@@ -882,7 +903,6 @@ async function renderProductionStatusFromStatusphere(tableEl) {
     if (out.css) cell.classList.add(out.css);
 
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
-  }
 }
 
 // ---------- VIEW + REFRESH ----------

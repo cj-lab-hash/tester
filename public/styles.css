@@ -104,7 +104,7 @@ td.cal-due, td.pm-due {
 .ps-blue  { color: #0b3bc0; font-weight: 700; } /* ENGG */
 .ps-violet { color: #6721e0; font-weight: 700; } /* LOT COMP */
 .ps-yellow { color: #f8f800; font-weight: 700; } /* STANDBY/IDLE */
-.ps-orange { color: #f16562; font-weight: 700; } /* PMCAL */
+.ps-orange { color: #ff8000; font-weight: 700; } /* PMCAL */
 
 .prod-link {
   color: inherit;

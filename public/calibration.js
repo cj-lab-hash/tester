@@ -1065,6 +1065,8 @@ function setView(view) {
 const LAST_REFRESH_KEY = "calibration_last_refresh_ts";
 
 async function refreshData() {
+  const t0 = performance.now();
+  console.time("refreshData total");
   try {
     await updateLastSyncIndicator();
 
@@ -1159,6 +1161,9 @@ async function refreshData() {
     localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
   } catch (err) {
     console.error("❌ Refresh failed:", err);
+  } finally {
+    console.timeEnd("refreshData total");
+    console.log("refreshData ms:", Math.round(performance.now() - t0));
   }
 }
 

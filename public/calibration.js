@@ -1063,9 +1063,9 @@ function setView(view) {
   if (ltxmx) ltxmx.style.display = (view === "LTXMX") ? "block" : "none";
 }
 
-function getCurrentView() {
-  return document.getElementById("viewSelect")?.value || "ACT";
-}
+// function getCurrentView() {
+//   return document.getElementById("viewSelect")?.value || "ACT";
+// }
 
 const LAST_REFRESH_KEY = "calibration_last_refresh_ts";
 

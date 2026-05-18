@@ -506,7 +506,7 @@ async function ensureLTXRowsExist() {
   const { data, error } = await supabase
     .from("statusphere_equipment")
     .select("equipment_id")
-    .or("equipment_id.ilike.LTX%")
+    .or("equipment_id.ilike.LTX0%")
     // .order("equipment_id", { ascending: false });
     .order("state_long", { ascending: false });
 
@@ -994,6 +994,18 @@ function setCurrentView(view) {
   });
 }
 
+// ✅ define this near the top, before renderViewTiles()
+const VIEWS = [
+  { key: "ACT",    desc: "Advantest / Credence / Teradyne" },
+  { key: "UFLEX",  desc: "Microflex / Terflex / IFLEX" },
+  { key: "EAGLE",  desc: "Eagle" },
+  { key: "SPEA",   desc: "DOT400" },
+  { key: "LTXMX",  desc: "LTXMX" },
+  { key: "MAV",    desc: "MAV / TERMAG" },
+  { key: "TMT",    desc: "ASL1K / ASL4K" },
+  { key: "LEGACY", desc: "STS50 / KTS / MPS / NOISE / SC212" },
+  { key: "LTX",    desc: "LTX" },
+];
 function renderViewTiles() {
   const wrap = document.getElementById("viewTiles");
   if (!wrap) return;

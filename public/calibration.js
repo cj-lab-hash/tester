@@ -859,12 +859,7 @@ async function renderProductionStatusFromStatusphere(tableEl) {
       // }
       // tr.hidden = false;
       // console.log(`Row for ${id}: state=${r.state_short}, issue=${out.label}, css=${out.css}`);
-    // if (out.css === "ps-green") {
-    //   tr.style.display = "none";
-    //   continue;
-    //   } else {
-    //   tr.style.display = "";
-    // }
+    
   
     cell.textContent = "";
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet");
@@ -895,7 +890,90 @@ async function renderProductionStatusFromStatusphere(tableEl) {
     if (out.css) cell.classList.add(out.css);
 
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+  }
 }
+
+// ---------- RENDER PRODUCTION STATUS IF NO PM/CAL ROWS----------
+async function renderProductionStatusFromStatusphereNonPMCAL(tableEl) {
+  if (!tableEl) return;
+
+  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
+  const ids = rows.map(tr => normalizeIdent(tr.cells?.[0]?.textContent)).filter(Boolean);
+  if (!ids.length) return;
+
+  const { data, error } = await supabase
+    .from("statusphere_equipment")
+    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
+    .in("equipment_id", ids);
+
+  if (error) {
+    console.error("Statusphere fetch error:", error.message);
+    return;
+  }
+
+  const map = new Map((data || []).map(r => [normalizeIdent(r.equipment_id), r]));
+  const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
+
+  for (const tr of rows) {
+    const id = normalizeIdent(tr.cells?.[0]?.textContent);
+    const cell = tr.cells?.[prodColIndex];
+    if (!cell) continue;
+
+    const r = map.get(id);
+    if (!r) continue;
+
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+    const HIDE_STATES = new Set(["PRODN", 
+      "LOT",
+      "SHUTDOWN",
+      "NO",
+      "ENGG",
+      "IDLE"
+    ]);
+    const state = (r.state_short || "").toUpperCase();
+    if (HIDE_STATES.has(state)) {
+      tr.hidden = true;
+      continue;
+    }
+    tr.hidden = false;
+      //  if ((r.state_short || "").toUpperCase() === "PRODN") {
+      //    tr.hidden = true;
+      //    continue;
+      //  }
+      //  tr.hidden = false;
+       console.log(`Row for ${id}: state=${r.state_short}, issue=${out.label}, css=${out.css}`);
+    
+  
+    cell.textContent = "";
+    cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet");
+
+    const url = buildStatusphereUrlFromRow(r.href, id);
+
+    if (url) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = out.label;
+      a.classList.add("prod-link");
+      cell.appendChild(a);
+    } else {
+      const span = document.createElement("span");
+      span.textContent = out.label;
+      cell.appendChild(span);
+    }
+
+    if (out.pillText) {
+      const pill = document.createElement("span");
+      pill.textContent = out.pillText;
+      pill.className = out.pillCss;
+      cell.appendChild(pill);
+    }
+
+    if (out.css) cell.classList.add(out.css);
+
+    cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+  }
 }
 // ---------- VIEW + REFRESH ----------
 function setView(view) {
@@ -943,7 +1021,8 @@ async function refreshData() {
 
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
-      await renderProductionStatusFromStatusphere(uflexTable);
+      //await renderProductionStatusFromStatusphere(uflexTable);
+      await renderProductionStatusFromStatusphereNonPMCAL(uflexTable);
         // console.log("UFLEX production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("UFLEX", uflexTable, lastSyncShownAt);
       return;
@@ -951,7 +1030,8 @@ async function refreshData() {
 
     if (view === "EAGLE") {
       await ensureEagleRowsExist();
-      await renderProductionStatusFromStatusphere(eagleTable);
+      // await renderProductionStatusFromStatusphere(eagleTable);
+      await renderProductionStatusFromStatusphereNonPMCAL(eagleTable);
         // console.log("EAGLE production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("EAGLE", eagleTable, lastSyncShownAt);
       return;
@@ -959,43 +1039,45 @@ async function refreshData() {
 
     if (view === "MAV") {
       await ensureMAVRowsExist();
-      await renderProductionStatusFromStatusphere(mavTable);
+      // await renderProductionStatusFromStatusphere(mavTable);
+      await renderProductionStatusFromStatusphereNonPMCAL(mavTable);
         // console.log("MAV production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("MAV", mavTable, lastSyncShownAt);
       return;
     }
     if (view === "TMT") {
       await ensureTMTRowsExist();
-      await renderProductionStatusFromStatusphere(tmtTable);
+      // await renderProductionStatusFromStatusphere(tmtTable);
+      await renderProductionStatusFromStatusphereNonPMCAL(tmtTable);
         // console.log("TMT production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("TMT", tmtTable, lastSyncShownAt);
       return;
     }
     if (view === "LTX") {
       await ensureLTXRowsExist();
-      await renderProductionStatusFromStatusphere(ltxTable);
+      // await renderProductionStatusFromStatusphere(ltxTable);
+      await renderProductionStatusFromStatusphereNonPMCAL(ltxTable);
         // console.log("LTX production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("LTX", ltxTable, lastSyncShownAt);
       return;
     } 
     if (view === "LEGACY") {
       await ensureLegacyRowsExist();
-      // console.log("Legacy rows ensured, now rendering production status...");
-      await renderProductionStatusFromStatusphere(legacyTable);
-      //  console.log("Legacy production status rendered. " + new Date().toLocaleTimeString());
-
+      // await renderProductionStatusFromStatusphere(legacyTable);
+      await renderProductionStatusFromStatusphereNonPMCAL(legacyTable);
       showViewAlertsOncePerChange("LEGACY", legacyTable, lastSyncShownAt);
       return;
     }
     if (view === "SPEA") {
       await ensureSPEARowsExist();
-      await renderProductionStatusFromStatusphere(speaTable);
+      // await renderProductionStatusFromStatusphere(speaTable);
+      await renderProductionStatusFromStatusphereNonPMCAL(speaTable);
       showViewAlertsOncePerChange("SPEA", speaTable, lastSyncShownAt);
       return;
     }
     if (view === "LTXMX") {
       await ensureLTXMXRowsExist();
-      await renderProductionStatusFromStatusphere(ltxmxTable);
+      await renderProductionStatusFromStatusphereNonPMCAL(ltxmxTable);
       showViewAlertsOncePerChange("LTXMX", ltxmxTable, lastSyncShownAt);
       return;
     }

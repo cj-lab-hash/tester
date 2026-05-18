@@ -853,20 +853,12 @@ async function renderProductionStatusFromStatusphere(tableEl) {
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
     
-    const HIDE_LABELS = new Set([
-      "PRODN",
-      "ENGG",
-      "LOT COMPLETION",
-      "NO PRODUCT",
-      "SHUTDOWN",
-    ]);
-    const labelUpper = (out.label || "").toUpperCase();
-    if (HIDE_LABELS.has(labelUpper)) {
-      tr.hidden = true;
-      continue;
-    } else {
+      if ((r.state_short || "").toUpperCase() === "PRODN") {
+        tr.hidden = true;
+        continue;
+      }
       tr.hidden = false;
-    } 
+      console.log(`Row for ${id}: state=${r.state_short}, issue=${out.label}, css=${out.css}`);
     // if (out.css === "ps-green") {
     //   tr.style.display = "none";
     //   continue;

@@ -980,41 +980,31 @@ async function renderProductionStatusFromStatusphereNonPMCAL(tableEl) {
 
 //-----------GRID VIEW TOGGLE----------
 
-const VIEWS = [
-  "ACT", "UFLEX", "EAGLE", "SPEA", "LTXMX", "MAV", "TMT", "LEGACY", "LTX"
-];
+const VIEW_KEY = "tester_monitoring_view";
+let currentView = localStorage.getItem(VIEW_KEY) || "ACT";
 
-
-let currentView = "ACT";
-
-function getCurrentView() {
-  return currentView;
-}
+function getCurrentView() { return currentView; }
 
 function setCurrentView(view) {
   currentView = view;
-  
+  localStorage.setItem(VIEW_KEY, view);
 
   document.querySelectorAll(".view-tile").forEach(btn => {
-    const isActive = btn.dataset.view === view;
-    btn.classList.toggle("active", isActive);
-    btn.setAttribute("aria-pressed", String(isActive));
+    btn.classList.toggle("active", btn.dataset.view === view);
   });
 }
 
 function renderViewTiles() {
   const wrap = document.getElementById("viewTiles");
-  if (!wrap) return;
-
   wrap.innerHTML = "";
 
   for (const v of VIEWS) {
     const btn = document.createElement("button");
-    btn.type = "button";
+    btn.type = "button";                // ✅ important
     btn.className = "view-tile";
-    btn.dataset.view = v;
-    btn.setAttribute("aria-pressed", "false");
-    btn.textContent = v;
+    btn.dataset.view = v.key;
+    btn.textContent = v.key;
+
     btn.addEventListener("click", () => {
       setCurrentView(v.key);
       setView(v.key);
@@ -1024,9 +1014,12 @@ function renderViewTiles() {
     wrap.appendChild(btn);
   }
 
-  // set initial active
-  setCurrentView(currentView);
+  // highlight stored view on load
+  document.querySelectorAll(".view-tile").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.view === currentView);
+  });
 }
+
 // ---------- VIEW + REFRESH ----------
 function setView(view) {
   const act = document.getElementById("sectionACT");
@@ -1073,6 +1066,7 @@ async function refreshData() {
 
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
+      renderViewTiles
       //await renderProductionStatusFromStatusphere(uflexTable);
       await renderProductionStatusFromStatusphereNonPMCAL(uflexTable);
         // console.log("UFLEX production status rendered. " + new Date().toLocaleTimeString());
@@ -1082,6 +1076,7 @@ async function refreshData() {
 
     if (view === "EAGLE") {
       await ensureEagleRowsExist();
+      renderViewTiles
       // await renderProductionStatusFromStatusphere(eagleTable);
       await renderProductionStatusFromStatusphereNonPMCAL(eagleTable);
         // console.log("EAGLE production status rendered. " + new Date().toLocaleTimeString());

@@ -1,4 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { get } from "pm2";
 
 
 // ===================== CONFIG =====================
@@ -976,6 +977,69 @@ async function renderProductionStatusFromStatusphereNonPMCAL(tableEl) {
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
   }
 }
+
+//-----------GRID VIEW TOGGLE----------
+const VIEWS = [
+  { key: "ACT",    desc: "Actuators" },
+  { key: "UFLEX",  desc: "Microflex / Terflex / IFLEX" },
+  { key: "EAGLE",  desc: "Eagle" },
+  { key: "SPEA",   desc: "DOT400" },
+  { key: "LTXMX",  desc: "LTXMX" },
+  { key: "MAV",    desc: "MAV / TERMAG" },
+  { key: "TMT",    desc: "ASL1K / ASL4K" },
+  { key: "LEGACY", desc: "STS50 / KTS / MPS / NOISE / SC212" },
+  { key: "LTX",    desc: "LTX" },
+];
+
+let currentView = "ACT";
+
+function getCurrentView() {
+  return currentView;
+}
+
+function setCurrentView(view) {
+  currentView = view;
+
+  document.querySelectorAll(".view-tile").forEach(btn => {
+    const active = btn.dataset.view === view;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function renderViewGrid() {
+  const wrap = document.getElementById("viewGrid");
+  if (!wrap) return;
+
+  wrap.innerHTML = "";
+
+  for (const v of VIEWS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "view-tile";
+    btn.dataset.view = v.key;
+    btn.setAttribute("aria-pressed", "false");
+
+    btn.innerHTML = `
+      <div>
+        <div class="title">${v.key}</div>
+        <div class="sub">${v.desc}</div>
+      </div>
+      <div class="badge">${v.key.slice(0,1)}</div>
+    `;
+
+    btn.addEventListener("click", () => {
+      setCurrentView(v.key);
+      setView(v.key);
+      refreshData();
+    });
+
+    wrap.appendChild(btn);
+  }
+
+  // set initial active
+  setCurrentView(currentView);
+}
 // ---------- VIEW + REFRESH ----------
 function setView(view) {
   const act = document.getElementById("sectionACT");
@@ -1105,14 +1169,8 @@ async function refreshData() {
 const UI_REFRESH_MS = 60 * 1000;
 
 window.addEventListener("DOMContentLoaded", () => {
-  const sel = document.getElementById("viewSelect");
-  setView(sel?.value || "ACT");
-
-  sel?.addEventListener("change", () => {
-    setView(sel.value);
-    refreshData();
-  });
-
+  renderViewGrid();
+  setView(getCurrentView());
   refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
@@ -1121,3 +1179,19 @@ window.addEventListener("DOMContentLoaded", () => {
   setInterval(updateLastSyncIndicator, 15_000);
   setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
 });
+//   const sel = document.getElementById("viewSelect");
+//   setView(sel?.value || "ACT");
+
+//   sel?.addEventListener("change", () => {
+//     setView(sel.value);
+//     refreshData();
+//   });
+
+//   refreshData();
+//   updateLastSyncIndicator();
+//   alertIssuesAllGroupsIfNewScrape();
+
+//   setInterval(refreshData, UI_REFRESH_MS);
+//   setInterval(updateLastSyncIndicator, 15_000);
+//   setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
+// });

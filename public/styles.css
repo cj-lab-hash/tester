@@ -371,3 +371,92 @@ td.cal-due, td.pm-due {
 .toast-yellow .toast-badge{background:#fef3c7; color:#eadd27;}    /* system problem */
 .toast-title{ font-weight: 800; }
 .toast-sub{ color:#4b5563; }
+
+
+/* GRID CONTAINER */
+.view-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin: 10px 0 0;
+  align-items: stretch;
+}
+
+/* TILE BUTTON */
+.view-tile{
+  appearance: none;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #111827;
+  color: #e5e7eb;
+  cursor: pointer;
+  text-align: left;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  box-shadow: 0 8px 22px rgba(0,0,0,0.14);
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+
+.view-tile:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+  filter: brightness(1.03);
+}
+
+.view-tile:active{
+  transform: translateY(0px);
+}
+
+/* TEXT */
+.view-tile .title{
+  font-weight: 900;
+  letter-spacing: .3px;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.view-tile .sub{
+  font-size: 11px;
+  opacity: .85;
+  margin-top: 4px;
+}
+
+/* ACTIVE TILE (selected view) */
+.view-tile.active{
+  outline: 3px solid rgba(59, 130, 246, 0.75); /* blue ring */
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+/* OPTIONAL: small badge/icon circle */
+.view-tile .badge{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.12);
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+}
+
+/* OPTIONAL: per-view colors (nice like your first image) */
+.view-tile[data-view="ACT"]    { background: #1f2937; }
+.view-tile[data-view="UFLEX"]  { background: #1e3a8a; }
+.view-tile[data-view="EAGLE"]  { background: #7c2d12; }
+.view-tile[data-view="SPEA"]   { background: #4c1d95; }
+.view-tile[data-view="LTXMX"]  { background: #374151; }
+.view-tile[data-view="MAV"]    { background: #0f766e; }
+.view-tile[data-view="TMT"]    { background: #6b7280; }
+.view-tile[data-view="LEGACY"] { background: #111827; }
+.view-tile[data-view="LTX"]    { background: #7f1d1d; }
+
+/* MOBILE: tighter grid */
+@media (max-width: 600px){
+  .view-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

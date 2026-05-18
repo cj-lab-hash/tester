@@ -1,5 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-import { get } from "pm2";
+
 
 
 // ===================== CONFIG =====================

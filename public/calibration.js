@@ -979,17 +979,11 @@ async function renderProductionStatusFromStatusphereNonPMCAL(tableEl) {
 }
 
 //-----------GRID VIEW TOGGLE----------
+
 const VIEWS = [
-  { key: "ACT",    desc: "Advantest Credence Teradyne" },
-  { key: "UFLEX",  desc: "Microflex / Terflex / IFLEX" },
-  { key: "EAGLE",  desc: "Eagle" },
-  { key: "SPEA",   desc: "DOT400" },
-  { key: "LTXMX",  desc: "LTXMX" },
-  { key: "MAV",    desc: "MAV / TERMAG" },
-  { key: "TMT",    desc: "ASL1K / ASL4K" },
-  { key: "LEGACY", desc: "STS50 / KTS / MPS / NOISE / SC212" },
-  { key: "LTX",    desc: "LTX" },
+  "ACT", "UFLEX", "EAGLE", "SPEA", "LTXMX", "MAV", "TMT", "LEGACY", "LTX"
 ];
+
 
 let currentView = "ACT";
 

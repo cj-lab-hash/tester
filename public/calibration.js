@@ -980,7 +980,7 @@ async function renderProductionStatusFromStatusphereNonPMCAL(tableEl) {
 
 //-----------GRID VIEW TOGGLE----------
 const VIEWS = [
-  { key: "ACT",    desc: "Actuators" },
+  { key: "ACT",    desc: "Advantest Credence Teradyne" },
   { key: "UFLEX",  desc: "Microflex / Terflex / IFLEX" },
   { key: "EAGLE",  desc: "Eagle" },
   { key: "SPEA",   desc: "DOT400" },
@@ -999,16 +999,17 @@ function getCurrentView() {
 
 function setCurrentView(view) {
   currentView = view;
+  localStorage.setItem(VIEW_KEY, view);
 
   document.querySelectorAll(".view-tile").forEach(btn => {
-    const active = btn.dataset.view === view;
-    btn.classList.toggle("active", active);
-    btn.setAttribute("aria-pressed", String(active));
+    const isActive = btn.dataset.view === view;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-pressed", String(isActive));
   });
 }
 
-function renderViewGrid() {
-  const wrap = document.getElementById("viewGrid");
+function renderViewTiles() {
+  const wrap = document.getElementById("viewTiles");
   if (!wrap) return;
 
   wrap.innerHTML = "";
@@ -1017,17 +1018,9 @@ function renderViewGrid() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "view-tile";
-    btn.dataset.view = v.key;
+    btn.dataset.view = v;
     btn.setAttribute("aria-pressed", "false");
-
-    btn.innerHTML = `
-      <div>
-        <div class="title">${v.key}</div>
-        <div class="sub">${v.desc}</div>
-      </div>
-      <div class="badge">${v.key.slice(0,1)}</div>
-    `;
-
+    btn.textContent = v;
     btn.addEventListener("click", () => {
       setCurrentView(v.key);
       setView(v.key);

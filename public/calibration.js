@@ -329,7 +329,7 @@ function computeStatus(dateObj) {
 }
 
 function setCellStatus(td, type, scheduleText) {
-  td.classList.remove(`${type}-overdue`, `${type}-due-soon`, `${type}-critical`);
+  td.classList.remove(`${type}-overdue`, `${type}-due-soon`, `${type}-critical`, `${type}-due`);
   td.textContent = scheduleText || "N/A";
 
   const dateObj = parseScheduleDate(scheduleText);
@@ -996,6 +996,7 @@ function setCurrentView(view) {
 
 function renderViewTiles() {
   const wrap = document.getElementById("viewTiles");
+  if (!wrap) return;
   wrap.innerHTML = "";
 
   for (const v of VIEWS) {
@@ -1054,6 +1055,7 @@ async function refreshData() {
     await updateLastSyncIndicator();
 
     const view = getCurrentView();
+    console.log("VIEW:", view);
     const actTable = document.getElementById("editableTable");
     const uflexTable = document.getElementById("uflexTable");
     const eagleTable = document.getElementById("eagleTable");
@@ -1064,9 +1066,9 @@ async function refreshData() {
     const speaTable = document.getElementById("speaTable");
     const ltxmxTable = document.getElementById("ltxmxTable");
 
+
     if (view === "UFLEX") {
       await ensureUflexRowsExist();
-      renderViewTiles
       //await renderProductionStatusFromStatusphere(uflexTable);
       await renderProductionStatusFromStatusphereNonPMCAL(uflexTable);
         // console.log("UFLEX production status rendered. " + new Date().toLocaleTimeString());
@@ -1076,7 +1078,6 @@ async function refreshData() {
 
     if (view === "EAGLE") {
       await ensureEagleRowsExist();
-      renderViewTiles
       // await renderProductionStatusFromStatusphere(eagleTable);
       await renderProductionStatusFromStatusphereNonPMCAL(eagleTable);
         // console.log("EAGLE production status rendered. " + new Date().toLocaleTimeString());

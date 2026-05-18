@@ -1018,6 +1018,8 @@ function renderViewTiles() {
     btn.dataset.view = v.key;
     btn.textContent = v.key;
 
+    if (v.desc) btn.title = v.desc;
+    
     btn.addEventListener("click", () => {
       setCurrentView(v.key);
       setView(v.key);
@@ -1067,7 +1069,7 @@ async function refreshData() {
     await updateLastSyncIndicator();
 
     const view = getCurrentView();
-    console.log("VIEW:", view);
+    // console.log("VIEW:", view);
     const actTable = document.getElementById("editableTable");
     const uflexTable = document.getElementById("uflexTable");
     const eagleTable = document.getElementById("eagleTable");

@@ -730,6 +730,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   else if (s === "PRODN") result = { label: issue || "PRODN", css: "ps-green" };
   else if (s === "ENGG") result = { label: issue || "ENGG", css: "ps-blue" };
   else if (s === "LOT") result = { label: issue || "LOT COMPLETION", css: "ps-violet" };
+  else if (s === "PMCAL") result = { label: issue || "TESTER PM CAL", css: "ps-orange" };
   else if (s === "SHUTDOWN" || s === "NO") {
     const label = (s === "NO") ? (issue || "NO PRODUCT") : "SHUTDOWN";
     result = { label, css: "ps-gray" };
@@ -862,7 +863,7 @@ async function renderProductionStatusFromStatusphere(tableEl) {
     
   
     cell.textContent = "";
-    cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet");
+    cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
 
@@ -945,7 +946,7 @@ async function renderProductionStatusFromStatusphereNonPMCAL(tableEl) {
     
   
     cell.textContent = "";
-    cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet");
+    cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
 

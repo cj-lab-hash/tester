@@ -858,7 +858,7 @@ async function renderProductionStatusFromStatusphere(tableEl) {
       "ENGG",
       "LOT COMPLETION",
       "NO PRODUCT",
-      "SHUTDOWN"
+      "SHUTDOWN",
     ]);
     const labelUpper = (out.label || "").toUpperCase();
     if (HIDE_LABELS.has(labelUpper)) {
@@ -904,7 +904,7 @@ async function renderProductionStatusFromStatusphere(tableEl) {
 
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
 }
-
+}
 // ---------- VIEW + REFRESH ----------
 function setView(view) {
   const act = document.getElementById("sectionACT");

@@ -1019,7 +1019,7 @@ function renderViewTiles() {
     btn.textContent = v.key;
 
     if (v.desc) btn.title = v.desc;
-    
+
     btn.addEventListener("click", () => {
       setCurrentView(v.key);
       setView(v.key);
@@ -1168,6 +1168,7 @@ const UI_REFRESH_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", () => {
   renderViewTiles();
   setView(getCurrentView());
+  setCurrentView(getCurrentView());
   refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();

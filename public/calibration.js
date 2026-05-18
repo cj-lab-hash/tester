@@ -1162,7 +1162,7 @@ async function refreshData() {
 const UI_REFRESH_MS = 60 * 1000;
 
 window.addEventListener("DOMContentLoaded", () => {
-  renderViewGrid();
+  renderViewTiles();
   setView(getCurrentView());
   refreshData();
   updateLastSyncIndicator();

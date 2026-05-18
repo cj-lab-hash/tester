@@ -999,7 +999,7 @@ function getCurrentView() {
 
 function setCurrentView(view) {
   currentView = view;
-  localStorage.setItem(VIEW_KEY, view);
+  
 
   document.querySelectorAll(".view-tile").forEach(btn => {
     const isActive = btn.dataset.view === view;

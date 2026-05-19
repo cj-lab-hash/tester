@@ -130,8 +130,7 @@ async function statusphereHasNewScrape(ids) {
   if (!ids || ids.length === 0) return false;
 
   const { data, error } = await supabase
-    // .from("statusphere_equipment")
-    .from("statusphere_equipment_latest")
+    .from("statusphere_equipment")
     .select("checked_at")
     .in("equipment_id", ids)
     .order("checked_at", { ascending: false })
@@ -401,6 +400,101 @@ async function renderSchedulesAndHighlights(tableEl) {
     else if (calState === "due-soon" || pmState === "due-soon") tr.classList.add("row-due-soon");
     else if (calState === "due" || pmState === "due") tr.classList.add("row-due");
   }
+}
+//--------- GENERALIZED ROWS LATEST -----
+async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "state_long" }) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tableEl || !tbody) return;
+
+  const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
+
+  const { data, error } = await supabase
+    .from("statusphere_equipment_latest")
+    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
+    .or(orFilter)
+    .order(orderBy, { ascending: false });
+
+  if (error) {
+    console.error(`Latest fetch error for ${tbodyId}:`, error.message);
+    return;
+  }
+
+  // Build rows using fragment (fast)
+  tbody.innerHTML = "";
+  const frag = document.createDocumentFragment();
+
+  for (const r of (data || [])) {
+    const tr = document.createElement("tr");
+
+    const tdName = document.createElement("td");
+    tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
+    tr.appendChild(tdName);
+
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+
+    frag.appendChild(tr);
+  }
+
+  tbody.appendChild(frag);
+
+  // Render production status WITHOUT another DB call
+  renderProductionStatusFromDataNonPMCAL(tableEl, data);
+}
+async function loadEAGLELatest(tableEl) {
+  return loadLatestByPatterns({
+    tableEl,
+    tbodyId: "eagleTbody",
+    patterns: ["EAGLE88%"]
+  });
+}
+
+async function loadSPEALatest(tableEl) {
+  return loadLatestByPatterns({
+    tableEl,
+    tbodyId: "speaTbody",
+    patterns: ["DOT400%"]
+  });
+}
+
+async function loadLTXMXLatest(tableEl) {
+  return loadLatestByPatterns({
+    tableEl,
+    tbodyId: "ltxmxTbody",
+    patterns: ["LTXMX%"]
+  });
+}
+
+async function loadMAVLatest(tableEl) {
+  return loadLatestByPatterns({
+    tableEl,
+    tbodyId: "mavTbody",
+    patterns: ["MAV10%", "MAV20%", "TERMAG20%"]
+  });
+}
+
+async function loadTMTLatest(tableEl) {
+  return loadLatestByPatterns({
+    tableEl,
+    tbodyId: "tmtTbody",
+    patterns: ["ASL1K%", "ASL4K%"]
+  });
+}
+
+async function loadLEGACYLatest(tableEl) {
+  return loadLatestByPatterns({
+    tableEl,
+    tbodyId: "legacyTbody",
+    patterns: ["KTS%", "STS50%", "MPS%", "NOISE%", "TERA360Z%", "SC212%"]
+  });
+}
+
+async function loadLTXLatest(tableEl) {
+  return loadLatestByPatterns({
+    tableEl,
+    tbodyId: "ltxTbody",
+    patterns: ["LTX0%"]
+  });
 }
 
 // ----------UFLEX ROWS LATEST --------
@@ -1211,55 +1305,62 @@ async function refreshData() {
     }
 
     if (view === "EAGLE") {
-      await ensureEagleRowsExist();
+      // await ensureEagleRowsExist();
+      await loadEAGLELatest(eagleTable);
       // await renderProductionStatusFromStatusphere(eagleTable);
-      await renderProductionStatusFromStatusphereNonPMCAL(eagleTable);
+      // await renderProductionStatusFromStatusphereNonPMCAL(eagleTable);
         // console.log("EAGLE production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("EAGLE", eagleTable, lastSyncShownAt);
       return;
     }
 
     if (view === "MAV") {
-      await ensureMAVRowsExist();
+      await loadMAVLatest(mavTable);
+      // await ensureMAVRowsExist();
       // await renderProductionStatusFromStatusphere(mavTable);
-      await renderProductionStatusFromStatusphereNonPMCAL(mavTable);
+      // await renderProductionStatusFromStatusphereNonPMCAL(mavTable);
         // console.log("MAV production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("MAV", mavTable, lastSyncShownAt);
       return;
     }
     if (view === "TMT") {
-      await ensureTMTRowsExist();
+      await loadTMTLatest(tmtTable);
+      // await ensureTMTRowsExist();
       // await renderProductionStatusFromStatusphere(tmtTable);
-      await renderProductionStatusFromStatusphereNonPMCAL(tmtTable);
+      // await renderProductionStatusFromStatusphereNonPMCAL(tmtTable);
         // console.log("TMT production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("TMT", tmtTable, lastSyncShownAt);
       return;
     }
     if (view === "LTX") {
-      await ensureLTXRowsExist();
+      await loadLTXLatest(ltxTable);
+      // await ensureLTXRowsExist();
       // await renderProductionStatusFromStatusphere(ltxTable);
-      await renderProductionStatusFromStatusphereNonPMCAL(ltxTable);
+      // await renderProductionStatusFromStatusphereNonPMCAL(ltxTable);
         // console.log("LTX production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("LTX", ltxTable, lastSyncShownAt);
       return;
     } 
     if (view === "LEGACY") {
-      await ensureLegacyRowsExist();
+      await loadLEGACYLatest(legacyTable);
+      // await ensureLegacyRowsExist();
       // await renderProductionStatusFromStatusphere(legacyTable);
-      await renderProductionStatusFromStatusphereNonPMCAL(legacyTable);
+      // await renderProductionStatusFromStatusphereNonPMCAL(legacyTable);
       showViewAlertsOncePerChange("LEGACY", legacyTable, lastSyncShownAt);
       return;
     }
     if (view === "SPEA") {
-      await ensureSPEARowsExist();
+      await loadSPEALatest(speaTable);
+      // await ensureSPEARowsExist();
       // await renderProductionStatusFromStatusphere(speaTable);
-      await renderProductionStatusFromStatusphereNonPMCAL(speaTable);
+      // await renderProductionStatusFromStatusphereNonPMCAL(speaTable);
       showViewAlertsOncePerChange("SPEA", speaTable, lastSyncShownAt);
       return;
     }
     if (view === "LTXMX") {
-      await ensureLTXMXRowsExist();
-      await renderProductionStatusFromStatusphereNonPMCAL(ltxmxTable);
+      await loadLTXMXLatest(ltxmxTable);
+      // await ensureLTXMXRowsExist();
+      // await renderProductionStatusFromStatusphereNonPMCAL(ltxmxTable);
       showViewAlertsOncePerChange("LTXMX", ltxmxTable, lastSyncShownAt);
       return;
     }

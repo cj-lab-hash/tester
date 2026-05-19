@@ -1050,7 +1050,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
   const HIDE_STATES = new Set([
     "PRODN",
     "ENGG",
-    "LOT"
+    "LOT",
+    "SHUTDOWN",
+    "NO",
+    "IDLE"
     // add more ONLY if you're sure you still want rows to appear
   ]);
 

@@ -216,9 +216,7 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(1),
 #speaTable td:nth-child(1),
 #ltxmxTable th:nth-child(1),
-#ltxmxTable td:nth-child(1),
-#systemTable th:nth-child(1),
-#systemTable td:nth-child(1) {
+#ltxmxTable td:nth-child(1) {
   width: 35%;
 }
 
@@ -237,9 +235,7 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(2),
 #speaTable td:nth-child(2),
 #ltxmxTable th:nth-child(2),
-#ltxmxTable td:nth-child(2),
-#systemTable th:nth-child(2),
-#systemTable td:nth-child(2) {
+#ltxmxTable td:nth-child(2){
   width: 65%;
 }
 
@@ -251,8 +247,7 @@ td.cal-due, td.pm-due {
 #tmtTable td:nth-child(2),
 #legacyTable td:nth-child(2),
 #speaTable td:nth-child(2),
-#ltxmxTable td:nth-child(2),
-#systemTable td:nth-child(2) {
+#ltxmxTable td:nth-child(2) {
   white-space: nowrap;     /* keep in one line */
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
@@ -285,8 +280,7 @@ td.cal-due, td.pm-due {
   #tmtTable td:nth-child(2),
   #legacyTable td:nth-child(2),
   #speaTable td:nth-child(2),
-  #ltxmxTable td:nth-child(2),
-  #systemTable td:nth-child(2) {
+  #ltxmxTable td:nth-child(2) {
     white-space: normal;     /* change to nowrap if you want ellipsis */
     word-break: break-word;
   }
@@ -461,6 +455,7 @@ td.cal-due, td.pm-due {
 .view-tile[data-view="TMT"]    { background:#6b7280; }
 .view-tile[data-view="LEGACY"] { background:#111827; }
 .view-tile[data-view="LTX"]    { background:#7f1d1d; }
+.view-tile[data-views="SYSTEM"] {background:#f8f800;}
 
 /* mobile: tighter tiles */
 @media (max-width: 600px){

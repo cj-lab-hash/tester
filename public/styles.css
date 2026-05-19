@@ -156,7 +156,8 @@ td.cal-due, td.pm-due {
 #sectionLEGACY h3,
 #sectionSPEA h3,
 #sectionLTXMX h3,
-#sectionSYSTEM h3 {
+#sectionSYSTEM h3,
+#sectionARK h3 {
   text-align: center;
 }
 
@@ -183,7 +184,9 @@ td.cal-due, td.pm-due {
 #ltxmxTable th,
 #ltxmxTable td,
 #systemTable th,
-#systemTable td{
+#systemTable td,
+#arkTable th,
+#arkTable td{
   text-align: center;
   padding: 8px;
 }
@@ -193,7 +196,7 @@ td.cal-due, td.pm-due {
 #mavTable, #ltxTable, 
 #tmtTable, #legacyTable, 
 #speaTable, #ltxmxTable,
-#systemTable {
+#systemTable, #arkTable{
   width: 60%;              /* overall table width - adjust 50% to 80% */
   margin: 0 auto;
   border-collapse: collapse;
@@ -216,7 +219,9 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(1),
 #speaTable td:nth-child(1),
 #ltxmxTable th:nth-child(1),
-#ltxmxTable td:nth-child(1) {
+#ltxmxTable td:nth-child(1),
+#arkTable th:nth-child(1),
+#arkTable td:nth-child(1) {
   width: 35%;
 }
 
@@ -235,7 +240,9 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(2),
 #speaTable td:nth-child(2),
 #ltxmxTable th:nth-child(2),
-#ltxmxTable td:nth-child(2){
+#ltxmxTable td:nth-child(2),
+#arkTable th:nth-child(2),
+#arkTable td:nth-child(2) {
   width: 65%;
 }
 
@@ -247,14 +254,15 @@ td.cal-due, td.pm-due {
 #tmtTable td:nth-child(2),
 #legacyTable td:nth-child(2),
 #speaTable td:nth-child(2),
-#ltxmxTable td:nth-child(2) {
+#ltxmxTable td:nth-child(2),
+#arkTable td:nth-child(2){
   white-space: nowrap;     /* keep in one line */
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
 }
 /* ✅ Mobile: full width + smaller text */
 @media (max-width: 600px){
-  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable, #systemTable {
+  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable,#arkTable, #systemTable {
     width: 100%;
     margin: 0;               /* let it fill container */
   }
@@ -267,7 +275,8 @@ td.cal-due, td.pm-due {
   #legacyTable th, #legacyTable td,
   #speaTable th, #speaTable td,
   #ltxmxTable th, #ltxmxTable td,
-  #systemTable th, #systemTable td{
+  #systemTable th, #systemTable td,
+  #arkTable th, #arkTable td{
     font-size: 12px;
     padding: 6px;
   }
@@ -280,7 +289,8 @@ td.cal-due, td.pm-due {
   #tmtTable td:nth-child(2),
   #legacyTable td:nth-child(2),
   #speaTable td:nth-child(2),
-  #ltxmxTable td:nth-child(2) {
+  #ltxmxTable td:nth-child(2),
+  #arkTable td:nth-child(2) {
     white-space: normal;     /* change to nowrap if you want ellipsis */
     word-break: break-word;
   }
@@ -441,7 +451,7 @@ td.cal-due, td.pm-due {
 
 /* selected tile */
 .view-tile.active{
-  outline: 3px solid rgba(59,130,246,0.75);
+  outline: 5px solid rgba(59,130,246,0.75);
   border-color: rgba(59,130,246,0.35);
 }
 
@@ -455,7 +465,8 @@ td.cal-due, td.pm-due {
 .view-tile[data-view="TMT"]    { background:#6b7280; }
 .view-tile[data-view="LEGACY"] { background:#111827; }
 .view-tile[data-view="LTX"]    { background:#7f1d1d; }
-.view-tile[data-view="SYSTEM"] {background:#e5d546;}
+.view-tile[data-view="SYSTEM"] { background:#e5d546; }
+.view-tile[data-view="ARK"]    { background:#46933F; }
 
 /* mobile: tighter tiles */
 @media (max-width: 600px){

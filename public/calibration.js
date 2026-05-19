@@ -768,6 +768,7 @@ const viewLoaders = {
   TMT:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"tmtTbody",    patterns:["ASL1K%","ASL4K%"] }),
   LEGACY: (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"legacyTbody", patterns:["KTS%","STS50%","MPS%","NOISE%","TERA360Z%","SC212%"] }),
   LTX:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"ltxTbody",    patterns:["LTX0%"] }),
+  ARK:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"arkTbody",    patterns:["KVDM2%","ASL3K%","RFX%"] }),
   SYSTEM: (tableEl) => loadSYSTEMLatest({ tableEl, tbodyId:"systemTbody", patterns:["SYSTEM%"] }),
 };
 
@@ -820,6 +821,7 @@ function setView(view) {
     ["LEGACY", "sectionLEGACY"],
     ["SPEA", "sectionSPEA"],
     ["LTXMX", "sectionLTXMX"],
+    ["ARK", "sectionARK"],
     ["SYSTEM", "sectionSYSTEM"],
   ];
 
@@ -849,11 +851,13 @@ async function refreshData() {
     const speaTable   = document.getElementById("speaTable");
     const ltxmxTable  = document.getElementById("ltxmxTable");
     const systemTable = document.getElementById("systemTable");
+    const arkTable    = document.getElementById("arkTable");
+
 
 
     // Non-ACT optimized views
     if (view !== "ACT") {
-      const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable, SYSTEM: systemTable};
+      const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable,ARK: arkTable,SYSTEM: systemTable};
       const tableEl = tableMap[view];
 
       const loader = viewLoaders[view];

@@ -14,7 +14,7 @@ const supabase = createClient(process.env.SUPABASE_URL, serviceKey, {
   global: { headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey } },
 });
 
-const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE", "MAV10", "MAV20", "TERMAG20","LTX","ASL1K","ASL4K","STS50", "KTS", "MPS","NOISE","TERA360Z","SC212","DOT400", "LTXMX"];
+const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE", "MAV10", "MAV20", "TERMAG20","LTX","ASL1K","ASL4K","STS50", "KTS", "MPS","NOISE","TERA360Z","SC212","DOT400", "LTXMX","KVDM2","ASL3K","RFX"];
 // ---------- helpers ----------
 function normalizeEquipmentId(id) {
   if (!id) return null;
@@ -46,6 +46,9 @@ function normalizeEquipmentId(id) {
   if (/^SC212\d{3}$/.test(s)) return s;
   if (/^DOT400\d{3}$/.test(s)) return s;
   if (/^LTXMX\d{3}$/.test(s)) return s;
+  if (/^KVDM2\d{3}$/.test(s)) return s;
+  if (/^ASL3K\d{3}$/.test(s)) return s;
+  if (/^RFX\d{3}$/.test(s)) return s;
   
 
   return null;
@@ -75,7 +78,10 @@ return (
   /^TERA360Z\d{3}$/.test(s) ||
   /^SC212\d{3}$/.test(s) ||
   /^DOT400\d{3}$/.test(s) ||
-  /^LTXMX\d{3}$/.test(s)
+  /^LTXMX\d{3}$/.test(s) ||
+  /^KVDM2\d{3}$/.test(s) ||
+  /^ASL3K\d{3}$/.test(s) ||
+  /^RFX\d{3}$/.test(s)
   
 
     // include all the above as valid IDs
@@ -181,7 +187,7 @@ async function setTesterTypeAllWithTab(page) {
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
+    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX|KVDM2|ASL3K|RFX)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
   }, { timeout: 70000 });
 
   // Debug: confirm what is selected now
@@ -229,7 +235,7 @@ async function main() {
 const hasTargets = await page.evaluate(() => {
   const hrefs = Array.from(document.querySelectorAll("map area"))
     .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
+   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX|KVDM2|ASL3K|RFX)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
   
 
 });
@@ -310,6 +316,9 @@ const counts = ids.reduce((m, id) => {
     :id.startsWith("SC212") ? "SC212"
     :id.startsWith("DOT400") ? "DOT400"
     :id.startsWith("LTXMX") ? "LTXMX"
+    :id.startsWith("KVDM2") ? "KVDM2"
+    :id.startsWith("ASL3K") ? "ASL3K"
+    :id.startsWith("RFX") ? "RFX"
     : "OTHER";
   m[prefix] = (m[prefix] || 0) + 1;
   return m;
@@ -368,8 +377,16 @@ console.log("Target family counts in page:", counts);
   console.log("✅ Upsert success");
 
   
-  // const ltxmxRows = rowsRaw.filter(r => (r.equipment_id || "").includes("LTXMX"));
-  // console.log("LTXMX rowsRaw:", ltxmxRows.length, ltxmxRows.slice(0, 10).map(r => r.equipment_id));
+  // const kvdm2Rows = rowsRaw.filter(r => (r.equipment_id || "").includes("KVDM2"));
+  // console.log("KVDM2 rowsRaw:", kvdm2Rows.length, kvdm2Rows.slice(0, 10).map(r => r.equipment_id));
+
+  // const rfxRows = rowsRaw.filter(r => (r.equipment_id || "").includes("RFX"));
+  // console.log(("RFX rowsRaw:", rfxRows.length, rfxRows.slice(0, 10).map(r => r.equipment_id)));
+
+  // const asl3kRows = rowsRaw.filter(r => (r.equipment_id || "").includes("ASL3K"));
+  // console.log(("ASL3K rowsRaw:", asl3kRows.length, asl3kRows.slice(0, 10).map(r => r.equipment_id)));
+
+
 
 
   // Cleanup old rows (keep only latest scrape)
@@ -377,7 +394,7 @@ console.log("Target family counts in page:", counts);
     .from("statusphere_equipment")
     .delete()
     .lt("checked_at", runTs)
-    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%,equipment_id.ilike.EAGLE%,equipment_id.ilike.MAV10%,equipment_id.ilike.MAV20%,equipment_id.ilike.TERMAG20%,equipment_id.ilike.LTX%,equipment_id.ilike.ASL1K%,equipment_id.ilike.ASL4K%,equipment_id.ilike.STS50%,equipment_id.ilike.KTS%,equipment_id.ilike.MPS%,equipment_id.ilike.NOISE%,equipment_id.ilike.TERA360Z%,equipment_id.ilike.SC212%,equipment_id.ilike.DOT400%,equipment_id.ilike.LTXMX%")
+    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%,equipment_id.ilike.EAGLE%,equipment_id.ilike.MAV10%,equipment_id.ilike.MAV20%,equipment_id.ilike.TERMAG20%,equipment_id.ilike.LTX%,equipment_id.ilike.ASL1K%,equipment_id.ilike.ASL4K%,equipment_id.ilike.STS50%,equipment_id.ilike.KTS%,equipment_id.ilike.MPS%,equipment_id.ilike.NOISE%,equipment_id.ilike.TERA360Z%,equipment_id.ilike.SC212%,equipment_id.ilike.DOT400%,equipment_id.ilike.LTXMX%,equipment_id.ilike.KVDM2%,equipment_id.ilike.ASL3K%,equipment_id.ilike.RFX%")
 ;
   if (delErr) console.error("❌ Cleanup delete error:", delErr);
   else console.log("🧹 Cleanup success (removed stale rows)");

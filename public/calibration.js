@@ -24,7 +24,7 @@ const VIEWS = [
   { key: "TMT",    desc: "ASL1K / ASL4K" },
   { key: "LEGACY", desc: "STS50 / KTS / MPS / NOISE / SC212" },
   { key: "LTX",    desc: "LTX" },
-  { key: "ARK",    desc: "ASL3K / RFX / KVDM2"}
+  { key: "ARK",    desc: "ASL3K / RFX / KVDM2"},
   { key: "SYSTEM", desc: "System Problems only" },
 ];
 

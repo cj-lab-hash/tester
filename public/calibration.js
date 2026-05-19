@@ -125,7 +125,7 @@ async function updateLastSyncIndicator() {
   el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
 }
 
-// ---------- SMART “NEW SCRAPE” CHECK (ACT only) ----------
+// ---------- SMART “NEW SCRAPE” CHECK (ACT only) ------------
 async function statusphereHasNewScrape(ids) {
   if (!ids || ids.length === 0) return false;
 

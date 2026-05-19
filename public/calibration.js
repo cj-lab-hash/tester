@@ -540,7 +540,7 @@ function showViewAlertsOncePerChange(viewName, tableEl, scrapeTs) {
     });
   }
 }
-// =====================RENDER SYSTEM PROBLEM ONLY =====================
+// ===================== RENDER: SYSTEM PROBLEM ONLY (same style as other tables) =====================
 async function loadSYSTEMLatest(tableEl) {
   const tbody = document.getElementById("systemTbody");
   if (!tableEl || !tbody) return;
@@ -562,41 +562,52 @@ async function loadSYSTEMLatest(tableEl) {
   for (const r of (data || [])) {
     const tr = document.createElement("tr");
 
-    // 1) Tester
+    // Column 1: TESTER NAME
     const tdName = document.createElement("td");
     const id = normalizeIdent(r.equipment_id) || r.equipment_id;
     tdName.textContent = id;
     tr.appendChild(tdName);
 
-    // 2) Issue (clickable link)
-    const tdIssue = document.createElement("td");
+    // Column 2: PRODUCTION STATUS (same behavior as other tables)
+    const tdStatus = document.createElement("td");
+    tdStatus.textContent = "";
+    tdStatus.classList.remove(
+      "ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange"
+    );
+
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
     const url = buildStatusphereUrlFromRow(r.href, id);
 
-    const label = "SYSTEM PROBLEM"; // force label (since we filter for it)
+    // clickable label like other tables
     if (url) {
       const a = document.createElement("a");
       a.href = url;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.textContent = label;
+      a.textContent = out.label;
       a.classList.add("prod-link");
-      tdIssue.appendChild(a);
+      tdStatus.appendChild(a);
     } else {
-      tdIssue.textContent = label;
+      const span = document.createElement("span");
+      span.textContent = out.label;
+      tdStatus.appendChild(span);
     }
-    tdIssue.classList.add("ps-yellow"); // optional highlighting
-    tr.appendChild(tdIssue);
 
-    // 3) State
-    const tdState = document.createElement("td");
-    tdState.textContent = r.state_short || "";
-    tr.appendChild(tdState);
+    // WAITING/ATTENDED pill (uses your existing logic)
+    if (out.pillText) {
+      const pill = document.createElement("span");
+      pill.textContent = out.pillText;
+      pill.className = out.pillCss;
+      tdStatus.appendChild(pill);
+    }
 
-    // 4) Updated
-    const tdUpd = document.createElement("td");
-    tdUpd.textContent = r.checked_at ? new Date(r.checked_at).toLocaleString() : "";
-    tr.appendChild(tdUpd);
+    // color class (UMAINT red, SETUP pink, etc.)
+    if (out.css) tdStatus.classList.add(out.css);
 
+    // hover tooltip (optional, but helpful)
+    tdStatus.title = `State: ${r.state_short || ""}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+
+    tr.appendChild(tdStatus);
     frag.appendChild(tr);
   }
 

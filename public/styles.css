@@ -221,7 +221,9 @@ td.cal-due, td.pm-due {
 #ltxmxTable th:nth-child(1),
 #ltxmxTable td:nth-child(1),
 #arkTable th:nth-child(1),
-#arkTable td:nth-child(1) {
+#arkTable td:nth-child(1),
+#systemTable th:nth-child(1),
+#systemTable td:nth-child(1){
   width: 35%;
 }
 
@@ -242,7 +244,9 @@ td.cal-due, td.pm-due {
 #ltxmxTable th:nth-child(2),
 #ltxmxTable td:nth-child(2),
 #arkTable th:nth-child(2),
-#arkTable td:nth-child(2) {
+#arkTable td:nth-child(2),
+#systemTable th:nth-child(2),
+#systemTable td:nth-child(2){
   width: 65%;
 }
 
@@ -255,7 +259,8 @@ td.cal-due, td.pm-due {
 #legacyTable td:nth-child(2),
 #speaTable td:nth-child(2),
 #ltxmxTable td:nth-child(2),
-#arkTable td:nth-child(2){
+#arkTable td:nth-child(2),
+#systemTable td:nth-child(2){
   white-space: nowrap;     /* keep in one line */
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
@@ -290,7 +295,8 @@ td.cal-due, td.pm-due {
   #legacyTable td:nth-child(2),
   #speaTable td:nth-child(2),
   #ltxmxTable td:nth-child(2),
-  #arkTable td:nth-child(2) {
+  #arkTable td:nth-child(2),
+  #systemTable td:nth-child(2) {
     white-space: normal;     /* change to nowrap if you want ellipsis */
     word-break: break-word;
   }

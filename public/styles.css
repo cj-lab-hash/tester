@@ -155,7 +155,8 @@ td.cal-due, td.pm-due {
 #sectionTMT h3,
 #sectionLEGACY h3,
 #sectionSPEA h3,
-#sectionLTXMX h3 {
+#sectionLTXMX h3,
+#sectionSYSTEM h3 {
   text-align: center;
 }
 
@@ -166,13 +167,33 @@ td.cal-due, td.pm-due {
   padding: 8px;
 }
 #uflexTable th,
-#uflexTable td,#eagleTable th,#eagleTable td,#mavTable th,#mavTable td,#ltxTable th,#ltxTable td,#tmtTable th,#tmtTable td,#legacyTable th,#legacyTable td,#speaTable th,#speaTable td,#ltxmxTable th,#ltxmxTable td {
+#uflexTable td,
+#eagleTable th,
+#eagleTable td,
+#mavTable th,
+#mavTable td,
+#ltxTable th,
+#ltxTable td,
+#tmtTable th,
+#tmtTable td,
+#legacyTable th,
+#legacyTable td,
+#speaTable th,
+#speaTable td,
+#ltxmxTable th,
+#ltxmxTable td,
+#systemTable th,
+#systemTable td{
   text-align: center;
   padding: 8px;
 }
 
 /* UFLEX table layout control */
-#uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable {
+#uflexTable, #eagleTable, 
+#mavTable, #ltxTable, 
+#tmtTable, #legacyTable, 
+#speaTable, #ltxmxTable,
+#systemTable {
   width: 60%;              /* overall table width - adjust 50% to 80% */
   margin: 0 auto;
   border-collapse: collapse;
@@ -195,7 +216,9 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(1),
 #speaTable td:nth-child(1),
 #ltxmxTable th:nth-child(1),
-#ltxmxTable td:nth-child(1) {
+#ltxmxTable td:nth-child(1),
+#systemTable th:nth-child(1),
+#systemTable td:nth-child(1) {
   width: 35%;
 }
 
@@ -214,19 +237,29 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(2),
 #speaTable td:nth-child(2),
 #ltxmxTable th:nth-child(2),
-#ltxmxTable td:nth-child(2) {
+#ltxmxTable td:nth-child(2),
+#systemTable th:nth-child(2),
+#systemTable td:nth-child(2) {
   width: 65%;
 }
 
 /* Keep long status from stretching column */
-#uflexTable td:nth-child(2),#eagleTable td:nth-child(2),#mavTable td:nth-child(2),#ltxTable td:nth-child(2),#tmtTable td:nth-child(2),#legacyTable td:nth-child(2),#speaTable td:nth-child(2),#ltxmxTable td:nth-child(2) {
+#uflexTable td:nth-child(2),
+#eagleTable td:nth-child(2),
+#mavTable td:nth-child(2),
+#ltxTable td:nth-child(2),
+#tmtTable td:nth-child(2),
+#legacyTable td:nth-child(2),
+#speaTable td:nth-child(2),
+#ltxmxTable td:nth-child(2),
+#systemTable td:nth-child(2) {
   white-space: nowrap;     /* keep in one line */
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
 }
 /* ✅ Mobile: full width + smaller text */
 @media (max-width: 600px){
-  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable{
+  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable, #systemTable {
     width: 100%;
     margin: 0;               /* let it fill container */
   }
@@ -238,7 +271,8 @@ td.cal-due, td.pm-due {
   #tmtTable th, #tmtTable td,
   #legacyTable th, #legacyTable td,
   #speaTable th, #speaTable td,
-  #ltxmxTable th, #ltxmxTable td{
+  #ltxmxTable th, #ltxmxTable td,
+  #systemTable th, #systemTable td{
     font-size: 12px;
     padding: 6px;
   }
@@ -251,7 +285,8 @@ td.cal-due, td.pm-due {
   #tmtTable td:nth-child(2),
   #legacyTable td:nth-child(2),
   #speaTable td:nth-child(2),
-  #ltxmxTable td:nth-child(2){
+  #ltxmxTable td:nth-child(2),
+  #systemTable td:nth-child(2) {
     white-space: normal;     /* change to nowrap if you want ellipsis */
     word-break: break-word;
   }

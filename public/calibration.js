@@ -130,7 +130,8 @@ async function statusphereHasNewScrape(ids) {
   if (!ids || ids.length === 0) return false;
 
   const { data, error } = await supabase
-    .from("statusphere_equipment")
+    // .from("statusphere_equipment")
+    .from("statusphere_equipment_latest")
     .select("checked_at")
     .in("equipment_id", ids)
     .order("checked_at", { ascending: false })
@@ -400,6 +401,52 @@ async function renderSchedulesAndHighlights(tableEl) {
     else if (calState === "due-soon" || pmState === "due-soon") tr.classList.add("row-due-soon");
     else if (calState === "due" || pmState === "due") tr.classList.add("row-due");
   }
+}
+
+// ----------UFLEX ROWS LATEST --------
+async function loadUFLEXLatest(tableEl) {
+  const tbody = document.getElementById("uflexTbody");
+  if (!tableEl || !tbody) return;
+
+  // UFLEX patterns
+  const orFilter = [
+    "equipment_id.ilike.MICROFLEX%",
+    "equipment_id.ilike.TERFLEX%",
+    "equipment_id.ilike.%IFLEX%"
+  ].join(",");
+
+  // ✅ ONE QUERY: latest row per equipment
+  const { data, error } = await supabase
+    .from("statusphere_equipment_latest")
+    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
+    .or(orFilter)
+    .order("state_long", { ascending: false });
+
+  if (error) {
+    console.error("UFLEX latest fetch error:", error.message);
+    return;
+  }
+
+  // Build table rows once using fast fragment
+  tbody.innerHTML = "";
+  const frag = document.createDocumentFragment();
+
+  for (const r of (data || [])) {
+    const tr = document.createElement("tr");
+
+    const tdName = document.createElement("td");
+    tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
+    tr.appendChild(tdName);
+
+    const tdProd = document.createElement("td"); // production status column
+    tr.appendChild(tdProd);
+
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
+
+  // Render production status using the fetched data (no extra Supabase call)
+  renderProductionStatusFromDataNonPMCAL(tableEl, data);
 }
 
 // ---------- UFLEX/EAGLE ROWS ----------
@@ -833,7 +880,8 @@ async function renderProductionStatusFromStatusphere(tableEl) {
   if (!ids.length) return;
 
   const { data, error } = await supabase
-    .from("statusphere_equipment")
+    // .from("statusphere_equipment")
+    .from("statusphere_equipment_latest")
     .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
     .in("equipment_id", ids);
 
@@ -863,6 +911,75 @@ async function renderProductionStatusFromStatusphere(tableEl) {
       // console.log(`Row for ${id}: state=${r.state_short}, issue=${out.label}, css=${out.css}`);
     
   
+    cell.textContent = "";
+    cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
+
+    const url = buildStatusphereUrlFromRow(r.href, id);
+
+    if (url) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = out.label;
+      a.classList.add("prod-link");
+      cell.appendChild(a);
+    } else {
+      const span = document.createElement("span");
+      span.textContent = out.label;
+      cell.appendChild(span);
+    }
+
+    if (out.pillText) {
+      const pill = document.createElement("span");
+      pill.textContent = out.pillText;
+      pill.className = out.pillCss;
+      cell.appendChild(pill);
+    }
+
+    if (out.css) cell.classList.add(out.css);
+
+    cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+  }
+}
+
+//------ NEW RENDERER FOR PRODUCTION STATUS NON PM/CAL --------
+function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
+  if (!tableEl) return;
+
+  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
+  const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
+
+  const map = new Map((dataRows || []).map(r => [normalizeIdent(r.equipment_id), r]));
+
+  // ✅ Hide list (issues-only) — tune as you like
+  const HIDE_STATES = new Set([
+    "PRODN",
+    "ENGG",
+    "LOT"
+    // add more ONLY if you're sure you still want rows to appear
+  ]);
+
+  for (const tr of rows) {
+    const id = normalizeIdent(tr.cells?.[0]?.textContent);
+    const cell = tr.cells?.[prodColIndex];
+    if (!cell) continue;
+
+    const r = map.get(id);
+    if (!r) {
+      tr.hidden = true; // hide rows not found
+      continue;
+    }
+
+    const state = (r.state_short || "").toUpperCase();
+    if (HIDE_STATES.has(state)) {
+      tr.hidden = true;
+      continue;
+    }
+    tr.hidden = false;
+
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+
     cell.textContent = "";
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
@@ -1084,9 +1201,10 @@ async function refreshData() {
 
 
     if (view === "UFLEX") {
-      await ensureUflexRowsExist();
+      // await ensureUflexRowsExist(); // working
+      await loadUFLEXLatest(uflexTable);
       //await renderProductionStatusFromStatusphere(uflexTable);
-      await renderProductionStatusFromStatusphereNonPMCAL(uflexTable);
+      // await renderProductionStatusFromStatusphereNonPMCAL(uflexTable); // working
         // console.log("UFLEX production status rendered. " + new Date().toLocaleTimeString());
       showViewAlertsOncePerChange("UFLEX", uflexTable, lastSyncShownAt);
       return;

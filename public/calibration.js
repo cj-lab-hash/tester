@@ -24,6 +24,7 @@ const VIEWS = [
   { key: "TMT",    desc: "ASL1K / ASL4K" },
   { key: "LEGACY", desc: "STS50 / KTS / MPS / NOISE / SC212" },
   { key: "LTX",    desc: "LTX" },
+  { key: "ARK",    desc: "ASL3K / RFX / KVDM2"}
   { key: "SYSTEM", desc: "System Problems only" },
 ];
 
@@ -56,7 +57,7 @@ function normalizeIdent(id) {
   if (/^ASL1K\d{3}$/i.test(s)) return s;
   if (/^ASL4K\d{3}$/i.test(s)) return s;
   if (/^STS50\d{5}$/i.test(s)) return s;
-  if (/^(SC212|KTS|MPS|NOISE|TERA360Z|DOT400|LTXMX)\d{3}$/i.test(s)) return s;
+  if (/^(SC212|KTS|MPS|NOISE|TERA360Z|DOT400|LTXMX|KVDM2|RFX|ASL3K)\d{3}$/i.test(s)) return s;
 
   return null;
 }
@@ -857,7 +858,7 @@ async function refreshData() {
 
     // Non-ACT optimized views
     if (view !== "ACT") {
-      const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable,ARK: arkTable,SYSTEM: systemTable};
+      const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable, ARK: arkTable,SYSTEM: systemTable};
       const tableEl = tableMap[view];
 
       const loader = viewLoaders[view];

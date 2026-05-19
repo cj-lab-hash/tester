@@ -455,7 +455,7 @@ td.cal-due, td.pm-due {
 .view-tile[data-view="TMT"]    { background:#6b7280; }
 .view-tile[data-view="LEGACY"] { background:#111827; }
 .view-tile[data-view="LTX"]    { background:#7f1d1d; }
-.view-tile[data-views="SYSTEM"] {background:#f8f800;}
+.view-tile[data-view="SYSTEM"] {background:#e5d546;}
 
 /* mobile: tighter tiles */
 @media (max-width: 600px){

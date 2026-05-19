@@ -24,6 +24,7 @@ const VIEWS = [
   { key: "TMT",    desc: "ASL1K / ASL4K" },
   { key: "LEGACY", desc: "STS50 / KTS / MPS / NOISE / SC212" },
   { key: "LTX",    desc: "LTX" },
+  { key: "SYSTEM", desc: "System Problems only" },
 ];
 
 // ===================== STATE =====================
@@ -538,6 +539,68 @@ function showViewAlertsOncePerChange(viewName, tableEl, scrapeTs) {
     });
   }
 }
+// =====================RENDER SYSTEM PROBLEM ONLY =====================
+async function loadSYSTEMLatest(tableEl) {
+  const tbody = document.getElementById("systemTbody");
+  if (!tableEl || !tbody) return;
+
+  const { data, error } = await supabase
+    .from("statusphere_equipment_latest")
+    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
+    .or("state_long.ilike.%SYSTEM PROBLEM%,raw_title.ilike.%SYSTEM PROBLEM%")
+    .order("checked_at", { ascending: false });
+
+  if (error) {
+    console.error("SYSTEM latest fetch error:", error.message);
+    return;
+  }
+
+  tbody.innerHTML = "";
+  const frag = document.createDocumentFragment();
+
+  for (const r of (data || [])) {
+    const tr = document.createElement("tr");
+
+    // 1) Tester
+    const tdName = document.createElement("td");
+    const id = normalizeIdent(r.equipment_id) || r.equipment_id;
+    tdName.textContent = id;
+    tr.appendChild(tdName);
+
+    // 2) Issue (clickable link)
+    const tdIssue = document.createElement("td");
+    const url = buildStatusphereUrlFromRow(r.href, id);
+
+    const label = "SYSTEM PROBLEM"; // force label (since we filter for it)
+    if (url) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = label;
+      a.classList.add("prod-link");
+      tdIssue.appendChild(a);
+    } else {
+      tdIssue.textContent = label;
+    }
+    tdIssue.classList.add("ps-yellow"); // optional highlighting
+    tr.appendChild(tdIssue);
+
+    // 3) State
+    const tdState = document.createElement("td");
+    tdState.textContent = r.state_short || "";
+    tr.appendChild(tdState);
+
+    // 4) Updated
+    const tdUpd = document.createElement("td");
+    tdUpd.textContent = r.checked_at ? new Date(r.checked_at).toLocaleString() : "";
+    tr.appendChild(tdUpd);
+
+    frag.appendChild(tr);
+  }
+
+  tbody.appendChild(frag);
+}
 
 // ===================== ACT: Render status by IDs (latest view) =====================
 async function renderProductionStatusFromStatusphere(tableEl) {
@@ -705,6 +768,7 @@ const viewLoaders = {
   TMT:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"tmtTbody",    patterns:["ASL1K%","ASL4K%"] }),
   LEGACY: (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"legacyTbody", patterns:["KTS%","STS50%","MPS%","NOISE%","TERA360Z%","SC212%"] }),
   LTX:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"ltxTbody",    patterns:["LTX0%"] }),
+  SYSTEM: (tableEl) => loadSYSTEMLatest({ tableEl, tbodyId:"systemTbody", patterns:["SYSTEM%"] }),
 };
 
 // ===================== TILES UI =====================
@@ -756,6 +820,7 @@ function setView(view) {
     ["LEGACY", "sectionLEGACY"],
     ["SPEA", "sectionSPEA"],
     ["LTXMX", "sectionLTXMX"],
+    ["SYSTEM", "sectionSYSTEM"],
   ];
 
   for (const [key, elId] of ids) {
@@ -783,10 +848,12 @@ async function refreshData() {
     const legacyTable = document.getElementById("legacyTable");
     const speaTable   = document.getElementById("speaTable");
     const ltxmxTable  = document.getElementById("ltxmxTable");
+    const systemTable = document.getElementById("systemTable");
+
 
     // Non-ACT optimized views
     if (view !== "ACT") {
-      const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable };
+      const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable, SYSTEM: systemTable};
       const tableEl = tableMap[view];
 
       const loader = viewLoaders[view];

@@ -39,7 +39,7 @@ const lastViewToastKey = new Map();
 let isRefreshing = false;
 
 // Display all status
-let showAllMode = true; // default = ALL
+// let showAllMode = true; // default = ALL
 let showAllMode = localStorage.getItem("showAllMode") !== "false";
 // ===================== HELPERS =====================
 function normalizeIdent(id) {

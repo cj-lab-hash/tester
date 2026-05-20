@@ -186,15 +186,18 @@ async function setTesterTypeAllWithTab(page) {
   await page.keyboard.press("Tab");
 
   // You said it takes ~15 seconds, so give it 20 seconds
-  await page.waitForTimeout(40000);
+  await page.waitForFunction(() => {
+  return document.querySelectorAll("map area").length > 50;
+}, { timeout: 70000 });
 
-
-  // Verify that targets exist in the map after refresh
+ // Verify that targets exist in the map after refresh
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX|KVDM2|ASL3K|RFX)\d*|EQUIPMENT=\d{2,3}NIGP4|EQUIPMENT=[^&]*IFLEX/i.test(h));
-  }, { timeout: 70000 });
+      // return hrefs.some(h => TARGET_REGEX.test(h)); }, { timeout: 70000 }); //trial for optimization
+     return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX|KVDM2|ASL3K|RFX)\d*|EQUIPMENT=\d{2,3}NIGP4|EQUIPMENT=[^&]*IFLEX/i.test(h));
+   }, { timeout: 70000 });
+
 
   // Debug: confirm what is selected now
   const selected = await sel.evaluate(el => el.options[el.selectedIndex]?.textContent?.trim());

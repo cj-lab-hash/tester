@@ -700,9 +700,9 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     const r = map.get(id);
     if (!r) { tr.hidden = true; continue; }
 
-    const state = (r.state_short || "").toUpperCase();
-    if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
-    tr.hidden = false;
+    // const state = (r.state_short || "").toUpperCase();
+    // if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
+    // tr.hidden = false;
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 

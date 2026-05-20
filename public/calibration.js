@@ -38,6 +38,9 @@ const lastViewToastKey = new Map();
 // Prevent overlapping refresh calls
 let isRefreshing = false;
 
+// Display all status
+let showAllMode = true; // default = ALL
+let showAllMode = localStorage.getItem("showAllMode") !== "false";
 // ===================== HELPERS =====================
 function normalizeIdent(id) {
   if (!id) return null;
@@ -618,6 +621,7 @@ async function loadSYSTEMLatest(tableEl) {
   tbody.appendChild(frag);
 }
 
+
 // ===================== ACT: Render status by IDs (latest view) =====================
 async function renderProductionStatusFromStatusphere(tableEl) {
   if (!tableEl) return;
@@ -756,7 +760,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     if (!r) { tr.hidden = true; continue; }
 
     const state = (r.state_short || "").toUpperCase();
-     if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
+     if (!showAllMode && HIDE_STATES.has(state)) {
+      tr.hidden = true;
+       continue; 
+      }
      tr.hidden = false;
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
@@ -1005,6 +1012,18 @@ window.addEventListener("DOMContentLoaded", () => {
   refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
+
+  const toggleBtn = document.getElementById("toggleModeBtn");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      showAllMode = !showAllMode;
+      localStorage.setItem("showAllMode",showAllMode);
+
+      toggleBtn.textContent =
+      showAllMode ? "Show: ALL" : "Show: DOWNTIME ONLY";
+      refreshData();
+    }); 
+  }
 
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);

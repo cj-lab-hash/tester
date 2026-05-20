@@ -12,7 +12,7 @@
         <h1>TESTER MONITORING</h1>
         <div class="header-right">
             <div id="lastSync" class="last-sync">Last Sync: --</div>
-
+            <button id="toggleModeBtn">Show: ALL</button>
         <!-- <div class="view-switch">
             <label for="viewSelect">View:</label>
             <select id="viewSelect">
@@ -464,14 +464,7 @@
             .catch(error => console.error('Error saving data:', error));
         }
 
-        // Function to refresh the page every 30 seconds
-        // function refreshPage() {
-        //     setTimeout(function() {
-        //         window.location.reload();
-        //     //}, 30000); // 30000 milliseconds = 30 seconds
-        //     }, 4.32e+7); // 4.32e+7 milliseconds = 12 hours
-        // }
-
+       
         // // Call the functions when the page loads
         window.onload = function() {
              loadData(); // Load data from the server
@@ -484,6 +477,6 @@
 
     </script>
     <script type="module" src="./calibration.js"></script>
-    <script type="module" src="./bible.js"></script>
+    <!-- <script type="module" src="./bible.js"></script> -->
 </body>
 </html>

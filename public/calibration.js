@@ -39,7 +39,7 @@ const lastViewToastKey = new Map();
 let isRefreshing = false;
 
 // Display all status
-// let showAllMode = true; // default = ALL
+
 let showAllMode = localStorage.getItem("showAllMode") !== "false";
 // ===================== HELPERS =====================
 function normalizeIdent(id) {
@@ -1013,14 +1013,18 @@ window.addEventListener("DOMContentLoaded", () => {
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
 
-  const toggleBtn = document.getElementById("toggleModeBtn");
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", () => {
-      showAllMode = !showAllMode;
+  const toggle = document.getElementById("toggleModeBtn");
+  const labelText = document.querySelector(".label-text");
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      showAllMode = toggle.checked;
       localStorage.setItem("showAllMode",showAllMode);
 
-      toggleBtn.textContent =
-      showAllMode ? "Show: ALL" : "Show: DOWNTIME ONLY";
+      labelText.textContent =
+      showAllMode
+       ? "Show: ALL STATUS"
+        : "Show: DOWNTIME ONLY";
+        
       refreshData();
     }); 
   }

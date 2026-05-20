@@ -485,3 +485,58 @@ td.cal-due, td.pm-due {
     font-size: 12px;
   }
 }
+/* Container */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Hide default checkbox */
+.toggle input {
+  display: none;
+}
+
+/* Slider background */
+.slider {
+  position: relative;
+  width: 50px;
+  height: 26px;
+  background-color: #ccc;
+  border-radius: 50px;
+  transition: 0.3s;
+}
+
+/* Circle inside slider */
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+/* ON state */
+.toggle input:checked + .slider {
+  background-color: #28a745; /* green */
+}
+
+/* Move circle when ON */
+.toggle input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+/* Label text */
+.label-text {
+  font-size: 14px;
+}
+.toggle input:not(:checked) + .slider {
+  background-color: #dc3545; /* red for issues mode */
+}

@@ -679,9 +679,8 @@ async function renderProductionStatusFromStatusphere(tableEl) {
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
   }
 }
-
-// ===================== NON-ACT: Optimized single-call load + render =====================
-function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
+// ======================LOAD DATA NO FILTERING =============================================
+function renderProductionStatusFromDataAll(tableEl, dataRows) {
   if (!tableEl) return;
 
   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
@@ -703,6 +702,62 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     // const state = (r.state_short || "").toUpperCase();
     // if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
     // tr.hidden = false;
+
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+
+    cell.textContent = "";
+    cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
+
+    const url = buildStatusphereUrlFromRow(r.href, id);
+
+    if (url) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = out.label;
+      a.classList.add("prod-link");
+      cell.appendChild(a);
+    } else {
+      const span = document.createElement("span");
+      span.textContent = out.label;
+      cell.appendChild(span);
+    }
+
+    if (out.pillText) {
+      const pill = document.createElement("span");
+      pill.textContent = out.pillText;
+      pill.className = out.pillCss;
+      cell.appendChild(pill);
+    }
+
+    if (out.css) cell.classList.add(out.css);
+    cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+  }
+}
+// ===================== NON-ACT: Optimized single-call load + render =====================
+function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
+  if (!tableEl) return;
+
+  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
+  const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
+
+  const map = new Map((dataRows || []).map(r => [normalizeIdent(r.equipment_id), r]));
+
+  // Issues-only (your current preference)
+  const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
+
+  for (const tr of rows) {
+    const id = normalizeIdent(tr.cells?.[0]?.textContent);
+    const cell = tr.cells?.[prodColIndex];
+    if (!cell) continue;
+
+    const r = map.get(id);
+    if (!r) { tr.hidden = true; continue; }
+
+    const state = (r.state_short || "").toUpperCase();
+     if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
+     tr.hidden = false;
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 
@@ -773,10 +828,48 @@ async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "sta
 
   renderProductionStatusFromDataNonPMCAL(tableEl, data);
 }
+async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long" }) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tableEl || !tbody) return;
+  
+  const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
 
+  const { data, error } = await supabase
+    .from("statusphere_equipment_latest")
+    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
+    .or(orFilter);
+    .order(orderBy, { ascending: false });
+    
+  if (error) {
+    console.error(`Latest fetch error for ${tbodyId}}:`, error.message);
+    return;
+  }
+
+  // ✅ build table rows
+  tbody.innerHTML = "";
+  const frag = document.createDocumentFragment();
+
+  for (const r of (data || [])) {
+    const tr = document.createElement("tr");
+
+    const tdName = document.createElement("td");
+    tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
+    tr.appendChild(tdName);
+
+    const tdProd = document.createElement("td");
+    tr.appendChild(tdProd);
+
+    frag.appendChild(tr);
+  }
+
+  tbody.appendChild(frag);
+
+  // ✅ render ALL statuses (no filtering)
+  renderProductionStatusFromDataAll(tableEl, data);
+}
 // View-specific loaders (all optimized)
 const viewLoaders = {
-  UFLEX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"uflexTbody",  patterns:["MICROFLEX%","TERFLEX%","%IFLEX%","%NIGP4%"] }),
+  UFLEX:  (tableEl) => LoadAllLatest({ tableEl, tbodyId:"uflexTbody",  patterns:["MICROFLEX%","TERFLEX%","%IFLEX%","%NIGP4%"] }),
   EAGLE:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"eagleTbody",  patterns:["EAGLE88%"] }),
   SPEA:   (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"speaTbody",   patterns:["DOT400%"] }),
   LTXMX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"ltxmxTbody",  patterns:["LTXMX%"] }),

@@ -837,7 +837,7 @@ async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long"
   const { data, error } = await supabase
     .from("statusphere_equipment_latest")
     .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-    .or(orFilter);
+    .or(orFilter)
     .order(orderBy, { ascending: false });
     
   if (error) {

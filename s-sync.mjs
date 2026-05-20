@@ -14,7 +14,7 @@ const supabase = createClient(process.env.SUPABASE_URL, serviceKey, {
   global: { headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey } },
 });
 
-const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "EAGLE", "MAV10", "MAV20", "TERMAG20","LTX","ASL1K","ASL4K","STS50", "KTS", "MPS","NOISE","TERA360Z","SC212","DOT400", "LTXMX","KVDM2","ASL3K","RFX"];
+const TARGET_FAMILIES = ["SZ", "TERCAT", "QUARTET", "DUO", "MICROFLEX", "TERFLEX", "IFLEX", "NIGP4", "EAGLE", "MAV10", "MAV20", "TERMAG20","LTX","ASL1K","ASL4K","STS50", "KTS", "MPS","NOISE","TERA360Z","SC212","DOT400", "LTXMX","KVDM2","ASL3K","RFX"];
 // ---------- helpers ----------
 function normalizeEquipmentId(id) {
   if (!id) return null;
@@ -31,6 +31,10 @@ function normalizeEquipmentId(id) {
   m = /^(\d{1,3})IFLEX$/.exec(s);
   if (m) return `${m[1].padStart(2, "0")}IFLEX`;
   if (s.includes("IFLEX")) return s;
+
+  m= /^(\d{2,3})NIGP4$/.exec(s);
+  if (m) return `${m[1].padStart(2, "0")}NIGP4`;
+  if (s.includes("NIGP4")) return s;
   if (/^EAGLE88[0-9A-Z]+$/.test(s)) return s;
   if (/^MAV10\d{2}$/.test(s)) return s;
   if(/^MAV20\d{2}$/.test(s)) return s;
@@ -64,6 +68,8 @@ return (
   /^(TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX)\d{3}$/.test(s) ||
   /^\d{2,3}IFLEX$/.test(s) ||
   s.includes("IFLEX") ||
+  /^\d{1,3}NIGP4$/.test(s) ||
+  s.includes("NIGP4") ||
   /^EAGLE88[0-9A-Z]+$/.test(s) || 
   /^MAV10\d{2}$/.test(s) ||
   /^MAV20\d{2}$/.test(s) ||
@@ -187,7 +193,7 @@ async function setTesterTypeAllWithTab(page) {
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX|KVDM2|ASL3K|RFX)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
+    return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX|KVDM2|ASL3K|RFX)\d*|EQUIPMENT=\d{2,3}NIGP4|EQUIPMENT=[^&]*IFLEX/i.test(h));
   }, { timeout: 70000 });
 
   // Debug: confirm what is selected now
@@ -235,14 +241,14 @@ async function main() {
 const hasTargets = await page.evaluate(() => {
   const hrefs = Array.from(document.querySelectorAll("map area"))
     .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
-   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX|KVDM2|ASL3K|RFX)\d*|EQUIPMENT=[^&]*IFLEX/i.test(h));
+   return hrefs.some(h => /EQUIPMENT=(SZ|TERCAT|QUARTET|DUO|MICROFLEX|TERFLEX|IFLEX|EAGLE|MAV10|MAV20|TERMAG20|LTX|ASL1K|ASL4K|STS50|KTS|MPS|NOISE|TERA360Z|SC212|DOT400|LTXMX|KVDM2|ASL3K|RFX)\d*|EQUIPMENT=\d{2,3}NIGP4|EQUIPMENT=[^&]*IFLEX/i.test(h));
   
 
 });
 
 if (!hasTargets) {
   await page.screenshot({ path: "statusphere_not_all.png", fullPage: true });
-  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX/IFLEX/EAGLE/MAV10/MAV20/TERMAG20/LTX/ASL1K/ASL4K/STS50/KTS/MPS/NOISE/TERA360Z/SC212/DO400/LTXMX found).");
+  console.error("Filter did not switch to ALL (no SZ/TERCAT/QUARTET/DUO/MICROFLEX/TERFLEX/IFLEX/NIGP4/EAGLE/MAV10/MAV20/TERMAG20/LTX/ASL1K/ASL4K/STS50/KTS/MPS/NOISE/TERA360Z/SC212/DO400/LTXMX found).");
   await browser.close();
   process.exit(2);
 }
@@ -300,7 +306,8 @@ const counts = ids.reduce((m, id) => {
     : id.startsWith("DUO") ? "DUO"
     : id.startsWith("MICROFLEX") ? "MICROFLEX"
     : id.startsWith("TERFLEX") ? "TERFLEX"
-    : id.startsWith("IFLEX") ? "IFLEX"
+    : id.includes("IFLEX") ? "IFLEX"
+    : id.includes("NIGP4") ? "NIGP4"
     : id.startsWith("EAGLE") ? "EAGLE"
     : id.startsWith("MAV10") ? "MAV10"
     : id.startsWith("MAV20") ? "MAV20"
@@ -309,16 +316,16 @@ const counts = ids.reduce((m, id) => {
     : id.startsWith("ASL1K") ? "ASL1K"
     : id.startsWith("ASL4K") ? "ASL4K"
     : id.startsWith("STS50") ? "STS50"
-    :id.startsWith("KTS") ? "KTS"
-    :id.startsWith("MPS") ? "MPS"
-    :id.startsWith("NOISE") ? "NOISE"
-    :id.startsWith("TERA360Z") ? "TERA360Z"
-    :id.startsWith("SC212") ? "SC212"
-    :id.startsWith("DOT400") ? "DOT400"
-    :id.startsWith("LTXMX") ? "LTXMX"
-    :id.startsWith("KVDM2") ? "KVDM2"
-    :id.startsWith("ASL3K") ? "ASL3K"
-    :id.startsWith("RFX") ? "RFX"
+    : id.startsWith("KTS") ? "KTS"
+    : id.startsWith("MPS") ? "MPS"
+    : id.startsWith("NOISE") ? "NOISE"
+    : id.startsWith("TERA360Z") ? "TERA360Z"
+    : id.startsWith("SC212") ? "SC212"
+    : id.startsWith("DOT400") ? "DOT400"
+    : id.startsWith("LTXMX") ? "LTXMX"
+    : id.startsWith("KVDM2") ? "KVDM2"
+    : id.startsWith("ASL3K") ? "ASL3K"
+    : id.startsWith("RFX") ? "RFX"
     : "OTHER";
   m[prefix] = (m[prefix] || 0) + 1;
   return m;
@@ -377,8 +384,8 @@ console.log("Target family counts in page:", counts);
   console.log("✅ Upsert success");
 
   
-  // const kvdm2Rows = rowsRaw.filter(r => (r.equipment_id || "").includes("KVDM2"));
-  // console.log("KVDM2 rowsRaw:", kvdm2Rows.length, kvdm2Rows.slice(0, 10).map(r => r.equipment_id));
+  //  const nigp4Rows = rowsRaw.filter(r => (r.equipment_id || "").includes("NIGP4"));
+  //  console.log("NIGP4 rowsRaw:", nigp4Rows.length, nigp4Rows.slice(0, 10).map(r => r.equipment_id));
 
   // const rfxRows = rowsRaw.filter(r => (r.equipment_id || "").includes("RFX"));
   // console.log(("RFX rowsRaw:", rfxRows.length, rfxRows.slice(0, 10).map(r => r.equipment_id)));
@@ -394,7 +401,7 @@ console.log("Target family counts in page:", counts);
     .from("statusphere_equipment")
     .delete()
     .lt("checked_at", runTs)
-    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%,equipment_id.ilike.EAGLE%,equipment_id.ilike.MAV10%,equipment_id.ilike.MAV20%,equipment_id.ilike.TERMAG20%,equipment_id.ilike.LTX%,equipment_id.ilike.ASL1K%,equipment_id.ilike.ASL4K%,equipment_id.ilike.STS50%,equipment_id.ilike.KTS%,equipment_id.ilike.MPS%,equipment_id.ilike.NOISE%,equipment_id.ilike.TERA360Z%,equipment_id.ilike.SC212%,equipment_id.ilike.DOT400%,equipment_id.ilike.LTXMX%,equipment_id.ilike.KVDM2%,equipment_id.ilike.ASL3K%,equipment_id.ilike.RFX%")
+    .or("equipment_id.ilike.SZ%,equipment_id.ilike.TERCAT%,equipment_id.ilike.QUARTET%,equipment_id.ilike.DUO%,equipment_id.ilike.MICROFLEX%,equipment_id.ilike.TERFLEX%,equipment_id.ilike.%IFLEX%,equipment_id.ilike.%NIGP4%,equipment_id.ilike.EAGLE%,equipment_id.ilike.MAV10%,equipment_id.ilike.MAV20%,equipment_id.ilike.TERMAG20%,equipment_id.ilike.LTX%,equipment_id.ilike.ASL1K%,equipment_id.ilike.ASL4K%,equipment_id.ilike.STS50%,equipment_id.ilike.KTS%,equipment_id.ilike.MPS%,equipment_id.ilike.NOISE%,equipment_id.ilike.TERA360Z%,equipment_id.ilike.SC212%,equipment_id.ilike.DOT400%,equipment_id.ilike.LTXMX%,equipment_id.ilike.KVDM2%,equipment_id.ilike.ASL3K%,equipment_id.ilike.RFX%")
 ;
   if (delErr) console.error("❌ Cleanup delete error:", delErr);
   else console.log("🧹 Cleanup success (removed stale rows)");

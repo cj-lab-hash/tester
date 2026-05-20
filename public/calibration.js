@@ -16,7 +16,7 @@ let currentView = localStorage.getItem(VIEW_KEY) || "ACT";
 
 const VIEWS = [
   { key: "ACT",    desc: "Advantest / Credence / Teradyne" },
-  { key: "UFLEX",  desc: "Microflex / Terflex / IFLEX" },
+  { key: "UFLEX",  desc: "Microflex / Terflex / IFLEX / NIGP4" },
   { key: "EAGLE",  desc: "Eagle" },
   { key: "SPEA",   desc: "DOT400" },
   { key: "LTXMX",  desc: "LTXMX" },
@@ -50,6 +50,10 @@ function normalizeIdent(id) {
   if (m) return `${m[1]}${m[2].padStart(3, "0")}`;
 
   if (s.includes("IFLEX")) return s;
+
+  if (m) return `&{m[1]}${m[2].padStart(3, "0")}`;
+  
+  if (s.includes("NIGP4")) return s;
   if (/^EAGLE88[0-9A-Z]+$/.test(s)) return s;
   if (/^MAV(10|20)\d{2}$/i.test(s)) return s;
   if (/^TERMAG20\d{2}$/i.test(s)) return s;
@@ -772,7 +776,7 @@ async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "sta
 
 // View-specific loaders (all optimized)
 const viewLoaders = {
-  UFLEX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"uflexTbody",  patterns:["MICROFLEX%","TERFLEX%","%IFLEX%"] }),
+  UFLEX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"uflexTbody",  patterns:["MICROFLEX%","TERFLEX%","%IFLEX%","%NIGP4%"] }),
   EAGLE:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"eagleTbody",  patterns:["EAGLE88%"] }),
   SPEA:   (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"speaTbody",   patterns:["DOT400%"] }),
   LTXMX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"ltxmxTbody",  patterns:["LTXMX%"] }),

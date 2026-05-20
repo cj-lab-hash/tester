@@ -876,7 +876,7 @@ async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long"
 }
 // View-specific loaders (all optimized)
 const viewLoaders = {
-  UFLEX:  (tableEl) => LoadAllLatest({ tableEl, tbodyId:"uflexTbody",  patterns:["MICROFLEX%","TERFLEX%","%IFLEX%","%NIGP4%"] }),
+  UFLEX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"uflexTbody",  patterns:["MICROFLEX%","TERFLEX%","%IFLEX%","%NIGP4%"] }),
   EAGLE:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"eagleTbody",  patterns:["EAGLE88%"] }),
   SPEA:   (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"speaTbody",   patterns:["DOT400%"] }),
   LTXMX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"ltxmxTbody",  patterns:["LTXMX%"] }),

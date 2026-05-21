@@ -191,14 +191,13 @@ td.cal-due, td.pm-due {
   padding: 8px;
 }
 
-
+/* UFLEX table layout control */
 #uflexTable, #eagleTable, 
 #mavTable, #ltxTable, 
 #tmtTable, #legacyTable, 
 #speaTable, #ltxmxTable,
 #systemTable, #arkTable{
-  width: 600;         
-  min-width: 600px;     /* overall table width - adjust 50% to 80% */
+  width: 60%;              /* overall table width - adjust 50% to 80% */
   margin: 0 auto;
   border-collapse: collapse;
   table-layout: fixed;     /* ✅ enforces your column widths */
@@ -266,36 +265,6 @@ td.cal-due, td.pm-due {
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
 }
-@media (max-width: 768px) {
-  .page-header {
-    grid-template-columns: 1fr; /* Drop 3-column desktop layout */
-    gap: 16px;
-    padding: 16px;
-  }
-
-  /* Force all elements into center-aligned natural blocks */
-  .header-left, 
-  .page-header h1, 
-  .header-right {
-    grid-column: 1 / -1;
-    justify-self: center;
-    align-items: center;
-    text-align: center;
-    width: 100%;
-  }
-
-  .header-left {
-    justify-content: center;
-  }
-
-  /* .header-left .verse-card {
-    max-width: 100%; /* Let verse adapt naturally to width */
-  
-
-  .header-right {
-    align-items: center;
-  }
-}
 /* ✅ Mobile: full width + smaller text */
 @media (max-width: 600px){
   #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable,#arkTable, #systemTable {
@@ -331,19 +300,6 @@ td.cal-due, td.pm-due {
     white-space: normal;     /* change to nowrap if you want ellipsis */
     word-break: break-word;
   }
-   .view-tiles {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-   .view-tile {
-    padding: 8px;
-    font-size: 11px;
-  }
-
-  .page-header h1 {
-    font-size: 22px;
-  }
-
 }
 /* SETUP phase pill */
 .phase-pill{
@@ -385,12 +341,12 @@ td.cal-due, td.pm-due {
 .header-left {
   grid-column: 1;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
 }
 .header-left .verse-card {
   margin-top: 6px;
-  margin-left: 0px;
+  margin-left: 10px;
 }
 .last-sync {
   display: inline-block;              /* ensures padding/border show properly */
@@ -409,7 +365,24 @@ td.cal-due, td.pm-due {
   overflow-x: auto;                 /* ✅ allow sideways scroll on small screens */
   -webkit-overflow-scrolling: touch;/* ✅ smooth scrolling on iOS */
 }
+@media (max-width: 600px){
+  .page-header{
+    grid-template-columns: 1fr;   /* stack */
+    gap: 8px;
+  }
 
+  .page-header h1{
+    grid-column: 2;
+    justify-self: center;
+    text-align: center;
+    margin: 0;
+  }
+
+  
+  .view-switch{
+    justify-content: center;
+  }
+}
 .toast-container{
   position: fixed;
   right: 16px;
@@ -511,7 +484,16 @@ td.cal-due, td.pm-due {
 .view-tile[data-view="ARK"]    { background:#46933F; }
 
 /* mobile: tighter tiles */
-
+@media (max-width: 600px){
+  .view-tiles{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .view-tile{
+    padding: 9px 8px;
+    font-size: 12px;
+  }
+}
 /* Container */
 .toggle {
   display: inline-flex;
@@ -577,8 +559,7 @@ td.cal-due, td.pm-due {
 
 .verse-card {
   width: 100%;
-  max-width: 480px;      /* ✅ nice on desktop */
-  margin: 0 auto;        /* ✅ center horizontally */
+  max-width: 420px;          /* ✅ allows full shrink/grow */
   background: #ffffff;
   border-left: 5px solid #28a745;
   padding: 12px 16px;
@@ -587,6 +568,7 @@ td.cal-due, td.pm-due {
   font-size: 14px;
   opacity: 0.92;
   font-weight: bold;
+  margin: 0 auto;           /* ✅ center it */
   box-sizing: border-box;
 }
 
@@ -600,26 +582,47 @@ td.cal-due, td.pm-due {
   font-size: 14px;
   color: #333;
 }
-/* ✅ Mobile fix for verse card ONLY */
 @media (max-width: 600px){
 
   .header-left {
-    padding: 0 12px;
+    justify-content: center;   /* ✅ center it */
+    width: 100%;
+    padding: 0 12px;           /* ✅ space from edges */
+    box-sizing: border-box;
   }
 
   .verse-card {
-    width: 100%;
-    max-width: 100%;   /* ✅ full width on phone */
+    max-width: 100%;           /* ✅ full width */
     font-size: 13px;
     line-height: 1.4;
     padding: 10px 12px;
   }
 
   .verse-text {
-    word-break: break-word;
+    word-break: break-word;    /* ✅ prevent overflow */
   }
 
-  .verse-ref {
-    font-size: 13px;
+}
+@media (max-width: 768px) {
+
+  .page-header {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
+
+  /* ✅ FORCE FULL WIDTH FOR ALL HEADER ELEMENTS */
+  .header-left,
+  .page-header h1,
+  .header-right {
+    grid-column: 1 / -1;   /* ✅ FULL WIDTH */
+    width: 100%;
+    justify-self: center;
+    text-align: center;
+  }
+
+  .header-left {
+    display: flex;
+    justify-content: center;
+  }
+
 }

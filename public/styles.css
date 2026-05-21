@@ -1,68 +1,289 @@
+/*==========================================================================
+   1. CORE / BASE STYLES
+   ========================================================================== */
 body {
   font-family: Arial, sans-serif;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
   margin: 0;
-  
+  background-color: #f9fafb;
+  color: #111827;
 }
+
+input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   2. FIXED PAGE HEADER (DESKTOP FIRST)
+   ========================================================================== */
+.page-header {
+  display: grid;
+  /* 3 equal columns: Left (1fr), Center (auto), Right (1fr) */
+  grid-template-columns: 1fr auto 1fr; 
+  align-items: center;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Page Header Left: Bible Verse */
+.header-left {
+  grid-column: 1;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.verse-card {
+  max-width: 340px;
+  width: 100%;
+  background: #ffffff;
+  border-left: 5px solid #28a745;
+  padding: 12px 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.verse-ref {
+  font-weight: bold;
+  color: #155724;
+  margin-bottom: 4px;
+}
+
+.verse-text {
+  color: #333;
+  line-height: 1.4;
+}
+
+/* Page Header Center: Title */
+.page-header h1 {
+  grid-column: 2;
+  justify-self: center;
+  text-align: center;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* Page Header Right: Sync & Toggle */
+.header-right {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-self: end;
+  gap: 8px;
+}
+
+.last-sync {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.view-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   3. TOGGLE SWITCH STYLES
+   ========================================================================== */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  user-select: none;
+}
+
+.toggle input {
+  display: none; /* Hide default checkbox */
+}
+
+.slider {
+  position: relative;
+  width: 46px;
+  height: 24px;
+  background-color: #dc3545; /* Red when issues mode is active/off */
+  border-radius: 50px;
+  transition: 0.3s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.toggle input:checked + .slider {
+  background-color: #28a745; /* Green when "Show All" is on */
+}
+
+.toggle input:checked + .slider::before {
+  transform: translateX(22px);
+}
+
+.label-text {
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   4. FILTER TILES (ACT, UFLEX, etc.)
+   ========================================================================== */
+.view-tiles-wrap {
+  width: 100%;
+  max-width: 1200px;
+  margin: 20px auto 10px;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.view-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.view-tile {
+  appearance: none;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #e5e7eb;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+
+.view-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  filter: brightness(1.1);
+}
+
+.view-tile.active {
+  outline: 4px solid rgba(59,130,246,0.8);
+  border-color: rgba(59,130,246,0.35);
+}
+
+/* Tile Backgrounds */
+.view-tile[data-view="ACT"]    { background:#1f2937; }
+.view-tile[data-view="UFLEX"]  { background:#1e3a8a; }
+.view-tile[data-view="EAGLE"]  { background:#7c2d12; }
+.view-tile[data-view="SPEA"]   { background:#4c1d95; }
+.view-tile[data-view="LTXMX"]  { background:#374151; }
+.view-tile[data-view="MAV"]    { background:#0f766e; }
+.view-tile[data-view="TMT"]    { background:#6b7280; }
+.view-tile[data-view="LEGACY"] { background:#111827; }
+.view-tile[data-view="LTX"]    { background:#7f1d1d; }
+.view-tile[data-view="SYSTEM"] { background:#e5d546; color: #111; }
+.view-tile[data-view="ARK"]    { background:#46933F; }
+
+/* ==========================================================================
+   5. TABLES & RESPONSIVE SCROLL WRAPPER
+   ========================================================================== */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto; /* Keeps your tables clean via sideways scroll on mobile */
+  -webkit-overflow-scrolling: touch;
+  margin-top: 15px;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
 #table {
   text-align: center;
 }
+
 table {
   margin: 0 auto;
+  border-collapse: collapse;
 }
+
 th, td {
-  padding: 8px;
+  padding: 10px;
   border: 1px solid #ddd;
 }
+
 th {
   background-color: #82c4b3;
-}
-.highlight-green {
-  color: green;
-}
-.highlight-red {
-  background-color: red;
-}
-.highlight-yellow {
- /* background-color: yellow; */
-  color: yellow;
-}
-input {
-width: 100%;
-box-sizing: border-box;
-}
-
-td.cal-overdue, td.pm-overdue {
-  background: #ffd6d6; /* light red */
+  color: #111827;
   font-weight: 700;
 }
 
-td.cal-due-soon, td.pm-due-soon {
-  background: #fff2c2; /* light yellow */
-  font-weight: 700;
+/* Headings for Sections */
+[id^="section"] h3 {
+  text-align: center;
+  font-size: 18px;
+  margin-top: 25px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
-td.cal-critical, td.pm-critical {
-  background: #f1ca7b; /* critical yellow */
-  font-weight: 700;
+
+/* Dynamic Width Controls for Categorized Tables */
+#uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, 
+#legacyTable, #speaTable, #ltxmxTable, #systemTable, #arkTable {
+  width: 60%;
+  margin: 0 auto;
+  table-layout: fixed;
 }
-td.cal-due, td.pm-due {
-  background: #f16562; /* due today orange */
-  font-weight: 700;
+
+/* Row Column Alignments & Sizing rules */
+#editableTable th, #editableTable td,
+[id$="Table"] th, [id$="Table"] td {
+  text-align: center;
+  vertical-align: middle;
 }
-/*tr.row-overdue {
-  background: #ffeaea; /* row red tint */
-/*} */
 
-/* tr.row-critical {
-  background: #ffeabf; /* row orange tint */
-/* } */
+/* Enforcing column widths on categorized tables */
+[id$="Table"] th:nth-child(1), [id$="Table"] td:nth-child(1) { width: 35%; }
+[id$="Table"] th:nth-child(2), [id$="Table"] td:nth-child(2) { width: 65%; }
 
-/* tr.row-due-soon {
-  background: #fff8dc; /* row yellow tint */
-/* } */
+/* Keep long statuses from breaking cells on desktop */
+[id$="Table"] td:nth-child(2) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
+/* ==========================================================================
+   6. HIGHLIGHTS, PILLS & STATUSES
+   ========================================================================== */
+.highlight-green { color: green; }
+.highlight-red   { background-color: red; color: white; }
+.highlight-yellow { color: #d4af37; }
+
+/* Cell Alerts */
+td.cal-overdue, td.pm-overdue   { background: #ffd6d6; font-weight: 700; }
+td.cal-due-soon, td.pm-due-soon { background: #fff2c2; font-weight: 700; }
+td.cal-critical, td.pm-critical { background: #f1ca7b; font-weight: 700; }
+td.cal-due, td.pm-due           { background: #f16562; font-weight: 700; }
+
+/* Pill Badges */
 .status-pill {
   display: inline-block;
   margin-left: 8px;
@@ -73,38 +294,21 @@ td.cal-due, td.pm-due {
   vertical-align: middle;
 }
 
-.status-overdue {
-  background: #ffb3b3;
-  color: #600;
-}
-
-.status-due-soon {
-  background: #ffe08a;
-  color: #5a3d00;
-}
-
-.status-critical {
-  background: #e09034;
-  color: #5a3d00;
-}
-.status-due {
-  background: #f16562;
-  color: #5a3d00;
-}
-.status-ok {
-  background: #c9f3d1;
-  color: #0b4d1a;
-}
+.status-overdue  { background: #ffb3b3; color: #600; }
+.status-due-soon { background: #ffe08a; color: #5a3d00; }
+.status-critical { background: #e09034; color: #fff; }
+.status-due      { background: #f16562; color: #fff; }
+.status-ok       { background: #c9f3d1; color: #0b4d1a; }
 
 /* Production status colors */
-.ps-red   { color: #a30505; font-weight: 700; } /* UMAINT / Contact Issue */
-.ps-green { color: #09bf18; font-weight: 700; } /* PRODN */
-.ps-pink  { color: #e3558e; font-weight: 700; } /* SETUP */
-.ps-gray  { color: #696f7b; font-weight: 700; } /* SHUTDOWN / NO */
-.ps-blue  { color: #0b3bc0; font-weight: 700; } /* ENGG */
-.ps-violet { color: #6721e0; font-weight: 700; } /* LOT COMP */
-.ps-yellow { color: #f8f800; font-weight: 700; } /* STANDBY/IDLE */
-.ps-orange { color: #ff8000; font-weight: 700; } /* PMCAL */
+.ps-red    { color: #a30505; font-weight: 700; }
+.ps-green  { color: #09bf18; font-weight: 700; }
+.ps-pink   { color: #e3558e; font-weight: 700; }
+.ps-gray   { color: #696f7b; font-weight: 700; }
+.ps-blue   { color: #0b3bc0; font-weight: 700; }
+.ps-violet { color: #6721e0; font-weight: 700; }
+.ps-yellow { color: #b8b800; font-weight: 700; }
+.ps-orange { color: #ff8000; font-weight: 700; }
 
 .prod-link {
   color: inherit;
@@ -114,276 +318,30 @@ td.cal-due, td.pm-due {
   padding: 2px 6px;
   border-radius: 6px;
   display: inline-block;
-
 }
-
 .prod-link:hover {
   background: rgba(0, 0, 0, 0.05);
-}
-
-.page-header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  padding: 12px 16px;
-}
-
-.view-switch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-#viewSelect {
-  padding: 4px 8px;
-}
-
-.prod-link:hover {
   opacity: 0.85;
 }
 
-.page-header h1{
-  grid-column: 2;
-  justify-self: center;
-  margin: 0;
-}
-#sectionACT h3,
-#sectionUFLEX h3,
-#sectionEAGLE h3,
-#sectionMAV h3,
-#sectionLTX h3,
-#sectionTMT h3,
-#sectionLEGACY h3,
-#sectionSPEA h3,
-#sectionLTXMX h3,
-#sectionSYSTEM h3,
-#sectionARK h3 {
-  text-align: center;
-}
-
-#editableTable th,
-#editableTable td{
-  text-align: center;      /* ✅ centers text in all cells */
-  vertical-align: middle;
-  padding: 8px;
-}
-#uflexTable th,
-#uflexTable td,
-#eagleTable th,
-#eagleTable td,
-#mavTable th,
-#mavTable td,
-#ltxTable th,
-#ltxTable td,
-#tmtTable th,
-#tmtTable td,
-#legacyTable th,
-#legacyTable td,
-#speaTable th,
-#speaTable td,
-#ltxmxTable th,
-#ltxmxTable td,
-#systemTable th,
-#systemTable td,
-#arkTable th,
-#arkTable td{
-  text-align: center;
-  padding: 8px;
-}
-
-/* UFLEX table layout control */
-#uflexTable, #eagleTable, 
-#mavTable, #ltxTable, 
-#tmtTable, #legacyTable, 
-#speaTable, #ltxmxTable,
-#systemTable, #arkTable{
-  width: 60%;              /* overall table width - adjust 50% to 80% */
-  margin: 0 auto;
-  border-collapse: collapse;
-  table-layout: fixed;     /* ✅ enforces your column widths */
-}
-
-/* Column widths */
-#uflexTable th:nth-child(1),
-#uflexTable td:nth-child(1),
-#eagleTable th:nth-child(1),
-#eagleTable td:nth-child(1),
-#mavTable th:nth-child(1),
-#mavTable td:nth-child(1),
-#ltxTable th:nth-child(1),
-#ltxTable td:nth-child(1),
-#tmtTable th:nth-child(1),
-#tmtTable td:nth-child(1),
-#legacyTable th:nth-child(1),
-#legacyTable td:nth-child(1),
-#speaTable th:nth-child(1),
-#speaTable td:nth-child(1),
-#ltxmxTable th:nth-child(1),
-#ltxmxTable td:nth-child(1),
-#arkTable th:nth-child(1),
-#arkTable td:nth-child(1),
-#systemTable th:nth-child(1),
-#systemTable td:nth-child(1){
-  width: 35%;
-}
-
-#uflexTable th:nth-child(2),
-#uflexTable td:nth-child(2),
-#eagleTable th:nth-child(2),
-#eagleTable td:nth-child(2),
-#mavTable th:nth-child(2),
-#mavTable td:nth-child(2),
-#ltxTable th:nth-child(2),
-#ltxTable td:nth-child(2),
-#tmtTable th:nth-child(2),
-#tmtTable td:nth-child(2),
-#legacyTable th:nth-child(2),
-#legacyTable td:nth-child(2),
-#speaTable th:nth-child(2),
-#speaTable td:nth-child(2),
-#ltxmxTable th:nth-child(2),
-#ltxmxTable td:nth-child(2),
-#arkTable th:nth-child(2),
-#arkTable td:nth-child(2),
-#systemTable th:nth-child(2),
-#systemTable td:nth-child(2){
-  width: 65%;
-}
-
-/* Keep long status from stretching column */
-#uflexTable td:nth-child(2),
-#eagleTable td:nth-child(2),
-#mavTable td:nth-child(2),
-#ltxTable td:nth-child(2),
-#tmtTable td:nth-child(2),
-#legacyTable td:nth-child(2),
-#speaTable td:nth-child(2),
-#ltxmxTable td:nth-child(2),
-#arkTable td:nth-child(2),
-#systemTable td:nth-child(2){
-  white-space: nowrap;     /* keep in one line */
-  overflow: hidden;        /* hide overflow */
-  text-overflow: ellipsis; /* show ... */
-}
-/* ✅ Mobile: full width + smaller text */
-@media (max-width: 600px){
-  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable,#arkTable, #systemTable {
-    width: 100%;
-    margin: 0;               /* let it fill container */
-  }
-  
-  #uflexTable th, #uflexTable td,
-  #eagleTable th, #eagleTable td,
-  #mavTable th, #mavTable td,
-  #ltxTable th, #ltxTable td,
-  #tmtTable th, #tmtTable td,
-  #legacyTable th, #legacyTable td,
-  #speaTable th, #speaTable td,
-  #ltxmxTable th, #ltxmxTable td,
-  #systemTable th, #systemTable td,
-  #arkTable th, #arkTable td{
-    font-size: 12px;
-    padding: 6px;
-  }
-
-  /* Allow wrapping if you prefer full text */
-  #uflexTable td:nth-child(2),
-  #eagleTable td:nth-child(2),
-  #mavTable td:nth-child(2),
-  #ltxTable td:nth-child(2),
-  #tmtTable td:nth-child(2),
-  #legacyTable td:nth-child(2),
-  #speaTable td:nth-child(2),
-  #ltxmxTable td:nth-child(2),
-  #arkTable td:nth-child(2),
-  #systemTable td:nth-child(2) {
-    white-space: normal;     /* change to nowrap if you want ellipsis */
-    word-break: break-word;
-  }
-}
-/* SETUP phase pill */
-.phase-pill{
-  display:inline-block;
-  margin-left:8px;
-  padding:2px 8px;
-  border-radius:10px;
-  font-size:11px;
-  font-weight:700;
-  border:1px solid rgba(0,0,0,0.15);
-}
-.pill-waiting{ background:#e5e7eb; color:#ce8a37; }
-.pill-attended{ background:#ffd1e6; color:#8a0f4c; }
-/* Waiting vs Started styles */
-.phase-waiting {
-  background: #e5e7eb;   /* light gray */
-  color: #374151;        /* dark gray */
-}
-
-.phase-attended {
-  background: #ffd1e6;   /* light pink */
-  color: #8a0f4c;        /* dark pink */
-}
-
-.phase-duration {
-  background: #f0f9ff;   /* light blue/cyan */
-  color: #0369a1;        /* dark blue */
-  margin-left: 4px;
-}
-
-.header-right{
-  display: flex;
-  grid-column: 3;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  justify-self: end;
-}
-.header-left {
-  grid-column: 1;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-.header-left .verse-card {
-  margin-top: 6px;
-  margin-left: 10px;
-}
-.last-sync {
-  display: inline-block;              /* ensures padding/border show properly */
-  font-size: 18px;
-  font-weight: 600;
-  color: #374151;
-  background: #f3f4f6;                /* makes the badge visible */
-  border: 1px solid rgba(0, 0, 0, 0.10);
+/* Setup Phases */
+.phase-pill {
+  display: inline-block;
+  margin-left: 8px;
   padding: 2px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-  text-align: center;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(0,0,0,0.15);
 }
-.table-wrap{
-  width: 100%;
-  overflow-x: auto;                 /* ✅ allow sideways scroll on small screens */
-  -webkit-overflow-scrolling: touch;/* ✅ smooth scrolling on iOS */
-}
-@media (max-width: 600px){
-  .page-header{
-    grid-template-columns: 1fr;   /* stack */
-    gap: 8px;
-  }
+.pill-waiting  { background: #e5e7eb; color: #374151; }
+.pill-attended { background: #ffd1e6; color: #8a0f4c; }
+.phase-duration { background: #f0f9ff; color: #0369a1; margin-left: 4px; }
 
-  .page-header h1{
-    grid-column: 2;
-    justify-self: center;
-    text-align: center;
-    margin: 0;
-  }
-
-  
-  .view-switch{
-    justify-content: center;
-  }
-}
-.toast-container{
+/* ==========================================================================
+   7. TOAST NOTIFICATIONS
+   ========================================================================== */
+.toast-container {
   position: fixed;
   right: 16px;
   bottom: 16px;
@@ -393,8 +351,7 @@ td.cal-due, td.pm-due {
   gap: 10px;
 }
 
-/* Toast pill */
-.toast{
+.toast {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -410,174 +367,88 @@ td.cal-due, td.pm-due {
   cursor: pointer;
 }
 
-/* Small badge in toast */
-.toast-badge{
+.toast-badge {
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 999px;
   border: 1px solid rgba(0,0,0,0.12);
 }
 
-/* Types */
-.toast-red .toast-badge{ background:#fee2e2; color:#3128e3; }     /* yield */
-.toast-pink .toast-badge{ background:#fce7f3; color:#9d174d; }    /* rkgu fail */
-.toast-gray .toast-badge{ background:#e5e7eb; color:#e80808; }   /* checker/qa fail/contact issue */
-.toast-yellow .toast-badge{background:#fef3c7; color:#eadd27;}    /* system problem */
-.toast-title{ font-weight: 800; }
-.toast-sub{ color:#4b5563; }
+.toast-red .toast-badge    { background:#fee2e2; color:#b91c1c; }
+.toast-pink .toast-badge   { background:#fce7f3; color:#9d174d; }
+.toast-gray .toast-badge   { background:#e5e7eb; color:#374151; }
+.toast-yellow .toast-badge { background:#fef3c7; color:#92400e; }
+.toast-title { font-weight: 800; }
+.toast-sub { color:#4b5563; }
 
+/* ==========================================================================
+   8. COMPACT RESPONSIVE MEDIA QUERIES (TABLETS & SMARTPHONES)
+   ========================================================================== */
 
-/* wrapper (optional: match your table width) */
-.view-tiles-wrap{
-  width: 100%;
-  max-width: 1100px;   /* adjust to match your table */
-  margin: 10px auto 12px;
-  padding: 0 10px;
+/* Breakpoint for Tablets and Down: Redesigning Layout Stacking */
+@media (max-width: 768px) {
+  .page-header {
+    grid-template-columns: 1fr; /* Drop 3-column desktop layout */
+    gap: 16px;
+    padding: 16px;
+  }
+
+  /* Force all elements into center-aligned natural blocks */
+  .header-left, 
+  .page-header h1, 
+  .header-right {
+    grid-column: 1;
+    justify-self: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  .header-left {
+    justify-content: center;
+  }
+
+  .header-left .verse-card {
+    max-width: 100%; /* Let verse adapt naturally to width */
+  }
+
+  .header-right {
+    align-items: center;
+  }
 }
 
-/* grid of small tiles */
-.view-tiles{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 10px;
-}
+/* Breakpoint for Small Mobile Screens */
+@media (max-width: 600px) {
+  /* Let tables fill up mobile screens natively */
+  [id$="Table"] {
+    width: 100%;
+    margin: 0;
+  }
+  
+  th, td,
+  [id$="Table"] th, [id$="Table"] td {
+    font-size: 12px;
+    padding: 6px;
+  }
 
-/* small tile button */
-.view-tile{
-  appearance: none;
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: #111827;
-  color: #e5e7eb;
-  cursor: pointer;
-  text-align: center;
-  font-weight: 800;
-  font-size: 13px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
-}
+  /* Allow description wrapping instead of truncation on mobile layout */
+  [id$="Table"] td:nth-child(2) {
+    white-space: normal;
+    word-break: break-word;
+  }
 
-.view-tile:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.16);
-  filter: brightness(1.03);
-}
-
-/* selected tile */
-.view-tile.active{
-  outline: 5px solid rgba(59,130,246,0.75);
-  border-color: rgba(59,130,246,0.35);
-}
-
-/* optional: per-view colors */
-.view-tile[data-view="ACT"]    { background:#1f2937; }
-.view-tile[data-view="UFLEX"]  { background:#1e3a8a; }
-.view-tile[data-view="EAGLE"]  { background:#7c2d12; }
-.view-tile[data-view="SPEA"]   { background:#4c1d95; }
-.view-tile[data-view="LTXMX"]  { background:#374151; }
-.view-tile[data-view="MAV"]    { background:#0f766e; }
-.view-tile[data-view="TMT"]    { background:#6b7280; }
-.view-tile[data-view="LEGACY"] { background:#111827; }
-.view-tile[data-view="LTX"]    { background:#7f1d1d; }
-.view-tile[data-view="SYSTEM"] { background:#e5d546; }
-.view-tile[data-view="ARK"]    { background:#46933F; }
-
-/* mobile: tighter tiles */
-@media (max-width: 600px){
-  .view-tiles{
+  /* Fit the filter buttons into clean rows of 3 columns */
+  .view-tiles {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
-  .view-tile{
-    padding: 9px 8px;
-    font-size: 12px;
+  
+  .view-tile {
+    padding: 8px;
+    font-size: 11px;
   }
-}
-/* Container */
-.toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  user-select: none;
-}
 
-/* Hide default checkbox */
-.toggle input {
-  display: none;
-}
-
-/* Slider background */
-.slider {
-  position: relative;
-  width: 50px;
-  height: 26px;
-  background-color: #ccc;
-  border-radius: 50px;
-  transition: 0.3s;
-}
-
-/* Circle inside slider */
-.slider::before {
-  content: "";
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  left: 3px;
-  top: 3px;
-  background: white;
-  border-radius: 50%;
-  transition: 0.3s;
-}
-
-/* ON state */
-.toggle input:checked + .slider {
-  background-color: #28a745; /* green */
-}
-
-/* Move circle when ON */
-.toggle input:checked + .slider::before {
-  transform: translateX(24px);
-}
-
-/* Label text */
-.label-text {
-  font-size: 14px;
-}
-.toggle input:not(:checked) + .slider {
-  background-color: #dc3545; /* red for issues mode */
-}
-/* Bible Verse */
-.verse-container {
-  display: grid;
-  align-items: start;
-  justify-content: center;
-  margin: 0;
-}
-
-.verse-card {
-  max-width: 350px;
-  background: #ffffff;
-  border-left: 5px solid #28a745;
-  padding: 12px 16px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  font-size: 14px;
-  opacity: 0.92;
-  font-weight: bold;
-  margin: 0;
-
-}
-
-.verse-ref {
-  font-weight: bold;
-  color: #155724;
-  margin-bottom: 5px;
-}
-
-.verse-text {
-  font-size: 14px;
-  color: #333;
+  .page-header h1 {
+    font-size: 22px;
+  }
 }

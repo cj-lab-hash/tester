@@ -8,14 +8,17 @@
     <link rel="icon" href="project.ico" type="image/x-icon">
 </head>
 <body>
-        <div class="verse-container">
-            <div class="verse-card">
-                <div id="verseRef" class="verse-ref">Loading verse...</div>
-                <div id="verseText" class="verse-text"></div>
-            </div>
-        </div>
         <div class="page-header">
+            
+    <div class="header-left">
+        <div class="verse-card">
+        <div id="verseRef"></div>
+        <div id="verseText"></div>
+        </div>
+    </div>
+
         <h1>TESTER MONITORING</h1>
+    
         <div class="header-right">
             <div id="lastSync" class="last-sync">Last Sync: --</div>
             <!-- <button id="toggleModeBtn">Show: ALL</button> -->
@@ -472,6 +475,6 @@
 
     </script>
     <script type="module" src="./calibration.js"></script>
-    <!-- <script type="module" src="./bible.js"></script> -->
+    <script type="module" src="./bible.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
+import { loadVerseFromAPI } from "./bible.js";
 // ===================== CONFIG =====================
 const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_YAq1ZIeaJdjx4w0G4DwY3g_tXAZHuVk";
@@ -1012,6 +1012,7 @@ window.addEventListener("DOMContentLoaded", () => {
   refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
+  loadVerseFromAPI();
 
   const toggle = document.getElementById("toggleModeBtn");
   const labelText = document.querySelector(".label-text");
@@ -1024,7 +1025,7 @@ window.addEventListener("DOMContentLoaded", () => {
       showAllMode
        ? "Show: ALL STATUS"
         : "Show: DOWNTIME ONLY";
-        
+
       refreshData();
     }); 
   }

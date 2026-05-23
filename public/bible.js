@@ -28,8 +28,10 @@ export async function loadVerseFromAPI() {
       reference = data.reference;
       text = (data.verses || []).map(v => v.text.trim()).join(" ");
 
-      if (history.includes(reference)) break;
-        attemps++;
+      if (history.includes(reference)) { 
+        break;
+      }
+        attempts++;
         
       }
       showVerse(reference, text);

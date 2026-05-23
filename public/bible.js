@@ -5,33 +5,48 @@ export async function loadVerseFromAPI() {
     });
 
     const cacheKey = `verse-${today}`;
+    const historyKey = "verse-history";
+
     const cached = localStorage.getItem(cacheKey);
 
     if (cached) {
       const { reference, text } = JSON.parse(cached);
-      document.getElementById("verseRef").textContent = reference;
-      document.getElementById("verseText").textContent = `“${text}”`;
+      showVerse(reference, text);
       return;
     }
 
-    // ✅ Random verse API
-    const res = await fetch("https://bible-api.com/?random=verse");
-    if (!res.ok) throw new Error("API failed");
+    let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+    let attempts = 0;
+    let reference, text;
 
-    const data = await res.json();
+    while (attempts < 5) {
+      const res = await fetch("https://bible-api.com/?random=verse");
+      if (!res.ok) throw new Error("API failed");
 
-    const text = data.verses.map(v => v.text.trim()).join(" ");
-    const reference = data.reference;
+      const data = await res.json();
 
-    document.getElementById("verseRef").textContent = reference;
-    document.getElementById("verseText").textContent = `“${text}”`;
+      reference = data.reference;
+      text = (data.verses || []).map(v => v.text.trim()).join(" ");
 
-    localStorage.setItem(cacheKey, JSON.stringify({ reference, text }));
+      if (history.includes(reference)) break;
+        attemps++;
+        
+      }
+      showVerse(reference, text);
 
+      localStorage.setItem(cacheKey, JSON.stringify({ reference, text }));
+      history.push(reference);
+      history = history.slice(-10);
+      localStorage.setItem(historyKey, JSON.stringify(history));
   } catch (err) {
     console.error("Bible API error:", err);
   }
 }
+
+function showVerse(reference, text) {
+      document.getElementById("verseRef").textContent = reference;
+      document.getElementById("verseText").textContent = `“${text}”`;
+    }
 
 setInterval(() => {
   const card = document.querySelector(".verse-card");
@@ -43,8 +58,8 @@ setInterval(() => {
   timeZone: "Asia/Manila"
 });
 
-const cacheKey = `verse-${today}`;
-localStorage.removeItem(cacheKey);
+
+localStorage.removeItem(`verse-${today}`);
 loadVerseFromAPI();
 
 if (card) card.style.opacity = 1;

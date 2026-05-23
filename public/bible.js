@@ -32,3 +32,23 @@ export async function loadVerseFromAPI() {
     console.error("Bible API error:", err);
   }
 }
+
+setInterval(() => {
+  const card = document.querySelector(".verse-card");
+
+  if (card) card.style.opacity = 0;
+
+  setTimeout(() => {
+    const today= new Date().toLocaleDateString("en-CA", {
+  timeZone: "Asia/Manila"
+});
+
+const cacheKey = `verse-${today}`;
+localStorage.removeItem(cacheKey);
+loadVerseFromAPI();
+
+if (card) card.style.opacity = 1;
+  }, 300);
+
+}, 60 * 60 * 1000); // every 1 hour
+

@@ -596,6 +596,7 @@ td.cal-due, td.pm-due {
     font-size: 13px;
     line-height: 1.4;
     padding: 10px 12px;
+    transition: opacity 0.3s ease;
   }
 
   .verse-text {

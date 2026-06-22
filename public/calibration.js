@@ -9,7 +9,14 @@ const DUE_SOON_DAYS = 10;
 const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+const HIDE_STATES = new Set([
+  "PRODN",
+  "ENGG",
+  "LOT",
+  "SHUTDOWN",
+  "NO",
+  "IDLE"
+]);
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
 let currentView = localStorage.getItem(VIEW_KEY) || "ACT";
@@ -766,7 +773,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
   const map = new Map((dataRows || []).map(r => [normalizeIdent(r.equipment_id), r]));
 
   // Issues-only (your current preference)
-  const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
+  // const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
 
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
@@ -822,7 +829,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
   const map = new Map((dataRows || []).map(r => [normalizeIdent(r.equipment_id), r]));
 
   // Issues-only (your current preference)
-  const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
+  // const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
 
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
@@ -833,11 +840,13 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     if (!r) { tr.hidden = true; continue; }
 
     const state = (r.state_short || "").toUpperCase();
-     if (!showAllMode && HIDE_STATES.has(state)) {
-      tr.hidden = true;
+    if (!showAllMode && HIDE_STATES.has(state)) {
+      // tr.hidden = true;
+      tr.style.display = "none";
        continue; 
       }
-     tr.hidden = false;
+    //  tr.hidden = false;
+    tr.style.display = "";
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 

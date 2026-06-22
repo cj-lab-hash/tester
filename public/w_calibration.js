@@ -9,7 +9,7 @@ const DUE_SOON_DAYS = 10;
 const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
+
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
 let currentView = localStorage.getItem(VIEW_KEY) || "ACT";
@@ -120,88 +120,7 @@ async function updateLastSyncIndicator() {
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
 }
-// ====================UNIFIED RENDER ===============================
-function renderProductionStatusUnified(tableEl, dataRows, options = {}) {
-  if (!tableEl) return;
 
-  const {
-    applyFilter = true,   // ✅ whether to hide rows using toggle
-  } = options;
-
-  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
-  const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
-
-  const map = new Map(
-    (dataRows || []).map(r => [normalizeIdent(r.equipment_id), r])
-  );
-
-  // const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
-
-  for (const tr of rows) {
-    const id = normalizeIdent(tr.cells?.[0]?.textContent);
-    const cell = tr.cells?.[prodColIndex];
-    if (!cell) continue;
-
-    const r = map.get(id);
-
-    // ❌ No data → hide
-    if (!r) {
-      tr.hidden = true;
-      continue;
-    }
-
-    const state = (r.state_short || "").toUpperCase();
-
-    // ✅ APPLY TOGGLE FILTER
-    if (applyFilter && !showAllMode && HIDE_STATES.has(state)) {
-      tr.hidden = true;
-      continue;
-    }
-
-    tr.hidden = false;
-
-    const out = productionStatusFromDb(
-      r.state_short,
-      r.state_long,
-      r.raw_title
-    );
-
-    // reset cell
-    cell.textContent = "";
-    cell.classList.remove(
-      "ps-red","ps-green","ps-pink","ps-gray",
-      "ps-blue","ps-yellow","ps-violet","ps-orange"
-    );
-
-    const url = buildStatusphereUrlFromRow(r.href, id);
-
-    if (url) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
-      cell.appendChild(a);
-    } else {
-      const span = document.createElement("span");
-      span.textContent = out.label;
-      cell.appendChild(span);
-    }
-
-    // ✅ WAITING / ATTENDED pill
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
-
-    if (out.css) cell.classList.add(out.css);
-
-    cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
-  }
-}
 // ===================== ACT: SMART SCRAPE CHECK =====================
 async function statusphereHasNewScrape(ids) {
   if (!ids?.length) return false;
@@ -598,7 +517,7 @@ function collectIssueAlerts(tableEl) {
     if (text.includes("QUALIFICATION FAILURE")) alerts.QUALIFICATION.push(tester);
     if (text.includes("HW CHECKER ISSUE")) alerts.HW_CHECKER.push(tester);
     if (text.includes("QA FAILURE")) alerts.QA.push(tester);
-    if (text.includes("HANDLER PROBLEM")) alerts.HANDLER.push(tester);
+    if (text.includes("HANDLER PROBLEM")) alerts.HANDLER(tester);
   }
 
   const result = [];
@@ -661,11 +580,11 @@ async function loadSYSTEMLatest(tableEl) {
     tr.appendChild(tdName);
 
     // Column 2: PRODUCTION STATUS (same behavior as other tables)
-    // const tdStatus = document.createElement("td");
-    // tdStatus.textContent = "";
-    // tdStatus.classList.remove(
-    //   "ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange"
-    // );
+    const tdStatus = document.createElement("td");
+    tdStatus.textContent = "";
+    tdStatus.classList.remove(
+      "ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange"
+    );
 
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
     const url = buildStatusphereUrlFromRow(r.href, id);
@@ -704,8 +623,6 @@ async function loadSYSTEMLatest(tableEl) {
   }
 
   tbody.appendChild(frag);
-  // renderProductionStatusUnified(tableEl, data, { applyFilter: true });
-  
 }
 
 
@@ -780,7 +697,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
   const map = new Map((dataRows || []).map(r => [normalizeIdent(r.equipment_id), r]));
 
   // Issues-only (your current preference)
-  // const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
+  const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
 
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
@@ -836,7 +753,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
   const map = new Map((dataRows || []).map(r => [normalizeIdent(r.equipment_id), r]));
 
   // Issues-only (your current preference)
-  // const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
+  const HIDE_STATES = new Set(["PRODN", "ENGG", "LOT", "SHUTDOWN", "NO", "IDLE"]);
 
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
@@ -919,8 +836,8 @@ async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "sta
     frag.appendChild(tr);
   }
   tbody.appendChild(frag);
-  renderProductionStatusUnified(tableEl, data, { applyFilter: true });
-  // renderProductionStatusFromDataNonPMCAL(tableEl, data);
+
+  renderProductionStatusFromDataNonPMCAL(tableEl, data);
 }
 async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long" }) {
   const tbody = document.getElementById(tbodyId);
@@ -935,7 +852,7 @@ async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long"
     .order(orderBy, { ascending: false });
     
   if (error) {
-    console.error(`Latest fetch error for ${tbodyId}:`, error.message);
+    console.error(`Latest fetch error for ${tbodyId}}:`, error.message);
     return;
   }
 
@@ -959,8 +876,7 @@ async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long"
   tbody.appendChild(frag);
 
   // ✅ render ALL statuses (no filtering)
-  // renderProductionStatusFromDataAll(tableEl, data);
-  renderProductionStatusUnified(tableEl, data, { applyFilter: false });
+  renderProductionStatusFromDataAll(tableEl, data);
 }
 // View-specific loaders (all optimized)
 const viewLoaders = {
@@ -1077,21 +993,11 @@ async function refreshData() {
 
     const rows = Array.from(actTable.querySelectorAll("tbody tr"));
     const ids = rows.map(tr => normalizeIdent(tr.cells?.[0]?.textContent)).filter(Boolean);
-    
+
     const shouldUpdate = await statusphereHasNewScrape(ids);
-    let data;
-
     if (shouldUpdate) {
-      // await renderProductionStatusFromStatusphere(actTable);
-      const res = await supabase
-  .from("statusphere_equipment_latest")
-  .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-  .in("equipment_id", ids);
-
-   const data = res.data;
-   }
-renderProductionStatusUnified(actTable, data, { applyFilter: true });
-
+      await renderProductionStatusFromStatusphere(actTable);
+    }
 
     showViewAlertsOncePerChange("ACT", actTable, lastSyncShownAt);
   } catch (err) {

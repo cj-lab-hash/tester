@@ -657,13 +657,12 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
     const state = (r.state_short || "").toUpperCase();
 
-    // ✅ FILTER
-    if (!showAllMode && HIDE_STATES.has(state)) {
-      tr.style.display = "none";   // ✅ works better for ACT than hidden
-      continue;
-    }
-
-    tr.style.display = "";
+    //  FILTER
+    if (!showAllMode && HIDE_STATES && HIDE_STATES.has(state)) {
+  tr.style.display = "none";
+} else {
+  tr.style.display = "";
+}
 
     const out = productionStatusFromDb(
       r.state_short,
@@ -703,66 +702,66 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 }
 
 // ===================== ACT: Render status by IDs (latest view) =====================
-async function renderProductionStatusFromStatusphere(tableEl) {
-  if (!tableEl) return;
+// async function renderProductionStatusFromStatusphere(tableEl) {
+//   if (!tableEl) return;
 
-  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
-  const ids = rows.map(tr => normalizeIdent(tr.cells?.[0]?.textContent)).filter(Boolean);
-  if (!ids.length) return;
+//   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
+//   const ids = rows.map(tr => normalizeIdent(tr.cells?.[0]?.textContent)).filter(Boolean);
+//   if (!ids.length) return;
 
-  const { data, error } = await supabase
-    .from("statusphere_equipment_latest")
-    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-    .in("equipment_id", ids);
+//   const { data, error } = await supabase
+//     .from("statusphere_equipment_latest")
+//     .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
+//     .in("equipment_id", ids);
 
-  if (error) {
-    console.error("Statusphere fetch error:", error.message);
-    return;
-  }
+//   if (error) {
+//     console.error("Statusphere fetch error:", error.message);
+//     return;
+//   }
 
-  const map = new Map((data || []).map(r => [normalizeIdent(r.equipment_id), r]));
-  const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
+//   const map = new Map((data || []).map(r => [normalizeIdent(r.equipment_id), r]));
+//   const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
 
-  for (const tr of rows) {
-    const id = normalizeIdent(tr.cells?.[0]?.textContent);
-    const cell = tr.cells?.[prodColIndex];
-    if (!cell) continue;
+//   for (const tr of rows) {
+//     const id = normalizeIdent(tr.cells?.[0]?.textContent);
+//     const cell = tr.cells?.[prodColIndex];
+//     if (!cell) continue;
 
-    const r = map.get(id);
-    if (!r) continue;
+//     const r = map.get(id);
+//     if (!r) continue;
 
-    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+//     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 
-    cell.textContent = "";
-    cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
+//     cell.textContent = "";
+//     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
-    const url = buildStatusphereUrlFromRow(r.href, id);
+//     const url = buildStatusphereUrlFromRow(r.href, id);
 
-    if (url) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
-      cell.appendChild(a);
-    } else {
-      const span = document.createElement("span");
-      span.textContent = out.label;
-      cell.appendChild(span);
-    }
+//     if (url) {
+//       const a = document.createElement("a");
+//       a.href = url;
+//       a.target = "_blank";
+//       a.rel = "noopener noreferrer";
+//       a.textContent = out.label;
+//       a.classList.add("prod-link");
+//       cell.appendChild(a);
+//     } else {
+//       const span = document.createElement("span");
+//       span.textContent = out.label;
+//       cell.appendChild(span);
+//     }
 
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
+//     if (out.pillText) {
+//       const pill = document.createElement("span");
+//       pill.textContent = out.pillText;
+//       pill.className = out.pillCss;
+//       cell.appendChild(pill);
+//     }
 
-    if (out.css) cell.classList.add(out.css);
-    cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
-  }
-}
+//     if (out.css) cell.classList.add(out.css);
+//     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+//   }
+// }
 // ======================LOAD DATA NO FILTERING =============================================
 function renderProductionStatusFromDataAll(tableEl, dataRows) {
   if (!tableEl) return;
@@ -921,7 +920,7 @@ async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "sta
 
   tbody.innerHTML = "";
   const frag = document.createDocumentFragment();
-
+  console.log("Loaded rows:", data?.length);
   for (const r of (data || [])) {
     const tr = document.createElement("tr");
 
@@ -988,7 +987,8 @@ const viewLoaders = {
   LEGACY: (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"legacyTbody", patterns:["KTS%","STS50%","MPS%","NOISE%","TERA360Z%","SC212%"] }),
   LTX:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"ltxTbody",    patterns:["LTX0%"] }),
   ARK:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"arkTbody",    patterns:["KVDM2%","ASL3K%","RFX%"] }),
-  SYSTEM: (tableEl) => loadSYSTEMLatest({ tableEl, tbodyId:"systemTbody", patterns:["SYSTEM%"] }),
+  // SYSTEM: (tableEl) => loadSYSTEMLatest({ tableEl, tbodyId:"systemTbody", patterns:["SYSTEM%"] }),
+  SYSTEM: (tableEl) => loadSYSTEMLatest(tableEl),
 };
 
 // ===================== TILES UI =====================
@@ -1060,52 +1060,54 @@ async function refreshData() {
 
     const view = getCurrentView();
 
-    const actTable    = document.getElementById("editableTable");
-    const uflexTable  = document.getElementById("uflexTable");
-    const eagleTable  = document.getElementById("eagleTable");
-    const mavTable    = document.getElementById("mavTable");
-    const ltxTable    = document.getElementById("ltxTable");
-    const tmtTable    = document.getElementById("tmtTable");
-    const legacyTable = document.getElementById("legacyTable");
-    const speaTable   = document.getElementById("speaTable");
-    const ltxmxTable  = document.getElementById("ltxmxTable");
-    const systemTable = document.getElementById("systemTable");
-    const arkTable    = document.getElementById("arkTable");
+    const tableMap = {
+      ACT: document.getElementById("editableTable"),
+      UFLEX: document.getElementById("uflexTable"),
+      EAGLE: document.getElementById("eagleTable"),
+      MAV: document.getElementById("mavTable"),
+      LTX: document.getElementById("ltxTable"),
+      TMT: document.getElementById("tmtTable"),
+      LEGACY: document.getElementById("legacyTable"),
+      SPEA: document.getElementById("speaTable"),
+      LTXMX: document.getElementById("ltxmxTable"),
+      ARK: document.getElementById("arkTable"),
+      SYSTEM: document.getElementById("systemTable")
+    };
 
+    const tableEl = tableMap[view];
 
+    // ✅ ACT VIEW
+    if (view === "ACT") {
+      await renderSchedulesAndHighlights(tableEl);
 
-    // Non-ACT optimized views
-    // if (view !== "ACT") {
-    //   const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable, ARK: arkTable,SYSTEM: systemTable};
-    //   const tableEl = tableMap[view];
+      const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
+      const ids = rows.map(tr =>
+        normalizeIdent(tr.cells?.[0]?.textContent)
+      ).filter(Boolean);
 
-    //   const loader = viewLoaders[view];
-    //   if (loader && tableEl) {
-    //     await loader(tableEl);
-    //     showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt);
-    //   }
-    //   return;
-    // }
-    
-      if (view === "ACT") {
-        await renderSchedulesAndHighlights(actTable);
-        await refreshACT(actTable);
+      const { data, error } = await supabase
+        .from("statusphere_equipment_latest")
+        .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
+        .in("equipment_id", ids);
+
+      if (error) {
+        console.error(error.message);
         return;
       }
 
-
-    // ACT view
-    await renderSchedulesAndHighlights(actTable);
-
-    const rows = Array.from(actTable.querySelectorAll("tbody tr"));
-    const ids = rows.map(tr => normalizeIdent(tr.cells?.[0]?.textContent)).filter(Boolean);
-
-    const shouldUpdate = await statusphereHasNewScrape(ids);
-    if (shouldUpdate) {
-      await renderProductionStatusFromStatusphere(actTable);
+      renderProductionStatusUnified(tableEl, data);
+      showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt);
+      return;
     }
 
-    showViewAlertsOncePerChange("ACT", actTable, lastSyncShownAt);
+    // ✅ NON-ACT VIEWS
+    const loader = viewLoaders[view];
+
+    if (loader && tableEl) {
+      await loader(tableEl);
+      showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt);
+    }
+
   } catch (err) {
     console.error("❌ Refresh failed:", err);
   } finally {

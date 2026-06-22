@@ -42,7 +42,6 @@ let isRefreshing = false;
 
 let showAllMode = localStorage.getItem("showAllMode") !== "false";
 // ===================== HELPERS =====================
-// ===================== FIXED normalizeIdent =====================
 function normalizeIdent(id) {
   if (!id) return null;
   const s = id.trim().toUpperCase();
@@ -55,6 +54,8 @@ function normalizeIdent(id) {
 
   if (s.includes("IFLEX")) return s;
 
+  if (m) return `&{m[1]}${m[2].padStart(3, "0")}`;
+  
   if (s.includes("NIGP4")) return s;
   if (/^EAGLE88[0-9A-Z]+$/.test(s)) return s;
   if (/^MAV(10|20)\d{2}$/i.test(s)) return s;
@@ -65,9 +66,8 @@ function normalizeIdent(id) {
   if (/^STS50\d{5}$/i.test(s)) return s;
   if (/^(SC212|KTS|MPS|NOISE|TERA360Z|DOT400|LTXMX|KVDM2|RFX|ASL3K)\d{3}$/i.test(s)) return s;
 
-  return s; // ✅ fallback instead of null
+  return null;
 }
-
 
 function buildStatusphereUrlFromRow(rowHref, equipmentId) {
   if (rowHref) {
@@ -625,75 +625,6 @@ async function loadSYSTEMLatest(tableEl) {
   tbody.appendChild(frag);
 }
 
-function renderProductionStatusUnified(tableEl, dataRows) {
-  if (!tableEl) return;
-
-  const prodColIndex = 2; // ✅ FORCE correct column for ACT
-
-  const map = new Map(
-    (dataRows || []).map(r => [normalizeIdent(r.equipment_id), r])
-  );
-
-  const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
-
-  for (const tr of rows) {
-    const id = normalizeIdent(tr.cells?.[0]?.textContent);
-    const cell = tr.cells?.[prodColIndex];
-    if (!cell) continue;
-
-    const r = map.get(id);
-
-    if (!r) {
-      console.warn("Missing:", id);
-      continue; // ✅ don't hide ACT rows
-    }
-
-    const state = (r.state_short || "").toUpperCase();
-
-    // ✅ FILTER
-    if (!showAllMode && HIDE_STATES.has(state)) {
-      tr.style.display = "none";   // ✅ works better for ACT than hidden
-      continue;
-    }
-
-    tr.style.display = "";
-
-    const out = productionStatusFromDb(
-      r.state_short,
-      r.state_long,
-      r.raw_title
-    );
-
-    cell.innerHTML = "";
-
-    const url = buildStatusphereUrlFromRow(r.href, id);
-
-    if (url) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
-      cell.appendChild(a);
-    } else {
-      cell.textContent = out.label;
-    }
-
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
-
-    // color
-    cell.className = cell.className.replace(/ps-\w+/g, "").trim();
-    if (out.css) cell.classList.add(out.css);
-
-    cell.title = `State: ${r.state_short}`;
-  }
-}
 
 // ===================== ACT: Render status by IDs (latest view) =====================
 async function renderProductionStatusFromStatusphere(tableEl) {
@@ -872,27 +803,6 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
   }
 }
 
-async function refreshACT(actTable) {
-  const rows = Array.from(actTable.querySelectorAll("tbody tr"));
-  const ids = rows.map(tr =>
-    normalizeIdent(tr.cells?.[0]?.textContent)
-  ).filter(Boolean);
-
-  if (!ids.length) return;
-
-  const { data, error } = await supabase
-    .from("statusphere_equipment_latest") // ✅ FIXED spelling
-    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-    .in("equipment_id", ids);
-
-  if (error) {
-    console.error("Fetch error:", error.message);
-    return;
-  }
-
-  renderProductionStatusUnified(actTable, data);
-}
-
 async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "state_long" }) {
   const tbody = document.getElementById(tbodyId);
   if (!tableEl || !tbody) return;
@@ -1066,24 +976,17 @@ async function refreshData() {
 
 
     // Non-ACT optimized views
-    // if (view !== "ACT") {
-    //   const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable, ARK: arkTable,SYSTEM: systemTable};
-    //   const tableEl = tableMap[view];
+    if (view !== "ACT") {
+      const tableMap = { UFLEX: uflexTable, EAGLE: eagleTable, MAV: mavTable, LTX: ltxTable, TMT: tmtTable, LEGACY: legacyTable, SPEA: speaTable, LTXMX: ltxmxTable, ARK: arkTable,SYSTEM: systemTable};
+      const tableEl = tableMap[view];
 
-    //   const loader = viewLoaders[view];
-    //   if (loader && tableEl) {
-    //     await loader(tableEl);
-    //     showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt);
-    //   }
-    //   return;
-    // }
-    
-      if (view === "ACT") {
-        await renderSchedulesAndHighlights(actTable);
-        await refreshACT(actTable);
-        return;
+      const loader = viewLoaders[view];
+      if (loader && tableEl) {
+        await loader(tableEl);
+        showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt);
       }
-
+      return;
+    }
 
     // ACT view
     await renderSchedulesAndHighlights(actTable);

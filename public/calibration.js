@@ -517,7 +517,7 @@ function collectIssueAlerts(tableEl) {
     if (text.includes("QUALIFICATION FAILURE")) alerts.QUALIFICATION.push(tester);
     if (text.includes("HW CHECKER ISSUE")) alerts.HW_CHECKER.push(tester);
     if (text.includes("QA FAILURE")) alerts.QA.push(tester);
-    if (text.includes("HANDLER PROBLEM")) alerts.HANDLER(tester);
+    if (text.includes("HANDLER PROBLEM")) alerts.HANDLER.push(tester);
   }
 
   const result = [];
@@ -528,7 +528,7 @@ function collectIssueAlerts(tableEl) {
   if (alerts.QUALIFICATION.length) result.push({key:"QUALIFICATION", list: alerts.QUALIFICATION, type:"pink", label:"QUALIFICATION FAILURE"});
   if (alerts.HW_CHECKER.length) result.push({key:"HW_CHECKER", list: alerts.HW_CHECKER, type:"pink", label:"HW CHECKER ISSUE"});
   if (alerts.QA.length) result.push({key:"QA", list: alerts.QA, type:"red", label:"QA FAILURE"});
-  if (alerts.HANDLER.length) result.push({key:"HANDLER", list:alerts.HANDLER, type:"red", label:"HANDLER PROBLEM"});
+  if (alerts.HANDLER.length) result.push({key:"HANDLER", list: alerts.HANDLER, type:"red", label:"HANDLER PROBLEM"});
   return result;
 }
 

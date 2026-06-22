@@ -206,6 +206,7 @@ function classifyIssue(stateLong = "", rawTitle = "") {
   if (text.includes("QUALIFICATION FAIL DFL")) return "QUALIFICATION FAILURE";
   if (text.includes("HW CHECKER PROBLEM") || text.includes("HW CHECKER")) return "HW CHECKER ISSUE";
   if (text.includes("QA FAIL")) return "QA FAILURE";
+  if (text.includes("HANDLER PROBLEM")) return "HANDLER PROBLEM";
 
   return null;
 }
@@ -247,6 +248,7 @@ async function alertIssuesAllGroupsIfNewScrape() {
     "QUALIFICATION FAILURE": [],
     "HW CHECKER ISSUE": [],
     "QA FAILURE": [],
+    "HANDLER PROBLEM": [],
   };
 
   for (const r of (rows || [])) {
@@ -450,7 +452,7 @@ function extractIssue(stateShort, stateLong, rawTitle) {
     "NO INVENTORY","PLANNED IDLE","INACTIVE",
     "PRODUCT EVAL","INCOMPLETE RESOURCES",
     "QA FAIL","STANDBY/IDLE","LOT COMPLETION",
-    "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM"
+    "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM"
   ];
   for (const k of known) if (text.includes(k)) return k;
   return null;
@@ -496,7 +498,7 @@ function collectIssueAlerts(tableEl) {
   if (!tableEl) return [];
   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
 
-  const alerts = { YIELD:[], CONTACT:[], RKGU:[], SYSTEM:[], QUALIFICATION:[], HW_CHECKER:[], QA:[] };
+  const alerts = { YIELD:[], CONTACT:[], RKGU:[], SYSTEM:[], QUALIFICATION:[], HW_CHECKER:[], QA:[],HANDLER:[] };
 
   for (const tr of rows) {
     const tester = (tr.cells?.[0]?.textContent || "").trim();
@@ -515,6 +517,7 @@ function collectIssueAlerts(tableEl) {
     if (text.includes("QUALIFICATION FAILURE")) alerts.QUALIFICATION.push(tester);
     if (text.includes("HW CHECKER ISSUE")) alerts.HW_CHECKER.push(tester);
     if (text.includes("QA FAILURE")) alerts.QA.push(tester);
+    if (text.includes("HANDLER PROBLEM")) alerts.HANDLER(tester);
   }
 
   const result = [];
@@ -525,6 +528,7 @@ function collectIssueAlerts(tableEl) {
   if (alerts.QUALIFICATION.length) result.push({key:"QUALIFICATION", list: alerts.QUALIFICATION, type:"pink", label:"QUALIFICATION FAILURE"});
   if (alerts.HW_CHECKER.length) result.push({key:"HW_CHECKER", list: alerts.HW_CHECKER, type:"pink", label:"HW CHECKER ISSUE"});
   if (alerts.QA.length) result.push({key:"QA", list: alerts.QA, type:"red", label:"QA FAILURE"});
+  if (alerts.HANDLER.length) result.push({key:"HANDLER", list:alerts.HANDLER, type:"red", label:"HANDLER PROBLEM"});
   return result;
 }
 

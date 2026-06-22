@@ -652,11 +652,16 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
     if (!r) {
       console.warn("Missing:", id);
-      continue; // ✅ don't hide ACT rows
+      tr.style.display = "none"; //if no data hide
+      continue;
     }
 
     const state = (r.state_short || "").toUpperCase();
 
+    if (!state) {
+      tr.style.display = "none";
+      continue;
+    }
     //  FILTER
     if (!showAllMode && HIDE_STATES && HIDE_STATES.has(state)) {
   tr.style.display = "none";

@@ -885,16 +885,25 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
   }
 }
 
-const toggle = document.getElementById('darkModeToggle');
-toggle.addEventListener('click', () => {
+const darktoggle = document.getElementById('darkModeToggle');
+const labelDark = document.querySelector(".label-dark");
+if (darktoggle) {
+darktoggle.addEventListener('click', () => {
   document.body.classList.toggle('dark-mode');
-  localStorage.setItem('theme', 
-    document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-});
 
+  const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+  localStorage.setItem('theme', theme);
+
+  
+  labelDark.textContent = theme === 'dark' ? "☀️ Light Mode" : "🌙 Dark Mode";
+  });
+}
 // Load saved preference
 if(localStorage.getItem('theme') === 'dark') {
   document.body.classList.add('dark-mode');
+  labelDark.textContent = "☀️ Light Mode";
+} else {
+  labelDark.textContent = "🌙 Dark Mode";
 }
 
 async function refreshACT(actTable) {

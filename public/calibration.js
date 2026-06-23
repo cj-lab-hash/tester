@@ -885,6 +885,18 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
   }
 }
 
+const toggle = document.getElementById('darkModeToggle');
+toggle.addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('theme', 
+    document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+});
+
+// Load saved preference
+if(localStorage.getItem('theme') === 'dark') {
+  document.body.classList.add('dark-mode');
+}
+
 async function refreshACT(actTable) {
   const rows = Array.from(actTable.querySelectorAll("tbody tr"));
   const ids = rows.map(tr =>

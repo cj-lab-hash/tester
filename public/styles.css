@@ -4,7 +4,11 @@ body {
   align-items: center;
   height: 100vh;
   margin: 0;
-  
+  background-color: white;
+}
+body.dark-mode {
+  background-color: #121212;
+  color: #ffffff;
 }
 #table {
   text-align: center;

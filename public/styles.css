@@ -6,18 +6,26 @@ body {
   margin: 0;
   background-color: white;
 }
+
+/*dark mode */
 body.dark-mode {
   background-color: #121212;
   color: #ffffff;
 }
 body.dark-mode .verse-card {
   background-color: #121212;
+  box-shadow: 0 2px 8px #ffd1e6;
+    opacity: 0.92;
 }
 body.dark-mode .verse-ref {
   color: #9ae6b4;
 }
 body.dark-mode .verse-text {
   color: #ddd;
+}
+body.dark-mode .last-sync {
+  background-color: #121212;
+  color:#ffffff;
 }
 #table {
   text-align: center;

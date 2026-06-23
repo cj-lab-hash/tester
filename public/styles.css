@@ -10,6 +10,15 @@ body.dark-mode {
   background-color: #121212;
   color: #ffffff;
 }
+body.dark-mode .verse-card {
+  background-color: #121212;
+}
+body.dark-mode .verse-ref {
+  color: #9ae6b4;
+}
+body.dark-mode .verse-text {
+  color: #ddd;
+}
 #table {
   text-align: center;
 }
@@ -586,6 +595,7 @@ td.cal-due, td.pm-due {
   font-size: 14px;
   color: #333;
 }
+
 @media (max-width: 600px){
 
   .header-left {

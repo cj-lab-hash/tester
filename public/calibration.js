@@ -7,7 +7,7 @@ const SUPABASE_KEY = "sb_publishable_YAq1ZIeaJdjx4w0G4DwY3g_tXAZHuVk";
 const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
 const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
-
+const lastIssueCounts = new Map();
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const HIDE_STATES = new Set([
   "PRODN",
@@ -266,7 +266,15 @@ async function alertIssuesAllGroupsIfNewScrape() {
 
   for (const [issueName, list] of Object.entries(buckets)) {
     if (!list.length) continue;
+    
+    const prevCount = lastIssueCounts.get(issueName) || 0;
+    const newCount = list.length;
 
+    if (newCount>prevCount) {
+      playAlertSound();
+    }
+    lastIssueCounts.set(issueName,newCount);
+    
     const type =
       issueName === "RKGU FAIL" ? "pink" :
       issueName.includes("SYSTEM") ? "yellow" :
@@ -705,7 +713,15 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     cell.title = `State: ${r.state_short}`;
   }
 }
+function playAlertSound() {
+  const audio = document.getElementById("alertSound");
+  if (!audio) return;
 
+  audio.currentTime = 0; // restart sound
+  audio.play().catch(() => {
+    // browser might block autoplay until user interacts
+  });
+}
 // ===================== ACT: Render status by IDs (latest view) =====================
 // async function renderProductionStatusFromStatusphere(tableEl) {
 //   if (!tableEl) return;

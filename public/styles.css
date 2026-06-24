@@ -348,8 +348,16 @@ td.cal-due, td.pm-due {
   font-weight:700;
   border:1px solid rgba(0,0,0,0.15);
 }
-.pill-waiting{ background:#e5e7eb; color:#ce8a37; }
-.pill-attended{ background:#ffd1e6; color:#8a0f4c; }
+.pill-waiting{ 
+  background:#e5e7eb; 
+  color:#ce8a37; 
+  transition: 0.4 ease;
+}
+.pill-attended{ 
+  background:#ffd1e6;
+  color:#8a0f4c;
+  transition: 0.4s ease;
+}
 /* Waiting vs Started styles */
 .phase-waiting {
   background: #e5e7eb;   /* light gray */

@@ -35,7 +35,10 @@ body.dark-mode .pill-attended {
   background-color: #121212;
   color:#a30505;
 }
-
+body.dark-mode .view-tile.active {
+    outline: 5px solid #ffd1e6;
+    border-color: #ffd1e6;
+}
 #darkModeToggle {
   font-size: 14px;
   cursor: pointer;
@@ -351,12 +354,12 @@ td.cal-due, td.pm-due {
 .pill-waiting{ 
   background:#e5e7eb; 
   color:#ce8a37; 
-  transition: 0.4 ease;
+  transition: color 0.4s ease;
 }
 .pill-attended{ 
   background:#ffd1e6;
   color:#8a0f4c;
-  transition: 0.4s ease;
+  transition: color 0.4s ease;
 }
 /* Waiting vs Started styles */
 .phase-waiting {
@@ -513,6 +516,7 @@ td.cal-due, td.pm-due {
 .view-tile.active{
   outline: 5px solid rgba(59,130,246,0.75);
   border-color: rgba(59,130,246,0.35);
+  transition: color 0.4s ease;
 }
 
 /* optional: per-view colors */
@@ -627,7 +631,7 @@ td.cal-due, td.pm-due {
 .verse-text {
   font-size: 14px;
   color: #333;
-  transition: color 0.4 ease;
+  transition: color 0.4s ease;
 }
 
 @media (max-width: 600px){

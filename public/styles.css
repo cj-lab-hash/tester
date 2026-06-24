@@ -28,6 +28,14 @@ body.dark-mode .last-sync {
   background-color: #121212;
   color:#ffffff;
 }
+body.dark-mode .pill-waiting {
+  background-color: #121212;
+}
+body.dark-mode .pill-attended {
+  background-color: #121212;
+  color:#f30404;
+}
+
 #darkModeToggle {
   font-size: 14px;
   cursor: pointer;

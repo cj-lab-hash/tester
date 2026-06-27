@@ -962,7 +962,7 @@ async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "sta
 
   tbody.innerHTML = "";
   const frag = document.createDocumentFragment();
-  console.log("Loaded rows:", data?.length);
+  // console.log("Loaded rows:", data?.length);
   for (const r of (data || [])) {
     const tr = document.createElement("tr");
 

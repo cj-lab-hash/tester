@@ -10,13 +10,19 @@ body {
 
 /*dark mode */
 body.dark-mode {
-  background-color: #121212;
-  color: #ffffff;
+  background-color: #0f1115;
+  color: #e5e7eb;
+}
+body.dark-mode .verse-card,
+body.dark-mode .last-sync
+/*body.dark-mode th,*/
+{
+  background-color: #1a1d23;
 }
 body.dark-mode .verse-card {
-  background-color: #121212;
-  box-shadow: 0 2px 8px #ffd1e6;
-    opacity: 0.92;
+  background-color: #1a1d23;
+  border-left: 4px solid #22c55e;
+  box-shadow: none;
 }
 body.dark-mode .verse-ref {
   color: #9ae6b4;
@@ -25,26 +31,45 @@ body.dark-mode .verse-text {
   color: #ddd;
 }
 body.dark-mode .last-sync {
-  background-color: #121212;
   color:#ffffff;
 }
+
 body.dark-mode .pill-waiting {
-  background-color: #121212;
+  background-color: #2a2f38;
+  color: #d1d5db;
 }
 body.dark-mode .pill-attended {
-  background-color: #121212;
-  color:#a30505;
+  background-color: #3b0a1d;
+  color: #f472b6;
 }
 body.dark-mode .view-tile.active {
-    outline: 5px solid #ffd1e6;
-    border-color: #ffd1e6;
+    outline: 2px solid #4da3ff;
+    border-color: #4da3ff;
 }
 body.dark-mode .page-header h1 {
-    border-radius: 10px;
-    box-shadow: 0px 7px 5px #ffd1e6;
+   box-shadow: none;;
 }
-body.dark-mode th{
-background-color: #121212;
+body.dark-mode th,
+body.dark-mode td {
+  border: 1px solid #2a2f38;
+}
+
+body.dark-mode tr:nth-child(even) {
+  background-color: #161a20;
+}
+body.dark-mode .ps-green {color: #22c552;}
+body.dark-mode .ps-yellow {color:#eab308;}
+body.dark-mode .ps-orange {color:#f97316;}
+body.dark-mode .ps-red {color:#ef4444;}
+
+body.dark-mode .view-tile:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+body.dark-mode .toast {
+  background: #1a1d23;
+  color: #e5e7eb;
+  border: 1px solid #2a2f38;
 }
 #darkModeToggle {
   font-size: 14px;
@@ -52,6 +77,11 @@ background-color: #121212;
   font-weight: 600;
   display: inline-block;
   transition: background-color 0.4s ease, color 0.4s ease;
+}
+* {
+  transition: background-color 0.3s ease,
+  color 0.3s ease,
+  border-color 0.3s ease;
 }
 #table {
   text-align: center;

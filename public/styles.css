@@ -43,8 +43,11 @@ body.dark-mode .pill-attended {
   color: #f472b6;
 }
 body.dark-mode .view-tile.active {
-    outline: 2px solid #4da3ff;
+    /* outline: 2px solid #4da3ff; */
+    outline: none;
     border-color: #4da3ff;
+    box-shadow: 0 0 0 2px #4da3ff inset;
+    filter: saturate(0.8) brightness(0.95);
 }
 body.dark-mode .page-header h1 {
    box-shadow: none;;
@@ -54,14 +57,54 @@ body.dark-mode td {
   border: 1px solid #2a2f38;
 }
 
+body.dark-mode th {
+  background-color: #2f6f68; /* darker teal */
+  color: #e5e7eb;
+}
+
 body.dark-mode tr:nth-child(even) {
-  background-color: #161a20;
+  /* background-color: #161a20; */
+  background-color: #14181f;
+}
+body.dark-mode .header-right {
+  background: #1a1d23;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+body.dark-mode tbody tr:hover {
+  background-color: #1f2630;
+  transition: 0.2s;
 }
 body.dark-mode .ps-green {color: #22c552;}
 body.dark-mode .ps-yellow {color:#eab308;}
 body.dark-mode .ps-orange {color:#f97316;}
-body.dark-mode .ps-red {color:#ef4444;}
-
+body.dark-mode .ps-red {
+  /* color:#ef4444; */
+  color: #fca5a5;
+  background:  rgba(239, 68, 68, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+body.dark-mode td.cal-overdue,
+body.dark-mode td.pm-overdue {
+  background: #3b1a1a;
+  color: #fca5a5;
+}
+body.dark-mode td.cal-due-soon,
+body.dark-mode td.pm-due-soon {
+  background: #3a2f14;
+  color: #facc15;
+}
+body.dark-mode td.status-critical,
+body.dark-mode td.pm-critical {
+  background: #3a2a12;
+  color:#fbbf24;
+}
+body.dark-mode td.cal-due,
+body.dark-mode td.pm-due {
+  background: #3a1f14;
+  color: #f97316;
+}
 body.dark-mode .view-tile:hover {
   transform: translateY(-2px);
   filter: brightness(1.1);
@@ -78,11 +121,12 @@ body.dark-mode .toast {
   display: inline-block;
   transition: background-color 0.4s ease, color 0.4s ease;
 }
-* {
+body, .view-tile, .toast, .header-right, .verse-card {
   transition: background-color 0.3s ease,
-  color 0.3s ease,
-  border-color 0.3s ease;
+              color 0.3s ease,
+              border-color 0.3s ease;
 }
+
 #table {
   text-align: center;
 }
@@ -90,8 +134,8 @@ table {
   margin: 0 auto;
 }
 th, td {
-  padding: 8px;
-  border: 1px solid #ddd;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
 }
 th {
   background-color: #82c4b3;

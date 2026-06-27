@@ -78,13 +78,8 @@ body.dark-mode tbody tr:hover {
 body.dark-mode .ps-green {color: #22c552;}
 body.dark-mode .ps-yellow {color:#eab308;}
 body.dark-mode .ps-orange {color:#f97316;}
-body.dark-mode .ps-red {
-  /* color:#ef4444; */
-  color: #fca5a5;
-  background:  rgba(239, 68, 68, 0.15);
-  padding: 4px 10px;
-  border-radius: 6px;
-}
+body.dark-mode .ps-red {color:#ef4444;}
+
 body.dark-mode td.cal-overdue,
 body.dark-mode td.pm-overdue {
   background: #3b1a1a;

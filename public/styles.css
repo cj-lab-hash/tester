@@ -68,7 +68,7 @@ body.dark-mode tr:nth-child(even) {
 }
 body.dark-mode .header-right {
   /* background: #1a1d23; */
-  padding: 8px 12px;
+  /* padding: 8px 12px; */
   border-radius: 8px;
 }
 body.dark-mode tbody tr:hover {

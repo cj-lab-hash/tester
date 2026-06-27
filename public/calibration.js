@@ -659,7 +659,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     const r = map.get(id);
 
     if (!r) {
-      console.warn("Missing:", id);
+      // console.warn("Missing:", id);
       tr.style.display = "none"; //if no data hide
       continue;
     }

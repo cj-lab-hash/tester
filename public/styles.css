@@ -67,7 +67,7 @@ body.dark-mode tr:nth-child(even) {
   background-color: #14181f;
 }
 body.dark-mode .header-right {
-  background: #1a1d23;
+  /* background: #1a1d23; */
   padding: 8px 12px;
   border-radius: 8px;
 }

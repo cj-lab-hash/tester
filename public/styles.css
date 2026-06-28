@@ -110,6 +110,9 @@ body.dark-mode .toast {
   color:#ffffff;
   border: 1px solid #2a2f38;
 }
+body.dark-mode .toast-sub {
+  color:#e5e7eb; 
+}
 #darkModeToggle {
   font-size: 14px;
   cursor: pointer;

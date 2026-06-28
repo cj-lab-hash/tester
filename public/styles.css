@@ -106,7 +106,8 @@ body.dark-mode .view-tile:hover {
 }
 body.dark-mode .toast {
   background: #1a1d23;
-  color: #e5e7eb;
+  /* color: #e5e7eb; */
+  color:#ffffff;
   border: 1px solid #2a2f38;
 }
 #darkModeToggle {

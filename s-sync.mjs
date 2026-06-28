@@ -168,8 +168,8 @@ function extractEquipmentFromHref(href = "") {
 }
 
 async function setTesterTypeAllWithTab(page) {
-  const sel = page.locator('select[name="RESOURCEFAMILY"]'); // ✅ correct tester type dropdown
-  const loc = page.locator('select[name="RESOURCELOCATION"]'); // ✅ correct resource location dropdown
+  const sel = page.locator('select[name="RESOURCEFAMILY"]'); 
+  const loc = page.locator('select[name="RESOURCELOCATION"]'); 
   //
 
   await sel.waitFor({ timeout: 50000 });
@@ -179,18 +179,18 @@ async function setTesterTypeAllWithTab(page) {
   await loc.selectOption({ label: "FT" });
 
 
-  // Mimic your manual action: Tab triggers submit/refresh
+ 
   await sel.focus();
   await page.keyboard.press("Tab");
   await loc.focus();
   await page.keyboard.press("Tab");
 
-  // You said it takes ~15 seconds, so give it 20 seconds
+  
   await page.waitForFunction(() => {
   return document.querySelectorAll("map area").length > 50;
 }, { timeout: 70000 });
 
- // Verify that targets exist in the map after refresh
+
   await page.waitForFunction(() => {
     const hrefs = Array.from(document.querySelectorAll("map area"))
       .map(a => (a.getAttribute("href") || "").replace(/&amp;/g, "&"));
@@ -206,15 +206,40 @@ async function setTesterTypeAllWithTab(page) {
   const selectedLoc = await loc.evaluate(el => el.options[el.selectedIndex]?.textContent?.trim());
   console.log("Resource Location selected (RESOURCELOCATION):", selectedLoc);
 }
+async function gotoWithRetry(page, url, retries = 3) {
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      console.log(`🌐 Navigating (attempt ${attempt})...`);
 
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+        timeout: 70000
+      });
 
+      return; // ✅ success
+    } catch (err) {
+      if (err.name === "TimeoutError") {
+        console.warn(`⚠️ Timeout on attempt ${attempt}`);
 
+        await page.screenshot({
+          path: `goto_timeout_attempt_${attempt}.png`,
+          fullPage: true
+        });
+
+        if (attempt > retries) throw err;
+      } else {
+        throw err; // non-timeout → don't retry
+      }
+    }
+  }
+}
 async function main() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ storageState: "statusphere_auth.json" });
   const page = await context.newPage();
 
-  await page.goto(STATUSPHERE_URL, { waitUntil: "domcontentloaded", timeout: 70000 });
+  // await page.goto(STATUSPHERE_URL, { waitUntil: "domcontentloaded", timeout: 70000 });
+  await gotoWithRetry(page, STATUSPHERE_URL);
   await page.waitForTimeout(2500);
 
   //very helpful to debug selectors and page structure without needing to run the whole script each time

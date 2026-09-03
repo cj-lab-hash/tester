@@ -1211,11 +1211,6 @@ window.addEventListener("DOMContentLoaded", () => {
   const tpetoggle = document.getElementById("toggleTPEBtn");
   const labelTPE = document.querySelector(".label-TPE");
   if (tpetoggle) {
-    // tpetoggle.checked = TPEDT;
-    // labelTPE.textContent = TPEDT
-    //   ? "TPE DOWNTIME ONLY"
-    //   : "ALL DOWNTIMES";
-
     tpetoggle.addEventListener("click", () => {
       TPEDT = tpetoggle.checked;
       localStorage.setItem("TPEDT",TPEDT);

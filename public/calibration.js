@@ -1216,10 +1216,10 @@ window.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("TPEDT",TPEDT);
 
       labelTPE.textContent = TPEDT
-        // ? "TPE DOWNTIME ONLY"
-        // : "ALL DOWNTIMES";
-        ? "ALL DOWNTIMES"
-        : "TPE DOWNTIME ONLY";
+        ? "TPE DOWNTIME ONLY"
+        : "ALL DOWNTIMES";
+        // ? "ALL DOWNTIMES"
+        // : "TPE DOWNTIME ONLY";
 
       refreshData();
     });

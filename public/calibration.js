@@ -1201,8 +1201,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
       labelText.textContent =
       showAllMode
-       ? "Show: ALL STATUS"
-        : "Show: DOWNTIME ONLY";
+       ? "ALL STATUS"
+        : "DOWNTIME ONLY";
 
       refreshData();
     }); 

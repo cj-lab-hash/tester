@@ -19,10 +19,11 @@ const HIDE_STATES = new Set([
 ]);
 const TPE_DOWNTIME = new Set([
   "YIELD ISSUE",
-  "RKGU FAIL",
+  "R/KGU FAIL",
   "CONTACT ISSUE",
-  "QUALIFICATION FAIL",
-  "TPE VERIFICATION"
+  "QUALIFICATION FAIL DFL",
+  "TPE VERIFICATION",
+  "QA FAIL"
 ]);
 
 function isTPEDowntime(stateLong) {
@@ -1211,15 +1212,22 @@ window.addEventListener("DOMContentLoaded", () => {
   const tpetoggle = document.getElementById("toggleTPEBtn");
   const labelTPE = document.querySelector(".label-TPE");
   if (tpetoggle) {
+    tpetoggle.checked = TPEDT;
+    if (labelTPE) {
+      labelTPE.textContent = TPEDT
+        ? "TPE DOWNTIME ONLY"
+        : "ALL DOWNTIMES";
+    }
+
     tpetoggle.addEventListener("click", () => {
       TPEDT = tpetoggle.checked;
       localStorage.setItem("TPEDT",TPEDT);
 
-      labelTPE.textContent = TPEDT
-        ? "TPE DOWNTIME ONLY"
-        : "ALL DOWNTIMES";
-        // ? "ALL DOWNTIMES"
-        // : "TPE DOWNTIME ONLY";
+      if (labelTPE) {
+        labelTPE.textContent = TPEDT
+          ? "TPE DOWNTIME ONLY"
+          : "ALL DOWNTIMES";
+      }
 
       refreshData();
     });

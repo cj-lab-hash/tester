@@ -125,9 +125,6 @@ body, .view-tile, .toast, .header-right, .verse-card {
               color 0.3s ease,
               border-color 0.3s ease;
 }
-#toggleTPEBtn {
-  display: none;
-}
 #table {
   text-align: center;
 }
@@ -644,13 +641,11 @@ td.cal-due, td.pm-due {
   display: none;
 }
 
-.tpetoggle {
+/* .tpetoggle {
   white-space: nowrap;
-}
+} */
 
-.label-TPE {
-  font-size: 14px;
-}
+
 
 /* Slider background */
 .slider {
@@ -721,11 +716,6 @@ td.cal-due, td.pm-due {
 .tpetoggle input:checked + .TPEslider::before {
   transform: translateX(24px);
 }
-
-/* Label text */
-.label-text {
-  font-size: 14px;
-}
 .toggle input:not(:checked) + .TPEslider,
 .tpetoggle input:not(:checked) + .TPEslider {
   background-color: #28a745; /* red for issues mode */
@@ -734,6 +724,14 @@ td.cal-due, td.pm-due {
 .tpetoggle input:not(:checked) + .slider {
   background-color: #dc3545; /* red for issues mode */
 }
+/* Label text */
+.label-text {
+  font-size: 14px;
+}
+.label-TPE {
+  font-size: 14px;
+}
+
 /* Bible Verse */
 .verse-container {
   display: grid;

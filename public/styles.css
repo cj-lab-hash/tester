@@ -713,7 +713,7 @@ td.cal-due, td.pm-due {
 /* ON state */
 .toggle input:checked + .TPEslider,
 .tpetoggle input:checked + .TPEslider {
-  background-color: #28a745; /* green */
+  background-color: #dc3545; /* green */
 }
 
 /* Move circle when ON */
@@ -728,7 +728,7 @@ td.cal-due, td.pm-due {
 }
 .toggle input:not(:checked) + .TPEslider,
 .tpetoggle input:not(:checked) + .TPEslider {
-  background-color: #dc3545; /* red for issues mode */
+  background-color: #28a745; /* red for issues mode */
 }
 .toggle input:not(:checked) + .slider,
 .tpetoggle input:not(:checked) + .slider {

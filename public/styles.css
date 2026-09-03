@@ -730,6 +730,10 @@ td.cal-due, td.pm-due {
 .tpetoggle input:not(:checked) + .TPEslider {
   background-color: #dc3545; /* red for issues mode */
 }
+.toggle input:not(:checked) + .slider,
+.tpetoggle input:not(:checked) + .slider {
+  background-color: #dc3545; /* red for issues mode */
+}
 /* Bible Verse */
 .verse-container {
   display: grid;

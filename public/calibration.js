@@ -17,6 +17,13 @@ const HIDE_STATES = new Set([
   "NO",
   "IDLE"
 ]);
+const TPE_DOWNTIME = new Set([
+  "YIELD ISSUE",
+  "RKGU FAIL",
+  "CONTACT ISSUE",
+  "QUALIFICATION FAIL",
+  "TPE VERIFICATION"
+]);
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
 let currentView = localStorage.getItem(VIEW_KEY) || "ACT";
@@ -48,6 +55,7 @@ let isRefreshing = false;
 // Display all status
 
 let showAllMode = localStorage.getItem("showAllMode") !== "false";
+let TPEDT = localStorage.getItem("TPEDT") !="false";
 // ===================== HELPERS =====================
 // ===================== FIXED normalizeIdent =====================
 function normalizeIdent(id) {
@@ -676,6 +684,18 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 } else {
   tr.style.display = "";
 }
+//for TPE downtime
+  const state_l = (r.state_long || "").toUpperCase();
+
+  if (!state_l) {
+    tr.style.display = "none";
+    continue
+  }
+  if(TPEDT && TPE_DOWNTIME && TPE_DOWNTIME.has(state_l)) {
+    tr.style.display = "none";
+  } else {
+    tr.style.display ="";
+  }
 
     const out = productionStatusFromDb(
       r.state_short,
@@ -868,6 +888,12 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     //  tr.hidden = false;
     tr.style.display = "";
 
+    const state_l = (r.state_long || "").toUpperCase();
+    if (TPEDT && TPE_DOWNTIME.has(state_l)) {
+      tr.style.display = "none";
+      continue;
+    }
+    tr.style.display = "";
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 
     cell.textContent = "";
@@ -921,6 +947,8 @@ if(localStorage.getItem('theme') === 'dark') {
 } else {
   labelDark.textContent = "🌙 Dark Mode";
 }
+
+
 
 async function refreshACT(actTable) {
   const rows = Array.from(actTable.querySelectorAll("tbody tr"));
@@ -1182,6 +1210,22 @@ window.addEventListener("DOMContentLoaded", () => {
 
       refreshData();
     }); 
+  }
+  
+  const tpetoggle = Document.getElementById("TPEDT");
+  const labelTPE = document.querySelector(".label-TPE");
+  if (tpetoggle) {
+    tpetoggle.addEventListener("click", () => {
+      TPEDT = tpetoggle.checked;
+      localStorage.setItem("TPEDT",TPEDT);
+
+      labelTPE.textContent = 
+      TPEDT
+      ? "Show: ALL DOWNTIMES"
+      : "Show: TPE DOWNTIME ONLY";
+
+      refreshData();
+    });
   }
 
   setInterval(refreshData, UI_REFRESH_MS);

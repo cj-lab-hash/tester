@@ -24,6 +24,11 @@ const TPE_DOWNTIME = new Set([
   "QUALIFICATION FAIL",
   "TPE VERIFICATION"
 ]);
+
+function isTPEDowntime(stateLong) {
+  const state = (stateLong || "").toUpperCase();
+  return [...TPE_DOWNTIME].some(issue => state.includes(issue));
+}
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
 let currentView = localStorage.getItem(VIEW_KEY) || "ACT";
@@ -678,24 +683,15 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       tr.style.display = "none";
       continue;
     }
-    //  FILTER
-    if (!showAllMode && HIDE_STATES && HIDE_STATES.has(state)) {
-  tr.style.display = "none";
-} else {
-  tr.style.display = "";
-}
-//for TPE downtime
-  const state_l = (r.state_long || "").toUpperCase();
+    const state_l = (r.state_long || "").toUpperCase();
 
-  if (!state_l) {
+    if (!state_l ||
+        (!showAllMode && HIDE_STATES.has(state)) ||
+        (TPEDT && !isTPEDowntime(state_l))) {
     tr.style.display = "none";
-    continue
-  }
-  if(TPEDT && TPE_DOWNTIME && TPE_DOWNTIME.has(state_l)) {
-    tr.style.display = "none";
-  } else {
-    tr.style.display ="";
-  }
+    continue;
+    }
+    tr.style.display = "";
 
     const out = productionStatusFromDb(
       r.state_short,
@@ -889,7 +885,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     tr.style.display = "";
 
     const state_l = (r.state_long || "").toUpperCase();
-    if (TPEDT && TPE_DOWNTIME.has(state_l)) {
+    if (TPEDT && !isTPEDowntime(state_l)) {
       tr.style.display = "none";
       continue;
     }
@@ -1212,17 +1208,21 @@ window.addEventListener("DOMContentLoaded", () => {
     }); 
   }
   
-  const tpetoggle = Document.getElementById("TPEDT");
+  const tpetoggle = document.getElementById("toggleTPEBtn");
   const labelTPE = document.querySelector(".label-TPE");
   if (tpetoggle) {
+    tpetoggle.checked = TPEDT;
+    labelTPE.textContent = TPEDT
+      ? "Show: TPE DOWNTIME ONLY"
+      : "Show: ALL DOWNTIMES";
+
     tpetoggle.addEventListener("click", () => {
       TPEDT = tpetoggle.checked;
       localStorage.setItem("TPEDT",TPEDT);
 
-      labelTPE.textContent = 
-      TPEDT
-      ? "Show: ALL DOWNTIMES"
-      : "Show: TPE DOWNTIME ONLY";
+      labelTPE.textContent = TPEDT
+        ? "Show: TPE DOWNTIME ONLY"
+        : "Show: ALL DOWNTIMES";
 
       refreshData();
     });

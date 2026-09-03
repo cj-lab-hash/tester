@@ -127,7 +127,7 @@ body, .view-tile, .toast, .header-right, .verse-card {
 }
 #TPEDT {
   font-size: 14px;
-  cursor: progress;
+  cursor: pointer;
   font-weight: 600;
   display: inline-block;
   transition: background-color 0.4s ease,color 0.4s ease;

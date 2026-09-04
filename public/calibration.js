@@ -1198,6 +1198,12 @@ window.addEventListener("DOMContentLoaded", () => {
   if (toggle) {
     toggle.addEventListener("click", () => {
       showAllMode = toggle.checked;
+      if (showAllMode) {
+        TPEDT = false;
+        tpetoggle.checked = false;
+        localStorage.setItem("TPEDT", "false");
+        if (labelTPE) labelTPE.textContent = "ALL DOWNTIMES";
+      }
       localStorage.setItem("showAllMode",showAllMode);
 
       labelText.textContent =

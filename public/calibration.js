@@ -546,12 +546,12 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   else result = { label: issue || s || "", css: "" };
 
   if (dieType) {
-    result.dieTypeText = `DIETYPE:${dieType}`;
+    result.dieTypeText = `${dieType}`;
     result.dieTypeCss = "phase-pill pill-die-type";
   }
 
   if (handler) {
-    result.handlerText = `HANDLER:${handler}`;
+    result.handlerText = `${handler}`;
     result.handlerCss = "phase-pill pill-handler";
   }
 

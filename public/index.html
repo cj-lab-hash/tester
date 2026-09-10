@@ -448,10 +448,14 @@
             if (!table) return;
 
             table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
-                if (row.cells.length >= 9) return;
+                if (row.cells.length >= 9) {
+                    row.cells[6].dataset.field = "docking";
+                    return;
+                }
 
                 const firstOperationalCell = row.cells[3];
-                firstOperationalCell.dataset.legacyIndex = String(3 + rowIndex * 4);
+                firstOperationalCell.dataset.field = "docking";
+                firstOperationalCell.dataset.legacyIndex = String(3 + rowIndex * 9);
                 ["STATUS", "DIE TYPE", "HANDLER"].forEach(() => {
                     row.insertBefore(document.createElement("td"), firstOperationalCell);
                 });
@@ -464,13 +468,12 @@
                 .then(response => response.json())
                 .then(data => {
                     const table = document.getElementById("editableTable");
-                    const cells = table.getElementsByTagName("td");
-                    for (let i = 0; i < cells.length; i++) {
-                        let index = cells[i].getAttribute('data-index'); // Get the data-index for the cell
-                        if (!index) continue;
-                        if (Number(index) % 9 === 2) continue; // Production status is database-driven
-                        if (cells[i].classList.contains('cal-status') || cells[i].classList.contains('pm-status')) continue;
-                        const legacyIndex = cells[i].getAttribute('data-legacy-index');
+                    table.querySelectorAll("tbody tr").forEach((row) => {
+                        const dockingCell = row.querySelector('[data-field="docking"]');
+                        const index = dockingCell?.getAttribute('data-index');
+                        if (!index) return;
+
+                        const legacyIndex = dockingCell.getAttribute('data-legacy-index');
                         const currentKey = `cell${index}`;
                         const legacyKey = `cell${legacyIndex}`;
                         const savedValue = Object.prototype.hasOwnProperty.call(data, currentKey)
@@ -480,9 +483,9 @@
                                 : undefined);
 
                         if (savedValue !== undefined) {
-                            cells[i].innerHTML = savedValue;
+                            dockingCell.innerHTML = savedValue;
                         }
-                    }
+                    });
                 })
                 .catch(error => console.error('Error loading data:', error));
                 

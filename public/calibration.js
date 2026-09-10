@@ -906,7 +906,8 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     }
     tr.style.display = "";
 
-    if (PRESU && !isPRESETUP(stateLong)) {
+    
+  if (PRESU && isPRESETUP(stateLong)) {
       tr.style.display = "none";
       continue;
     }
@@ -1259,7 +1260,7 @@ window.addEventListener("DOMContentLoaded", () => {
       refreshData();
     });
   }
-  const presetupToggle = document.getElementById("presetupToggle");
+  const presetupToggle = document.getElementById("togglePRESETUPBtn");
   const labelPRE = document.querySelector(".label-PRESETUP");
   if (presetupToggle) {
     presetupToggle.checked = PRESU;
@@ -1271,6 +1272,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     presetupToggle.addEventListener("click", () => {
       PRESU = presetupToggle.checked;
+      localStorage.setItem("PRESU", String(PRESU));
+
       if (labelPRE) {
         labelPRE.textContent = PRESU
           ? "PRESETUP"

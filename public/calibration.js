@@ -17,6 +17,25 @@ const HIDE_STATES = new Set([
   "NO",
   "IDLE"
 ]);
+const TPE_DOWNTIME = new Set([
+  "YIELD ISSUE",
+  "R/KGU FAIL",
+  "CONTACT ISSUE",
+  "QUALIFICATION FAIL DFL",
+  "TPE VERIFICATION",
+  "QA FAIL"
+]);
+const PRE_SETUP = new Set ([
+"PRE SETUP"
+]);
+function isTPEDowntime(stateLong) {
+  const state = (stateLong || "").toUpperCase();
+  return [...TPE_DOWNTIME].some(issue => state.includes(issue));
+}
+function isPRESETUP(statelong) {
+  const state = (statelong || "").toUpperCase();
+  return [...PRE_SETUP].some(pre => state.includes(pre)) 
+}
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
 let currentView = localStorage.getItem(VIEW_KEY) || "ACT";
@@ -48,6 +67,8 @@ let isRefreshing = false;
 // Display all status
 
 let showAllMode = localStorage.getItem("showAllMode") !== "false";
+let TPEDT = localStorage.getItem("TPEDT") !="false";
+let PRESU = localStorage.getItem("PRESU") !="false";
 // ===================== HELPERS =====================
 // ===================== FIXED normalizeIdent =====================
 function normalizeIdent(id) {
@@ -450,7 +471,8 @@ function formatHMS(totalSeconds) {
   const mm = Math.floor((s % 3600) / 60);
   const ss = s % 60;
   const pad = n => String(n).padStart(2, "0");
-  return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+  return `${pad(hh)}:${pad(mm)}`;
+  // return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
 }
 
 function extractIssue(stateShort, stateLong, rawTitle) {
@@ -494,15 +516,21 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   if (!PILL_ALLOWED_STATES.has(s)) return result;
 
   const phase = getPhaseForState(s, rawTitle);
+  if (phase === "ATTENDED") {
+    const durSecs = extractDurationSeconds(s, stateLong, rawTitle);
+    const hms = formatHMS(durSecs);
+    result.pillText = hms ? `ATTENDED ${hms}` : "ATTENDED";
+    result.pillCss = "phase-pill pill-attended";
+  }
 
   if (phase === "WAITING") {
     const durSecs = extractDurationSeconds(s, stateLong, rawTitle);
     const hms = formatHMS(durSecs);
     result.pillText = hms ? `WAITING ${hms}` : "WAITING";
     result.pillCss = "phase-pill pill-waiting";
-  } else if (phase === "ATTENDED") {
-    result.pillText = "ATTENDED";
-    result.pillCss = "phase-pill pill-attended";
+  // } else if (phase === "ATTENDED") {
+  //   result.pillText = "ATTENDED";
+  //   result.pillCss = "phase-pill pill-attended";
   }
 
   return result;
@@ -670,12 +698,16 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       tr.style.display = "none";
       continue;
     }
-    //  FILTER
-    if (!showAllMode && HIDE_STATES && HIDE_STATES.has(state)) {
-  tr.style.display = "none";
-} else {
-  tr.style.display = "";
-}
+    const stateLong = (r.state_long || "").toUpperCase();
+
+    if (!stateLong ||
+        (!showAllMode && HIDE_STATES.has(state)) ||
+        (TPEDT && !isTPEDowntime(stateLong)) ||
+        (PRESU && !isPRESETUP(stateLong))) {
+      tr.style.display = "none";
+      continue;
+    }
+    tr.style.display = "";
 
     const out = productionStatusFromDb(
       r.state_short,
@@ -868,6 +900,19 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     //  tr.hidden = false;
     tr.style.display = "";
 
+    const stateLong = (r.state_long || "").toUpperCase();
+    if (TPEDT && !isTPEDowntime(stateLong)) {
+      tr.style.display = "none";
+      continue;
+    }
+    tr.style.display = "";
+
+    if (PRESU && !isPRESETUP(stateLong)) {
+      tr.style.display = "none";
+      continue;
+    }
+    tr.style.display = "";
+    
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 
     cell.textContent = "";
@@ -921,6 +966,8 @@ if(localStorage.getItem('theme') === 'dark') {
 } else {
   labelDark.textContent = "🌙 Dark Mode";
 }
+
+
 
 async function refreshACT(actTable) {
   const rows = Array.from(actTable.querySelectorAll("tbody tr"));
@@ -1173,15 +1220,106 @@ window.addEventListener("DOMContentLoaded", () => {
   if (toggle) {
     toggle.addEventListener("click", () => {
       showAllMode = toggle.checked;
+      if (showAllMode) {
+        TPEDT = false;
+        tpetoggle.checked = false;
+        localStorage.setItem("TPEDT", "false");
+        if (labelTPE) labelTPE.textContent = "ALL DOWNTIMES";
+      }
       localStorage.setItem("showAllMode",showAllMode);
 
       labelText.textContent =
       showAllMode
-       ? "Show: ALL STATUS"
-        : "Show: DOWNTIME ONLY";
+       ? "ALL STATUS"
+        : "DOWNTIME ONLY";
 
       refreshData();
     }); 
+  }
+  
+  const tpetoggle = document.getElementById("toggleTPEBtn");
+  const labelTPE = document.querySelector(".label-TPE");
+  if (tpetoggle) {
+    tpetoggle.checked = TPEDT;
+    if (labelTPE) {
+      labelTPE.textContent = TPEDT
+        ? "TPE DOWNTIME ONLY"
+        : "ALL DOWNTIMES";
+    }
+
+    tpetoggle.addEventListener("click", () => {
+      TPEDT = tpetoggle.checked;
+
+      if (TPEDT && presetupToggle) {
+        PRESU = false;
+        presetupToggle.checked = false;
+        localStorage.setItem("PRESU", "false");
+
+        if (labelPRE) {
+          labelPRE.textContent = "ALL";
+        }
+      }
+
+      localStorage.setItem("TPEDT", String(TPEDT));
+
+      if (labelTPE) {
+        labelTPE.textContent = TPEDT
+          ? "TPE DOWNTIME ONLY"
+          : "ALL DOWNTIMES";
+      }
+
+      refreshData();
+    });
+  }
+  const presetupToggle = document.getElementById("togglePRESETUPBtn");
+  const labelPRE = document.querySelector(".label-PRESETUP");
+  if (presetupToggle) {
+    presetupToggle.checked = PRESU;
+
+    if (labelPRE) {
+      labelPRE.textContent = PRESU
+        ? "PRESETUP"
+        : "ALL";
+    }
+
+    presetupToggle.addEventListener("click", () => {
+      PRESU = presetupToggle.checked;
+
+      if (PRESU) {
+        TPEDT = false;
+        showAllMode = true;
+
+        if (tpetoggle) {
+          tpetoggle.checked = false;
+          localStorage.setItem("TPEDT", "false");
+          if (labelTPE) {
+            labelTPE.textContent = "ALL DOWNTIMES";
+          }
+        }
+
+        if (toggle) {
+          toggle.checked = true;
+          localStorage.setItem("showAllMode", "true");
+          if (labelText) {
+            labelText.textContent = "ALL STATUS";
+          }
+        }
+      }
+
+      if (PRESU && tpetoggle) {
+        tpetoggle.checked = false;
+      }
+
+      localStorage.setItem("PRESU", String(PRESU));
+
+      if (labelPRE) {
+        labelPRE.textContent = PRESU
+          ? "PRESETUP"
+          : "ALL";
+      }
+
+      refreshData();
+    });
   }
 
   setInterval(refreshData, UI_REFRESH_MS);

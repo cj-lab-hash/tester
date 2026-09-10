@@ -25,10 +25,16 @@ const TPE_DOWNTIME = new Set([
   "TPE VERIFICATION",
   "QA FAIL"
 ]);
-
+const PRE_SETUP = new Set ([
+"PRE SETUP"
+]);
 function isTPEDowntime(stateLong) {
   const state = (stateLong || "").toUpperCase();
   return [...TPE_DOWNTIME].some(issue => state.includes(issue));
+}
+function isPRESETUP(statelong) {
+  const state = (statelong || "").toUpperCase();
+  return [...PRE_SETUP].some(pre => state.includes(pre)) 
 }
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
@@ -62,6 +68,7 @@ let isRefreshing = false;
 
 let showAllMode = localStorage.getItem("showAllMode") !== "false";
 let TPEDT = localStorage.getItem("TPEDT") !="false";
+let PRESU = localStorage.getItem("PRESU") !="false";
 // ===================== HELPERS =====================
 // ===================== FIXED normalizeIdent =====================
 function normalizeIdent(id) {
@@ -691,13 +698,13 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       tr.style.display = "none";
       continue;
     }
-    const state_l = (r.state_long || "").toUpperCase();
+    const stateLong = (r.state_long || "").toUpperCase();
 
-    if (!state_l ||
+    if (!stateLong ||
         (!showAllMode && HIDE_STATES.has(state)) ||
-        (TPEDT && !isTPEDowntime(state_l))) {
-    tr.style.display = "none";
-    continue;
+        (TPEDT && !isTPEDowntime(stateLong)) || (PRESU && isPRESETUP(stateLong))) {
+      tr.style.display = "none";
+      continue;
     }
     tr.style.display = "";
 
@@ -892,12 +899,19 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     //  tr.hidden = false;
     tr.style.display = "";
 
-    const state_l = (r.state_long || "").toUpperCase();
-    if (TPEDT && !isTPEDowntime(state_l)) {
+    const stateLong = (r.state_long || "").toUpperCase();
+    if (TPEDT && !isTPEDowntime(stateLong)) {
       tr.style.display = "none";
       continue;
     }
     tr.style.display = "";
+
+    if (PRESU && isPRESETUP(stateLong)) {
+      tr.style.display = "none";
+      continue;
+    }
+    tr.style.display = "";
+    
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
 
     cell.textContent = "";
@@ -1240,6 +1254,27 @@ window.addEventListener("DOMContentLoaded", () => {
         labelTPE.textContent = TPEDT
           ? "TPE DOWNTIME ONLY"
           : "ALL DOWNTIMES";
+      }
+
+      refreshData();
+    });
+  }
+  const presetupToggle = document.getElementById("presetupToggle");
+  const labelPRE = document.querySelector(".label-PRESETUP");
+  if (presetupToggle) {
+    presetupToggle.checked = PRESU;
+    if (labelPRE) {
+      labelPRE.textContent = PRESU
+        ? "PRESETUP"
+        : "NO PRESETUP";
+    }
+
+    presetupToggle.addEventListener("click", () => {
+      PRESU = presetupToggle.checked;
+      if (labelPRE) {
+        labelPRE.textContent = PRESU
+          ? "PRESETUP"
+          : "NO PRESETUP";
       }
 
       refreshData();

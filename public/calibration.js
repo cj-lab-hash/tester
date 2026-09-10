@@ -1273,6 +1273,7 @@ async function refreshData() {
 
     // ✅ ACT VIEW
     if (view === "ACT") {
+      window.normalizeActTableRows?.();
       await renderSchedulesAndHighlights(tableEl);
 
       const rows = Array.from(tableEl.querySelectorAll("tbody tr"));

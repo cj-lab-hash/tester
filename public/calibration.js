@@ -535,7 +535,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   else result = { label: issue || s || "", css: "" };
 
   if (dieType) {
-    result.dieTypeText = `DIETYPE ${dieType}`;
+    result.dieTypeText = `DIETYPE:${dieType}`;
     result.dieTypeCss = "phase-pill pill-die-type";
   }
 

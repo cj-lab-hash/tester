@@ -21,25 +21,23 @@
     
         <div class="header-right">
             <div id="lastSync" class="last-sync">Last Sync: --</div>
-            <fieldset class="filter-modes" aria-label="Status filter">
-                <legend>FILTER</legend>
-                <label>
-                    <input type="radio" name="statusFilter" value="all" checked>
-                    <span>ALL STATUS</span>
-                </label>
-                <label>
-                    <input type="radio" name="statusFilter" value="downtime">
-                    <span>DOWNTIMES ONLY</span>
-                </label>
-                <label>
-                    <input type="radio" name="statusFilter" value="tpe">
-                    <span>TPE DOWNTIMES</span>
-                </label>
-                <label>
-                    <input type="radio" name="statusFilter" value="presetup">
-                    <span>PRESETUP</span>
-                </label>
-            </fieldset>
+            <!-- <button id="toggleModeBtn">Show: ALL</button> -->
+            <label class="toggle">
+            <input type="checkbox" id="toggleModeBtn" checked>
+            <span class="slider"></span>
+            <span class="label-text">Show All</span>
+            </label>
+            <label class="tpetoggle">
+            <input type="checkbox" id="toggleTPEBtn" checked>
+            <span class="TPEslider"></span>
+            <span class="label-TPE">ALL DOWNTIMES</span>
+            </label>
+            <label class="presetupToggle">
+                <!-- <input type="checkbox" id="togglePRESETUPBtn" checked> -->
+                 <input type="checkbox" id="togglePRESETUPBtn" checked>
+                <span class="PRESETUPslider"></span>
+                <span class="label-PRESETUP">PRE SETUP</span>
+            </label>
             <div id="darkModeToggle">
             <span class="label-dark">🌙Dark Mode</span>
             </div>
@@ -60,9 +58,6 @@
                     <th>TESTER NAME</th>
                     <th>HOST NAME</th>
                     <th>PRODUCTION STATUS</th>
-                    <th>STATUS</th>
-                    <th>DIE TYPE</th>
-                    <th>HANDLER</th>
                     <th>DOCKING MECHANISM</th>
                     <th>CAL SCHEDULE</th>
                     <th>PM SCHEDULE</th>
@@ -74,9 +69,9 @@
                         <td data-index="0">TERCAT005</td>
                         <td data-index="1">T4105A</td>
                         <td data-index="2"></td>
-                        <td data-index="6" ondblclick="editCell(this)"></td>
-                        <td data-index="7" class="cal-status"></td>
-                        <td data-index="8" class="pm-status"></td>
+                        <td data-index="3" ondblclick="editCell(this)"></td>
+                        <td data-index="4" class="cal-status"></td>
+                        <td data-index="5" class="pm-status"></td>
                 </tr>
                 <tr>
                         <td data-index="9">TERCAT010</td>
@@ -87,172 +82,172 @@
                         <td data-index="14" class="pm-status"></td>
                 </tr>
                 <tr>
-                        <td data-index="15">TERCAT004</td>
-                        <td data-index="16">T4104A</td>
-                        <td data-index="17"></td>
-                        <td data-index="18" ondblclick="editCell(this)"></td>
-                        <td data-index="19" class="cal-status"></td>
-                        <td data-index="20" class="pm-status"></td>
+                        <td data-index="18">TERCAT004</td>
+                        <td data-index="19">T4104A</td>
+                        <td data-index="20"></td>
+                        <td data-index="21" ondblclick="editCell(this)"></td>
+                        <td data-index="22" class="cal-status"></td>
+                        <td data-index="23" class="pm-status"></td>
                 </tr>
                 <tr>
-                        <td data-index="21">TERCAT014</td>
-                        <td data-index="22">T4106A</td>
-                        <td data-index="23"></td>
-                        <td data-index="24"></td>
-                        <td data-index="25" class="cal-status"></td>
-                        <td data-index="26" class="pm-status"></td>
-                    </tr>
-                <tr>
-                        <td data-index="27">TERCAT011</td>
-                        <td data-index="28">T4112A</td>
+                        <td data-index="27">TERCAT014</td>
+                        <td data-index="28">T4106A</td>
                         <td data-index="29"></td>
                         <td data-index="30" ondblclick="editCell(this)"></td>
                         <td data-index="31" class="cal-status"></td>
                         <td data-index="32" class="pm-status"></td>
-                </tr>
-                <tr hidden="true">
-                        <td data-index="33">TERCAT006</td>
-                        <td data-index="34">T4107A</td>
-                        <td data-index="35"></td>
-                        <td data-index="36" ondblclick="editCell(this)"></td>
-                        <td data-index="37" class="cal-status"></td>
-                        <td data-index="38" class="pm-status"></td>
-                </tr>
-                <tr hidden="true">
-                        <td data-index="39">TERCAT002</td>
-                        <td data-index="40">T4102A</td>
-                        <td data-index="41"></td>
-                        <td data-index="42" ondblclick="editCell(this)"></td>
-                        <td data-index="43" class="cal-status"></td>
-                        <td data-index="44" class="pm-status"></td>
-                </tr>
+                    </tr>
                 <tr>
-                        <td data-index="45">TERCAT017</td>
-                        <td data-index="46">T4117A</td>
+                        <td data-index="36">TERCAT011</td>
+                        <td data-index="37">T4112A</td>
+                        <td data-index="38"></td>
+                        <td data-index="39" ondblclick="editCell(this)"></td>
+                        <td data-index="40" class="cal-status"></td>
+                        <td data-index="41" class="pm-status"></td>
+                </tr>
+                <tr hidden="true">
+                        <td data-index="45">TERCAT006</td>
+                        <td data-index="46">T4107A</td>
                         <td data-index="47"></td>
                         <td data-index="48" ondblclick="editCell(this)"></td>
                         <td data-index="49" class="cal-status"></td>
                         <td data-index="50" class="pm-status"></td>
                 </tr>
                 <tr hidden="true">
-                        <td data-index="51">SZ001</td>
-                        <td data-index="52">SZ1</td>
-                        <td data-index="53"></td>
-                        <td data-index="54" ondblclick="editCell(this)"></td>
-                        <td data-index="55" class="cal-status"></td>
-                        <td data-index="56" class="pm-status"></td>
+                        <td data-index="54">TERCAT002</td>
+                        <td data-index="55">T4102A</td>
+                        <td data-index="56"></td>
+                        <td data-index="57" ondblclick="editCell(this)"></td>
+                        <td data-index="58" class="cal-status"></td>
+                        <td data-index="59" class="pm-status"></td>
                 </tr>
                 <tr>
-                        <td data-index="57">SZ005</td>
-                        <td data-index="58">SZ5</td>
-                        <td data-index="59"></td>
-                        <td data-index="60" ondblclick="editCell(this)"></td>
-                        <td data-index="61" class="cal-status"></td>
-                        <td data-index="62" class="pm-status"></td>
-                </tr>
-                <tr>
-                        <td data-index="63">SZ007</td>
-                        <td data-index="64">SZ7</td>
-                        <td data-index="65"></td>
-                        <td data-index="66" ondblclick="editCell(this)"></td>
-                        <td data-index="67" class="cal-status"></td>
-                        <td data-index="68" class="pm-status"></td>
-                </tr>
-                <tr>
-                        <td data-index="69">SZ010</td>
-                        <td data-index="70">SZ10</td>
-                        <td data-index="71"></td>
-                        <td data-index="72" ondblclick="editCell(this)"></td>
-                        <td data-index="73" class="cal-status"></td>
-                        <td data-index="74" class="pm-status"></td>
-                </tr>
-                <tr>
-                        <td data-index="75">SZ011</td>
-                        <td data-index="76">SZ11</td>
-                        <td data-index="77"></td>
-                        <td data-index="78" ondblclick="editCell(this)"></td>
-                        <td data-index="79" class="cal-status"></td>
-                        <td data-index="80" class="pm-status"></td>
-                </tr>
-                <tr>
-                        <td data-index="81">SZ012</td>
-                        <td data-index="82">SZ12</td>
-                        <td data-index="83"></td>
-                        <td data-index="84" ondblclick="editCell(this)"></td>
-                        <td data-index="85" class="cal-status"></td>
-                        <td data-index="86" class="pm-status"></td>
+                        <td data-index="53">TERCAT017</td>
+                        <td data-index="54">T4117A</td>
+                        <td data-index="55"></td>
+                        <td data-index="56" ondblclick="editCell(this)"></td>
+                        <td data-index="57" class="cal-status"></td>
+                        <td data-index="58" class="pm-status"></td>
                 </tr>
                 <tr hidden="true">
-                        <td data-index="87">SZ015</td>
-                        <td data-index="88">SZ17</td>
-                        <td data-index="89"></td>
-                        <td data-index="90" ondblclick="editCell(this)"></td>
-                        <td data-index="91" class="cal-status"></td>
-                        <td data-index="92" class="pm-status"></td>
-                </tr>
-                <tr hidden="true">
-                        <td data-index="93">SZ017</td>
-                        <td data-index="94">SZ3650E</td>
-                        <td data-index="95"></td>
-                        <td data-index="96" ondblclick="editCell(this)"></td>
-                        <td data-index="97" class="cal-status"></td>
-                        <td data-index="98" class="pm-status"></td>
+                        <td data-index="62">SZ001</td>
+                        <td data-index="63">SZ1</td>
+                        <td data-index="64"></td>
+                        <td data-index="65" ondblclick="editCell(this)"></td>
+                        <td data-index="66" class="cal-status"></td>
+                        <td data-index="67" class="pm-status"></td>
                 </tr>
                 <tr>
-                        <td data-index="99">SZ023</td>
-                        <td data-index="100">SZ15</td>
-                        <td data-index="101"></td>
-                        <td data-index="102" ondblclick="editCell(this)"></td>
-                        <td data-index="103" class="cal-status"></td>
-                        <td data-index="104" class="pm-status"></td>
+                        <td data-index="71">SZ005</td>
+                        <td data-index="72">SZ5</td>
+                        <td data-index="73"></td>
+                        <td data-index="74" ondblclick="editCell(this)"></td>
+                        <td data-index="75" class="cal-status"></td>
+                        <td data-index="76" class="pm-status"></td>
+                </tr>
+                <tr>
+                        <td data-index="80">SZ007</td>
+                        <td data-index="81">SZ7</td>
+                        <td data-index="82"></td>
+                        <td data-index="83" ondblclick="editCell(this)"></td>
+                        <td data-index="84" class="cal-status"></td>
+                        <td data-index="85" class="pm-status"></td>
+                </tr>
+                <tr>
+                        <td data-index="89">SZ010</td>
+                        <td data-index="90">SZ10</td>
+                        <td data-index="91"></td>
+                        <td data-index="92" ondblclick="editCell(this)"></td>
+                        <td data-index="93" class="cal-status"></td>
+                        <td data-index="94" class="pm-status"></td>
+                </tr>
+                <tr>
+                        <td data-index="97">SZ011</td>
+                        <td data-index="98">SZ11</td>
+                        <td data-index="99"></td>
+                        <td data-index="100" ondblclick="editCell(this)"></td>
+                        <td data-index="101" class="cal-status"></td>
+                        <td data-index="102" class="pm-status"></td>
+                </tr>
+                <tr>
+                        <td data-index="106">SZ012</td>
+                        <td data-index="107">SZ12</td>
+                        <td data-index="108"></td>
+                        <td data-index="109" ondblclick="editCell(this)"></td>
+                        <td data-index="110" class="cal-status"></td>
+                        <td data-index="111" class="pm-status"></td>
                 </tr>
                 <tr hidden="true">
-                        <td data-index="105">SZ025</td>
-                        <td data-index="106">SZ19</td>
-                        <td data-index="107"></td>
-                        <td data-index="108" ondblclick="editCell(this)"></td>
-                        <td data-index="109" class="cal-status"></td>
-                        <td data-index="110" class="pm-status"></td>
+                        <td data-index="115">SZ015</td>
+                        <td data-index="116">SZ17</td>
+                        <td data-index="117"></td>
+                        <td data-index="118" ondblclick="editCell(this)"></td>
+                        <td data-index="119" class="cal-status"></td>
+                        <td data-index="120" class="pm-status"></td>
+                </tr>
+                <tr hidden="true">
+                        <td data-index="124">SZ017</td>
+                        <td data-index="125">SZ3650E</td>
+                        <td data-index="126"></td>
+                        <td data-index="127" ondblclick="editCell(this)"></td>
+                        <td data-index="128" class="cal-status"></td>
+                        <td data-index="129" class="pm-status"></td>
+                </tr>
+                <tr>
+                        <td data-index="97">SZ023</td>
+                        <td data-index="98">SZ15</td>
+                        <td data-index="99"></td>
+                        <td data-index="100" ondblclick="editCell(this)"></td>
+                        <td data-index="101" class="cal-status"></td>
+                        <td data-index="102" class="pm-status"></td>
+                </tr>
+                <tr hidden="true">
+                        <td data-index="106">SZ025</td>
+                        <td data-index="107">SZ19</td>
+                        <td data-index="108"></td>
+                        <td data-index="109" ondblclick="editCell(this)"></td>
+                        <td data-index="110" class="cal-status"></td>
+                        <td data-index="111" class="pm-status"></td>
                     </tr>
                     <tr hidden="true">
-                        <td data-index="111">SZ026</td>
-                        <td data-index="112">SZ25</td>
-                        <td data-index="113"></td>
-                        <td data-index="114" ondblclick="editCell(this)"></td>
-                        <td data-index="115" class="cal-status"></td>
-                        <td data-index="116" class="pm-status"></td>
+                        <td data-index="115">SZ026</td>
+                        <td data-index="116">SZ25</td>
+                        <td data-index="117"></td>
+                        <td data-index="118" ondblclick="editCell(this)"></td>
+                        <td data-index="119" class="cal-status"></td>
+                        <td data-index="120" class="pm-status"></td>
                     </tr>
                     <tr>
-                        <td data-index="117">QUARTET001</td>
-                        <td data-index="118">aapduo5</td>
-                        <td data-index="119"></td>
-                        <td data-index="120" ondblclick="editCell(this)"></td>
-                        <td data-index="121" class="cal-status"></td>
-                        <td data-index="122" class="pm-status"></td>
+                        <td data-index="124">QUARTET001</td>
+                        <td data-index="125">aapduo5</td>
+                        <td data-index="126"></td>
+                        <td data-index="127" ondblclick="editCell(this)"></td>
+                        <td data-index="128" class="cal-status"></td>
+                        <td data-index="129" class="pm-status"></td>
                     </tr>
                     <tr>
-                        <td data-index="123">QUARTET002</td>
-                        <td data-index="124">quartet2</td>
-                        <td data-index="125"></td>
-                        <td data-index="126" ondblclick="editCell(this)"></td>
-                        <td data-index="127" class="cal-status"></td>
-                        <td data-index="128" class="pm-status"></td>
+                        <td data-index="130">QUARTET002</td>
+                        <td data-index="131">quartet2</td>
+                        <td data-index="132"></td>
+                        <td data-index="133" ondblclick="editCell(this)"></td>
+                        <td data-index="134" class="cal-status"></td>
+                        <td data-index="135" class="pm-status"></td>
                     </tr>
                     <tr>
-                        <td data-index="129">QUARTET003</td>
-                        <td data-index="130">quartet3</td>
-                        <td data-index="131"></td>
-                        <td data-index="132" ondblclick="editCell(this)"></td>
-                        <td data-index="133" class="cal-status"></td>
-                        <td data-index="134" class="pm-status"></td>
+                        <td data-index="139">QUARTET003</td>
+                        <td data-index="140">quartet3</td>
+                        <td data-index="141"></td>
+                        <td data-index="142" ondblclick="editCell(this)"></td>
+                        <td data-index="143" class="cal-status"></td>
+                        <td data-index="144" class="pm-status"></td>
                     </tr>
                     <tr>
-                        <td data-index="135">DUO008</td>
-                        <td data-index="136">duo11</td>
-                        <td data-index="137"></td>
-                        <td data-index="138" ondblclick="editCell(this)"></td>
-                        <td data-index="139" class="cal-status"></td>
-                        <td data-index="140" class="pm-status"></td>
+                        <td data-index="148">DUO008</td>
+                        <td data-index="149">duo11</td>
+                        <td data-index="150"></td>
+                        <td data-index="151" ondblclick="editCell(this)"></td>
+                        <td data-index="152" class="cal-status"></td>
+                        <td data-index="153" class="pm-status"></td>
                     </tr>
             </tbody>
         </table>
@@ -266,9 +261,6 @@
             <tr>
                 <th>TESTER NAME</th>
                 <th>PRODUCTION STATUS</th>
-                <th>STATUS</th>
-                <th>DIE TYPE</th>
-                <th>HANDLER</th>
                
             </tr>
             </thead>
@@ -284,9 +276,6 @@
                     <tr>
                         <th>TESTER NAME</th>
                         <th>PRODUCTION STATUS</th>
-                        <th>STATUS</th>
-                        <th>DIE TYPE</th>
-                        <th>HANDLER</th>
                        
                     </tr>
                     </thead>
@@ -302,9 +291,6 @@
                     <tr>
                         <th>TESTER NAME</th>
                         <th>PRODUCTION STATUS</th>
-                        <th>STATUS</th>
-                        <th>DIE TYPE</th>
-                        <th>HANDLER</th>
                        
                     </tr>
                     </thead>
@@ -320,9 +306,6 @@
                     <tr>
                         <th>TESTER NAME</th>
                         <th>PRODUCTION STATUS</th>
-                        <th>STATUS</th>
-                        <th>DIE TYPE</th>
-                        <th>HANDLER</th>
                        
                     </tr>
                     </thead>
@@ -338,9 +321,6 @@
                     <tr>
                         <th>TESTER NAME</th>
                         <th>PRODUCTION STATUS</th>
-                        <th>STATUS</th>
-                        <th>DIE TYPE</th>
-                        <th>HANDLER</th>
                        
                     </tr>
                     </thead>
@@ -356,9 +336,6 @@
                     <tr>
                         <th>TESTER NAME</th>
                         <th>PRODUCTION STATUS</th>
-                        <th>STATUS</th>
-                        <th>DIE TYPE</th>
-                        <th>HANDLER</th>
                        
                     </tr>
                     </thead>
@@ -376,9 +353,6 @@
                 <tr>
                     <th>TESTER NAME</th>
                     <th>PRODUCTION STATUS</th>
-                    <th>STATUS</th>
-                    <th>DIE TYPE</th>
-                    <th>HANDLER</th>
                    
                 </tr>
                 </thead>
@@ -394,9 +368,6 @@
                 <tr>
                     <th>TESTER NAME</th>
                     <th>PRODUCTION STATUS</th>
-                    <th>STATUS</th>
-                    <th>DIE TYPE</th>
-                    <th>HANDLER</th>
                    
                 </tr>
                 </thead>
@@ -412,9 +383,6 @@
                     <tr>
                         <th>TESTER NAME</th>
                         <th>PRODUCTION STATUS</th>
-                        <th>STATUS</th>
-                        <th>DIE TYPE</th>
-                        <th>HANDLER</th>
                         
                        
                     </tr>
@@ -431,9 +399,6 @@
                 <tr>
                     <th>TESTER NAME</th>
                     <th>PRODUCTION STATUS</th>
-                    <th>STATUS</th>
-                    <th>DIE TYPE</th>
-                    <th>HANDLER</th>
                    
                 </tr>
                 </thead>
@@ -447,14 +412,13 @@
             const table = document.getElementById("editableTable");
             if (!table) return;
 
-            table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
+            table.querySelectorAll("tbody tr").forEach((row) => {
                 if (row.cells.length >= 9) return;
 
-                const firstOperationalCell = row.cells[3];
-                firstOperationalCell.dataset.legacyIndex = String(3 + rowIndex * 4);
-                ["STATUS", "DIE TYPE", "HANDLER"].forEach(() => {
-                    row.insertBefore(document.createElement("td"), firstOperationalCell);
-                });
+                const dockingCell = row.cells[3];
+                row.insertBefore(document.createElement("td"), dockingCell);
+                row.insertBefore(document.createElement("td"), dockingCell);
+                row.insertBefore(document.createElement("td"), dockingCell);
             });
         }
 
@@ -464,25 +428,13 @@
                 .then(response => response.json())
                 .then(data => {
                     const table = document.getElementById("editableTable");
-                    const cells = table.getElementsByTagName("td");
-                    for (let i = 0; i < cells.length; i++) {
-                        let index = cells[i].getAttribute('data-index'); // Get the data-index for the cell
-                        if (!index) continue;
-                        if (Number(index) % 9 === 2) continue; // Production status is database-driven
-                        if (cells[i].classList.contains('cal-status') || cells[i].classList.contains('pm-status')) continue;
-                        const legacyIndex = cells[i].getAttribute('data-legacy-index');
-                        const currentKey = `cell${index}`;
-                        const legacyKey = `cell${legacyIndex}`;
-                        const savedValue = Object.prototype.hasOwnProperty.call(data, currentKey)
-                            ? data[currentKey]
-                            : (legacyIndex && Object.prototype.hasOwnProperty.call(data, legacyKey)
-                                ? data[legacyKey]
-                                : undefined);
-
-                        if (savedValue !== undefined) {
-                            cells[i].innerHTML = savedValue;
+                    table.querySelectorAll("tbody tr").forEach((row) => {
+                        const dockingCell = row.cells[6];
+                        const index = dockingCell?.getAttribute('data-index');
+                        if (index && Object.prototype.hasOwnProperty.call(data, `cell${index}`)) {
+                            dockingCell.innerHTML = data[`cell${index}`];
                         }
-                    }
+                    });
                 })
                 .catch(error => console.error('Error loading data:', error));
                 

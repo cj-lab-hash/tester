@@ -407,8 +407,8 @@ async function renderSchedulesAndHighlights(tableEl) {
     const testerName = normalizeIdent(tr.cells?.[0]?.textContent);
     const plan = map.get(testerName);
 
-    const calTd = tr.cells[4];
-    const pmTd  = tr.cells[5];
+    const calTd = tr.cells[7];
+    const pmTd  = tr.cells[8];
 
     const calState = setCellStatus(calTd, "cal", plan?.cal_schedule ?? null);
     const pmState  = setCellStatus(pmTd, "pm",  plan?.pm_schedule ?? null);

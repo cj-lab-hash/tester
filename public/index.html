@@ -447,10 +447,11 @@
             const table = document.getElementById("editableTable");
             if (!table) return;
 
-            table.querySelectorAll("tbody tr").forEach((row) => {
+            table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
                 if (row.cells.length >= 9) return;
 
                 const firstOperationalCell = row.cells[3];
+                firstOperationalCell.dataset.legacyIndex = String(3 + rowIndex * 4);
                 ["STATUS", "DIE TYPE", "HANDLER"].forEach(() => {
                     row.insertBefore(document.createElement("td"), firstOperationalCell);
                 });
@@ -465,10 +466,21 @@
                     const table = document.getElementById("editableTable");
                     const cells = table.getElementsByTagName("td");
                     for (let i = 0; i < cells.length; i++) {
-                        if (i == 2) continue; // Skip the PRODUCTION STATUS column (index 2) since it's dynamically updated
                         let index = cells[i].getAttribute('data-index'); // Get the data-index for the cell
-                        if (data[`cell${index}`]) {
-                            cells[i].innerHTML = data[`cell${index}`];
+                        if (!index) continue;
+                        if (Number(index) % 9 === 2) continue; // Production status is database-driven
+                        if (cells[i].classList.contains('cal-status') || cells[i].classList.contains('pm-status')) continue;
+                        const legacyIndex = cells[i].getAttribute('data-legacy-index');
+                        const currentKey = `cell${index}`;
+                        const legacyKey = `cell${legacyIndex}`;
+                        const savedValue = Object.prototype.hasOwnProperty.call(data, currentKey)
+                            ? data[currentKey]
+                            : (legacyIndex && Object.prototype.hasOwnProperty.call(data, legacyKey)
+                                ? data[legacyKey]
+                                : undefined);
+
+                        if (savedValue !== undefined) {
+                            cells[i].innerHTML = savedValue;
                         }
                     }
                 })

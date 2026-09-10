@@ -66,9 +66,7 @@ let isRefreshing = false;
 
 // Display all status
 
-let showAllMode = localStorage.getItem("showAllMode") !== "false";
-let TPEDT = localStorage.getItem("TPEDT") !="false";
-let PRESU = localStorage.getItem("PRESU") !="false";
+let filterMode = localStorage.getItem("filterMode") || "all";
 // ===================== HELPERS =====================
 // ===================== FIXED normalizeIdent =====================
 function normalizeIdent(id) {
@@ -701,9 +699,9 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     const stateLong = (r.state_long || "").toUpperCase();
 
     if (!stateLong ||
-        (!showAllMode && HIDE_STATES.has(state)) ||
-        (TPEDT && !isTPEDowntime(stateLong)) ||
-        (PRESU && !isPRESETUP(stateLong))) {
+      (filterMode === "downtime" && HIDE_STATES.has(state)) ||
+      (filterMode === "tpe" && !isTPEDowntime(stateLong)) ||
+      (filterMode === "presetup" && !isPRESETUP(stateLong))) {
       tr.style.display = "none";
       continue;
     }
@@ -892,7 +890,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     if (!r) { tr.hidden = true; continue; }
 
     const state = (r.state_short || "").toUpperCase();
-    if (!showAllMode && HIDE_STATES.has(state)) {
+    if (filterMode === "downtime" && HIDE_STATES.has(state)) {
       // tr.hidden = true;
       tr.style.display = "none";
        continue; 
@@ -901,13 +899,13 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     tr.style.display = "";
 
     const stateLong = (r.state_long || "").toUpperCase();
-    if (TPEDT && !isTPEDowntime(stateLong)) {
+    if (filterMode === "tpe" && !isTPEDowntime(stateLong)) {
       tr.style.display = "none";
       continue;
     }
     tr.style.display = "";
 
-    if (PRESU && !isPRESETUP(stateLong)) {
+    if (filterMode === "presetup" && !isPRESETUP(stateLong)) {
       tr.style.display = "none";
       continue;
     }
@@ -1215,112 +1213,20 @@ window.addEventListener("DOMContentLoaded", () => {
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
 
-  const toggle = document.getElementById("toggleModeBtn");
-  const labelText = document.querySelector(".label-text");
-  if (toggle) {
-    toggle.addEventListener("click", () => {
-      showAllMode = toggle.checked;
-      if (showAllMode) {
-        TPEDT = false;
-        tpetoggle.checked = false;
-        localStorage.setItem("TPEDT", "false");
-        if (labelTPE) labelTPE.textContent = "ALL DOWNTIMES";
-      }
-      localStorage.setItem("showAllMode",showAllMode);
+  const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
+    ? filterMode
+    : "all";
+  filterMode = savedFilterMode;
+  const filterControl = document.querySelector("input[name='statusFilter'][value='" + filterMode + "']");
+  if (filterControl) filterControl.checked = true;
 
-      labelText.textContent =
-      showAllMode
-       ? "ALL STATUS"
-        : "DOWNTIME ONLY";
-
-      refreshData();
-    }); 
-  }
-  
-  const tpetoggle = document.getElementById("toggleTPEBtn");
-  const labelTPE = document.querySelector(".label-TPE");
-  if (tpetoggle) {
-    tpetoggle.checked = TPEDT;
-    if (labelTPE) {
-      labelTPE.textContent = TPEDT
-        ? "TPE DOWNTIME ONLY"
-        : "ALL DOWNTIMES";
-    }
-
-    tpetoggle.addEventListener("click", () => {
-      TPEDT = tpetoggle.checked;
-
-      if (TPEDT && presetupToggle) {
-        PRESU = false;
-        presetupToggle.checked = false;
-        localStorage.setItem("PRESU", "false");
-
-        if (labelPRE) {
-          labelPRE.textContent = "ALL";
-        }
-      }
-
-      localStorage.setItem("TPEDT", String(TPEDT));
-
-      if (labelTPE) {
-        labelTPE.textContent = TPEDT
-          ? "TPE DOWNTIME ONLY"
-          : "ALL DOWNTIMES";
-      }
-
+  document.querySelectorAll("input[name='statusFilter']").forEach((control) => {
+    control.addEventListener("change", () => {
+      filterMode = control.value;
+      localStorage.setItem("filterMode", filterMode);
       refreshData();
     });
-  }
-  const presetupToggle = document.getElementById("togglePRESETUPBtn");
-  const labelPRE = document.querySelector(".label-PRESETUP");
-  if (presetupToggle) {
-    presetupToggle.checked = PRESU;
-
-    if (labelPRE) {
-      labelPRE.textContent = PRESU
-        ? "PRESETUP"
-        : "ALL";
-    }
-
-    presetupToggle.addEventListener("click", () => {
-      PRESU = presetupToggle.checked;
-
-      if (PRESU) {
-        TPEDT = false;
-        showAllMode = true;
-
-        if (tpetoggle) {
-          tpetoggle.checked = false;
-          localStorage.setItem("TPEDT", "false");
-          if (labelTPE) {
-            labelTPE.textContent = "ALL DOWNTIMES";
-          }
-        }
-
-        if (toggle) {
-          toggle.checked = true;
-          localStorage.setItem("showAllMode", "true");
-          if (labelText) {
-            labelText.textContent = "ALL STATUS";
-          }
-        }
-      }
-
-      if (PRESU && tpetoggle) {
-        tpetoggle.checked = false;
-      }
-
-      localStorage.setItem("PRESU", String(PRESU));
-
-      if (labelPRE) {
-        labelPRE.textContent = PRESU
-          ? "PRESETUP"
-          : "ALL";
-      }
-
-      refreshData();
-    });
-  }
+  });
 
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);

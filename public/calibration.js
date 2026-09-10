@@ -633,6 +633,14 @@ function appendStatusDetails(phaseCell, dieTypeCell, handlerCell, status) {
   }
 }
 
+function ensureStatusDetailCells(row, startIndex) {
+  while (row.cells.length <= startIndex + 2) {
+    row.appendChild(document.createElement("td"));
+  }
+
+  return [row.cells[startIndex], row.cells[startIndex + 1], row.cells[startIndex + 2]];
+}
+
 // ===================== VIEW TOAST ALERTS (from table content) =====================
 function collectIssueAlerts(tableEl) {
   if (!tableEl) return [];
@@ -781,6 +789,8 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     const cell = tr.cells?.[prodColIndex];
     if (!cell) continue;
 
+    const [phaseCell, dieTypeCell, handlerCell] = ensureStatusDetailCells(tr, 6);
+
     const r = map.get(id);
 
     if (!r) {
@@ -829,7 +839,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       cell.textContent = out.label;
     }
 
-    appendStatusPills(cell, out);
+    appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     // color
     cell.className = cell.className.replace(/ps-\w+/g, "").trim();

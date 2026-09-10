@@ -298,6 +298,18 @@ td.cal-due, td.pm-due {
   vertical-align: middle;
   padding: 8px;
 }
+#editableTable th:nth-child(7),
+#editableTable td:nth-child(7),
+#editableTable th:nth-child(8),
+#editableTable td:nth-child(8),
+#editableTable th:nth-child(9),
+#editableTable td:nth-child(9) {
+  white-space: nowrap;
+  padding: 6px;
+}
+#editableTable td:nth-child(n+7) .phase-pill {
+  margin-left: 0;
+}
 #uflexTable th,
 #uflexTable td,
 #eagleTable th,

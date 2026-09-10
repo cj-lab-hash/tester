@@ -58,6 +58,9 @@
                     <th>TESTER NAME</th>
                     <th>HOST NAME</th>
                     <th>PRODUCTION STATUS</th>
+                    <th>STATUS</th>
+                    <th>DIE TYPE</th>
+                    <th>HANDLER</th>
                     <th>DOCKING MECHANISM</th>
                     <th>CAL SCHEDULE</th>
                     <th>PM SCHEDULE</th>
@@ -413,9 +416,13 @@
             if (!table) return;
 
             table.querySelectorAll("tbody tr").forEach((row) => {
-                if (row.cells.length >= 9) return;
+                if (row.cells.length >= 9) {
+                    row.cells[6].dataset.field = "docking";
+                    return;
+                }
 
                 const dockingCell = row.cells[3];
+                dockingCell.dataset.field = "docking";
                 row.insertBefore(document.createElement("td"), dockingCell);
                 row.insertBefore(document.createElement("td"), dockingCell);
                 row.insertBefore(document.createElement("td"), dockingCell);
@@ -429,7 +436,7 @@
                 .then(data => {
                     const table = document.getElementById("editableTable");
                     table.querySelectorAll("tbody tr").forEach((row) => {
-                        const dockingCell = row.cells[6];
+                        const dockingCell = row.querySelector('[data-field="docking"]');
                         const index = dockingCell?.getAttribute('data-index');
                         if (index && Object.prototype.hasOwnProperty.call(data, `cell${index}`)) {
                             dockingCell.innerHTML = data[`cell${index}`];
@@ -470,6 +477,7 @@
 
         // Function to save edited data to the server
         function saveEdit(td, newValue) {
+            if (td.dataset.field !== "docking") return;
             var index = td.getAttribute('data-index'); // Get the index for the cell
 
             // Update the cell's innerHTML

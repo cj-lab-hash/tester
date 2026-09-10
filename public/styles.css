@@ -626,7 +626,7 @@ td.cal-due, td.pm-due {
 }
 /* Container */
 .toggle,
-.tpetoggle {
+.tpetoggle,presetupToggle {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -724,6 +724,9 @@ td.cal-due, td.pm-due {
   font-size: 14px;
 }
 .label-TPE {
+  font-size: 14px;
+}
+.label-PRESETUP {
   font-size: 14px;
 }
 

@@ -328,7 +328,7 @@ td.cal-due, td.pm-due {
 #tmtTable, #legacyTable, 
 #speaTable, #ltxmxTable,
 #systemTable, #arkTable{
-  width: 60%;              /* overall table width - adjust 50% to 80% */
+  width: 80%;              /* match the ACT table width */
   margin: 0 auto;
   border-collapse: collapse;
   table-layout: fixed;     /* ✅ enforces your column widths */
@@ -392,7 +392,7 @@ td.cal-due, td.pm-due {
 #ltxmxTable td:nth-child(2),
 #arkTable td:nth-child(2),
 #systemTable td:nth-child(2){
-  white-space: nowrap;     /* keep in one line */
+  white-space: nowrap;     /* keep status and pills in one line */
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
 }
@@ -417,7 +417,7 @@ td.cal-due, td.pm-due {
     padding: 6px;
   }
 
-  /* Allow wrapping if you prefer full text */
+  /* Keep the status and its pills aligned like the ACT table. */
   #uflexTable td:nth-child(2),
   #eagleTable td:nth-child(2),
   #mavTable td:nth-child(2),
@@ -428,8 +428,9 @@ td.cal-due, td.pm-due {
   #ltxmxTable td:nth-child(2),
   #arkTable td:nth-child(2),
   #systemTable td:nth-child(2) {
-    white-space: normal;     /* change to nowrap if you want ellipsis */
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 /* SETUP phase pill */

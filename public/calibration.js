@@ -606,6 +606,33 @@ function appendStatusPills(container, status) {
   }
 }
 
+function appendStatusDetails(phaseCell, dieTypeCell, handlerCell, status) {
+  phaseCell.textContent = "";
+  dieTypeCell.textContent = "";
+  handlerCell.textContent = "";
+
+  if (status.pillText) {
+    const phasePill = document.createElement("span");
+    phasePill.textContent = status.pillText;
+    phasePill.className = status.pillCss;
+    phaseCell.appendChild(phasePill);
+  }
+
+  if (status.dieTypeText) {
+    const dieTypePill = document.createElement("span");
+    dieTypePill.textContent = status.dieTypeText;
+    dieTypePill.className = status.dieTypeCss;
+    dieTypeCell.appendChild(dieTypePill);
+  }
+
+  if (status.handlerText) {
+    const handlerPill = document.createElement("span");
+    handlerPill.textContent = status.handlerText;
+    handlerPill.className = status.handlerCss;
+    handlerCell.appendChild(handlerPill);
+  }
+}
+
 // ===================== VIEW TOAST ALERTS (from table content) =====================
 function collectIssueAlerts(tableEl) {
   if (!tableEl) return [];
@@ -717,7 +744,10 @@ async function loadSYSTEMLatest(tableEl) {
       tdStatus.appendChild(span);
     }
 
-    appendStatusPills(tdStatus, out);
+    const tdPhase = document.createElement("td");
+    const tdDieType = document.createElement("td");
+    const tdHandler = document.createElement("td");
+    appendStatusDetails(tdPhase, tdDieType, tdHandler, out);
 
     // color class (UMAINT red, SETUP pink, etc.)
     if (out.css) tdStatus.classList.add(out.css);
@@ -726,6 +756,9 @@ async function loadSYSTEMLatest(tableEl) {
     tdStatus.title = `State: ${r.state_short || ""}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
 
     tr.appendChild(tdStatus);
+    tr.appendChild(tdPhase);
+    tr.appendChild(tdDieType);
+    tr.appendChild(tdHandler);
     frag.appendChild(tr);
   }
 
@@ -890,7 +923,10 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
     const cell = tr.cells?.[prodColIndex];
-    if (!cell) continue;
+    const phaseCell = tr.cells?.[2];
+    const dieTypeCell = tr.cells?.[3];
+    const handlerCell = tr.cells?.[4];
+    if (!cell || !phaseCell || !dieTypeCell || !handlerCell) continue;
 
     const r = map.get(id);
     if (!r) { tr.hidden = true; continue; }
@@ -920,7 +956,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
       cell.appendChild(span);
     }
 
-    appendStatusPills(cell, out);
+    appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     if (out.css) cell.classList.add(out.css);
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
@@ -941,7 +977,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
     const cell = tr.cells?.[prodColIndex];
-    if (!cell) continue;
+    const phaseCell = tr.cells?.[2];
+    const dieTypeCell = tr.cells?.[3];
+    const handlerCell = tr.cells?.[4];
+    if (!cell || !phaseCell || !dieTypeCell || !handlerCell) continue;
 
     const r = map.get(id);
     if (!r) { tr.hidden = true; continue; }
@@ -989,7 +1028,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
       cell.appendChild(span);
     }
 
-    appendStatusPills(cell, out);
+    appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     if (out.css) cell.classList.add(out.css);
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
@@ -1068,7 +1107,13 @@ async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "sta
     tr.appendChild(tdName);
 
     const tdProd = document.createElement("td");
+    const tdPhase = document.createElement("td");
+    const tdDieType = document.createElement("td");
+    const tdHandler = document.createElement("td");
     tr.appendChild(tdProd);
+    tr.appendChild(tdPhase);
+    tr.appendChild(tdDieType);
+    tr.appendChild(tdHandler);
 
     frag.appendChild(tr);
   }
@@ -1099,14 +1144,18 @@ async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long"
 
   for (const r of (data || [])) {
     const tr = document.createElement("tr");
-
     const tdName = document.createElement("td");
+    const tdProd = document.createElement("td");
+    const tdPhase = document.createElement("td");
+    const tdDieType = document.createElement("td");
+    const tdHandler = document.createElement("td");
+
     tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
     tr.appendChild(tdName);
-
-    const tdProd = document.createElement("td");
     tr.appendChild(tdProd);
-
+    tr.appendChild(tdPhase);
+    tr.appendChild(tdDieType);
+    tr.appendChild(tdHandler);
     frag.appendChild(tr);
   }
 

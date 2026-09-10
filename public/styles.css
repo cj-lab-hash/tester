@@ -433,6 +433,80 @@ td.cal-due, td.pm-due {
     text-overflow: ellipsis;
   }
 }
+
+/* Dedicated detail columns for non-ACT tables */
+#uflexTable th:nth-child(1), #uflexTable td:nth-child(1),
+#eagleTable th:nth-child(1), #eagleTable td:nth-child(1),
+#mavTable th:nth-child(1), #mavTable td:nth-child(1),
+#ltxTable th:nth-child(1), #ltxTable td:nth-child(1),
+#tmtTable th:nth-child(1), #tmtTable td:nth-child(1),
+#legacyTable th:nth-child(1), #legacyTable td:nth-child(1),
+#speaTable th:nth-child(1), #speaTable td:nth-child(1),
+#ltxmxTable th:nth-child(1), #ltxmxTable td:nth-child(1),
+#systemTable th:nth-child(1), #systemTable td:nth-child(1),
+#arkTable th:nth-child(1), #arkTable td:nth-child(1) {
+  width: 22%;
+}
+
+#uflexTable th:nth-child(2), #uflexTable td:nth-child(2),
+#eagleTable th:nth-child(2), #eagleTable td:nth-child(2),
+#mavTable th:nth-child(2), #mavTable td:nth-child(2),
+#ltxTable th:nth-child(2), #ltxTable td:nth-child(2),
+#tmtTable th:nth-child(2), #tmtTable td:nth-child(2),
+#legacyTable th:nth-child(2), #legacyTable td:nth-child(2),
+#speaTable th:nth-child(2), #speaTable td:nth-child(2),
+#ltxmxTable th:nth-child(2), #ltxmxTable td:nth-child(2),
+#systemTable th:nth-child(2), #systemTable td:nth-child(2),
+#arkTable th:nth-child(2), #arkTable td:nth-child(2) {
+  width: 28%;
+  white-space: normal;
+}
+
+#uflexTable th:nth-child(3), #uflexTable td:nth-child(3),
+#eagleTable th:nth-child(3), #eagleTable td:nth-child(3),
+#mavTable th:nth-child(3), #mavTable td:nth-child(3),
+#ltxTable th:nth-child(3), #ltxTable td:nth-child(3),
+#tmtTable th:nth-child(3), #tmtTable td:nth-child(3),
+#legacyTable th:nth-child(3), #legacyTable td:nth-child(3),
+#speaTable th:nth-child(3), #speaTable td:nth-child(3),
+#ltxmxTable th:nth-child(3), #ltxmxTable td:nth-child(3),
+#systemTable th:nth-child(3), #systemTable td:nth-child(3),
+#arkTable th:nth-child(3), #arkTable td:nth-child(3),
+#uflexTable th:nth-child(4), #uflexTable td:nth-child(4),
+#eagleTable th:nth-child(4), #eagleTable td:nth-child(4),
+#mavTable th:nth-child(4), #mavTable td:nth-child(4),
+#ltxTable th:nth-child(4), #ltxTable td:nth-child(4),
+#tmtTable th:nth-child(4), #tmtTable td:nth-child(4),
+#legacyTable th:nth-child(4), #legacyTable td:nth-child(4),
+#speaTable th:nth-child(4), #speaTable td:nth-child(4),
+#ltxmxTable th:nth-child(4), #ltxmxTable td:nth-child(4),
+#systemTable th:nth-child(4), #systemTable td:nth-child(4),
+#arkTable th:nth-child(4), #arkTable td:nth-child(4),
+#uflexTable th:nth-child(5), #uflexTable td:nth-child(5),
+#eagleTable th:nth-child(5), #eagleTable td:nth-child(5),
+#mavTable th:nth-child(5), #mavTable td:nth-child(5),
+#ltxTable th:nth-child(5), #ltxTable td:nth-child(5),
+#tmtTable th:nth-child(5), #tmtTable td:nth-child(5),
+#legacyTable th:nth-child(5), #legacyTable td:nth-child(5),
+#speaTable th:nth-child(5), #speaTable td:nth-child(5),
+#ltxmxTable th:nth-child(5), #ltxmxTable td:nth-child(5),
+#systemTable th:nth-child(5), #systemTable td:nth-child(5),
+#arkTable th:nth-child(5), #arkTable td:nth-child(5) {
+  width: 16.66%;
+}
+
+#uflexTable td:nth-child(n+3) .phase-pill,
+#eagleTable td:nth-child(n+3) .phase-pill,
+#mavTable td:nth-child(n+3) .phase-pill,
+#ltxTable td:nth-child(n+3) .phase-pill,
+#tmtTable td:nth-child(n+3) .phase-pill,
+#legacyTable td:nth-child(n+3) .phase-pill,
+#speaTable td:nth-child(n+3) .phase-pill,
+#ltxmxTable td:nth-child(n+3) .phase-pill,
+#systemTable td:nth-child(n+3) .phase-pill,
+#arkTable td:nth-child(n+3) .phase-pill {
+  margin-left: 0;
+}
 /* SETUP phase pill */
 .phase-pill{
   display:inline-block;

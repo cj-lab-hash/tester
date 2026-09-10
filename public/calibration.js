@@ -407,8 +407,8 @@ async function renderSchedulesAndHighlights(tableEl) {
     const testerName = normalizeIdent(tr.cells?.[0]?.textContent);
     const plan = map.get(testerName);
 
-    const calTd = tr.cells[4];
-    const pmTd  = tr.cells[5];
+    const calTd = tr.cells[7];
+    const pmTd  = tr.cells[8];
 
     const calState = setCellStatus(calTd, "cal", plan?.cal_schedule ?? null);
     const pmState  = setCellStatus(pmTd, "pm",  plan?.pm_schedule ?? null);
@@ -482,6 +482,30 @@ function getElapsedSecondsSince(checkedAt) {
   return Math.max(0, Math.floor((Date.now() - timestampMs) / 1000));
 }
 
+function extractDieType(rawTitle) {
+  if (!rawTitle) return null;
+
+  const match = rawTitle.match(
+    /(?:die\s*type|dieType|device)\s*:\s*([^\r\n]+?)(?=\s+(?:qty|quantity|lot\s*#?|time\s*start|time\s*end|handler|$)|$)/i
+  );
+
+  const dieType = match?.[1]
+    ?.replace(/^(?:die\s*type|dieType|device)\s*:\s*/i, "")
+    .trim();
+
+  return dieType || null;
+}
+
+function extractHandler(rawTitle) {
+  if (!rawTitle) return null;
+
+  const match = rawTitle.match(
+    /handler\s*:\s*([^\r\n]+?)(?=\s+(?:duration|time\s*start|time\s*end|lot\s*#?|device|die\s*type|qty|quantity)|$)/i
+  );
+
+  return match?.[1]?.trim() || null;
+}
+
 function extractIssue(stateShort, stateLong, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
@@ -505,6 +529,8 @@ function extractIssue(stateShort, stateLong, rawTitle) {
 function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   const s = (stateShort || "").toUpperCase().trim();
   const issue = extractIssue(s, stateLong, rawTitle);
+  const dieType = extractDieType(rawTitle);
+  const handler = extractHandler(rawTitle);
 
   let result;
   if (s === "UMAINT") result = { label: issue || "UMAINT", css: "ps-red" };
@@ -518,6 +544,16 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
     result = { label, css: "ps-gray" };
   } else if (s === "IDLE") result = { label: issue || "IDLE", css: "ps-yellow" };
   else result = { label: issue || s || "", css: "" };
+
+  if (dieType) {
+    result.dieTypeText = `${dieType}`;
+    result.dieTypeCss = "phase-pill pill-die-type";
+  }
+
+  if (handler) {
+    result.handlerText = `${handler}`;
+    result.handlerCss = "phase-pill pill-handler";
+  }
 
   const PILL_ALLOWED_STATES = new Set(["UMAINT", "SETUP"]);
   if (!PILL_ALLOWED_STATES.has(s)) return result;
@@ -545,6 +581,56 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   }
 
   return result;
+}
+
+function appendStatusPills(container, status) {
+  if (status.pillText) {
+    const phasePill = document.createElement("span");
+    phasePill.textContent = status.pillText;
+    phasePill.className = status.pillCss;
+    container.appendChild(phasePill);
+  }
+
+  if (status.dieTypeText) {
+    const dieTypePill = document.createElement("span");
+    dieTypePill.textContent = status.dieTypeText;
+    dieTypePill.className = status.dieTypeCss;
+    container.appendChild(dieTypePill);
+  }
+
+  if (status.handlerText) {
+    const handlerPill = document.createElement("span");
+    handlerPill.textContent = status.handlerText;
+    handlerPill.className = status.handlerCss;
+    container.appendChild(handlerPill);
+  }
+}
+
+function appendStatusDetails(phaseCell, dieTypeCell, handlerCell, status) {
+  phaseCell.textContent = "";
+  dieTypeCell.textContent = "";
+  handlerCell.textContent = "";
+
+  if (status.pillText) {
+    const phasePill = document.createElement("span");
+    phasePill.textContent = status.pillText;
+    phasePill.className = status.pillCss;
+    phaseCell.appendChild(phasePill);
+  }
+
+  if (status.dieTypeText) {
+    const dieTypePill = document.createElement("span");
+    dieTypePill.textContent = status.dieTypeText;
+    dieTypePill.className = status.dieTypeCss;
+    dieTypeCell.appendChild(dieTypePill);
+  }
+
+  if (status.handlerText) {
+    const handlerPill = document.createElement("span");
+    handlerPill.textContent = status.handlerText;
+    handlerPill.className = status.handlerCss;
+    handlerCell.appendChild(handlerPill);
+  }
 }
 
 // ===================== VIEW TOAST ALERTS (from table content) =====================
@@ -658,13 +744,10 @@ async function loadSYSTEMLatest(tableEl) {
       tdStatus.appendChild(span);
     }
 
-    // WAITING/ATTENDED pill (uses your existing logic)
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      tdStatus.appendChild(pill);
-    }
+    const tdPhase = document.createElement("td");
+    const tdDieType = document.createElement("td");
+    const tdHandler = document.createElement("td");
+    appendStatusDetails(tdPhase, tdDieType, tdHandler, out);
 
     // color class (UMAINT red, SETUP pink, etc.)
     if (out.css) tdStatus.classList.add(out.css);
@@ -673,6 +756,9 @@ async function loadSYSTEMLatest(tableEl) {
     tdStatus.title = `State: ${r.state_short || ""}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
 
     tr.appendChild(tdStatus);
+    tr.appendChild(tdPhase);
+    tr.appendChild(tdDieType);
+    tr.appendChild(tdHandler);
     frag.appendChild(tr);
   }
 
@@ -690,10 +776,17 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
 
+  window.normalizeActTableRows?.();
+
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
     const cell = tr.cells?.[prodColIndex];
     if (!cell) continue;
+
+    const phaseCell = tr.cells?.[3];
+    const dieTypeCell = tr.cells?.[4];
+    const handlerCell = tr.cells?.[5];
+    if (!phaseCell || !dieTypeCell || !handlerCell) continue;
 
     const r = map.get(id);
 
@@ -743,12 +836,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       cell.textContent = out.label;
     }
 
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
+    appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     // color
     cell.className = cell.className.replace(/ps-\w+/g, "").trim();
@@ -842,7 +930,10 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
     const cell = tr.cells?.[prodColIndex];
-    if (!cell) continue;
+    const phaseCell = tr.cells?.[2];
+    const dieTypeCell = tr.cells?.[3];
+    const handlerCell = tr.cells?.[4];
+    if (!cell || !phaseCell || !dieTypeCell || !handlerCell) continue;
 
     const r = map.get(id);
     if (!r) { tr.hidden = true; continue; }
@@ -872,12 +963,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
       cell.appendChild(span);
     }
 
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
+    appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     if (out.css) cell.classList.add(out.css);
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
@@ -898,7 +984,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
     const cell = tr.cells?.[prodColIndex];
-    if (!cell) continue;
+    const phaseCell = tr.cells?.[2];
+    const dieTypeCell = tr.cells?.[3];
+    const handlerCell = tr.cells?.[4];
+    if (!cell || !phaseCell || !dieTypeCell || !handlerCell) continue;
 
     const r = map.get(id);
     if (!r) { tr.hidden = true; continue; }
@@ -946,12 +1035,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
       cell.appendChild(span);
     }
 
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
+    appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     if (out.css) cell.classList.add(out.css);
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
@@ -1030,7 +1114,13 @@ async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "sta
     tr.appendChild(tdName);
 
     const tdProd = document.createElement("td");
+    const tdPhase = document.createElement("td");
+    const tdDieType = document.createElement("td");
+    const tdHandler = document.createElement("td");
     tr.appendChild(tdProd);
+    tr.appendChild(tdPhase);
+    tr.appendChild(tdDieType);
+    tr.appendChild(tdHandler);
 
     frag.appendChild(tr);
   }
@@ -1061,14 +1151,18 @@ async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long"
 
   for (const r of (data || [])) {
     const tr = document.createElement("tr");
-
     const tdName = document.createElement("td");
+    const tdProd = document.createElement("td");
+    const tdPhase = document.createElement("td");
+    const tdDieType = document.createElement("td");
+    const tdHandler = document.createElement("td");
+
     tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
     tr.appendChild(tdName);
-
-    const tdProd = document.createElement("td");
     tr.appendChild(tdProd);
-
+    tr.appendChild(tdPhase);
+    tr.appendChild(tdDieType);
+    tr.appendChild(tdHandler);
     frag.appendChild(tr);
   }
 

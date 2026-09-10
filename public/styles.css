@@ -298,6 +298,18 @@ td.cal-due, td.pm-due {
   vertical-align: middle;
   padding: 8px;
 }
+#editableTable th:nth-child(4),
+#editableTable td:nth-child(4),
+#editableTable th:nth-child(5),
+#editableTable td:nth-child(5),
+#editableTable th:nth-child(6),
+#editableTable td:nth-child(6) {
+  white-space: nowrap;
+  padding: 6px;
+}
+#editableTable td:nth-child(n+4):nth-child(-n+6) .phase-pill {
+  margin-left: 0;
+}
 #uflexTable th,
 #uflexTable td,
 #eagleTable th,
@@ -328,7 +340,7 @@ td.cal-due, td.pm-due {
 #tmtTable, #legacyTable, 
 #speaTable, #ltxmxTable,
 #systemTable, #arkTable{
-  width: 60%;              /* overall table width - adjust 50% to 80% */
+  width: 80%;              /* match the ACT table width */
   margin: 0 auto;
   border-collapse: collapse;
   table-layout: fixed;     /* ✅ enforces your column widths */
@@ -392,7 +404,7 @@ td.cal-due, td.pm-due {
 #ltxmxTable td:nth-child(2),
 #arkTable td:nth-child(2),
 #systemTable td:nth-child(2){
-  white-space: nowrap;     /* keep in one line */
+  white-space: nowrap;     /* keep status and pills in one line */
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
 }
@@ -417,7 +429,7 @@ td.cal-due, td.pm-due {
     padding: 6px;
   }
 
-  /* Allow wrapping if you prefer full text */
+  /* Keep the status and its pills aligned like the ACT table. */
   #uflexTable td:nth-child(2),
   #eagleTable td:nth-child(2),
   #mavTable td:nth-child(2),
@@ -428,9 +440,84 @@ td.cal-due, td.pm-due {
   #ltxmxTable td:nth-child(2),
   #arkTable td:nth-child(2),
   #systemTable td:nth-child(2) {
-    white-space: normal;     /* change to nowrap if you want ellipsis */
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+}
+
+/* Dedicated detail columns for non-ACT tables */
+#uflexTable th:nth-child(1), #uflexTable td:nth-child(1),
+#eagleTable th:nth-child(1), #eagleTable td:nth-child(1),
+#mavTable th:nth-child(1), #mavTable td:nth-child(1),
+#ltxTable th:nth-child(1), #ltxTable td:nth-child(1),
+#tmtTable th:nth-child(1), #tmtTable td:nth-child(1),
+#legacyTable th:nth-child(1), #legacyTable td:nth-child(1),
+#speaTable th:nth-child(1), #speaTable td:nth-child(1),
+#ltxmxTable th:nth-child(1), #ltxmxTable td:nth-child(1),
+#systemTable th:nth-child(1), #systemTable td:nth-child(1),
+#arkTable th:nth-child(1), #arkTable td:nth-child(1) {
+  width: 22%;
+}
+
+#uflexTable th:nth-child(2), #uflexTable td:nth-child(2),
+#eagleTable th:nth-child(2), #eagleTable td:nth-child(2),
+#mavTable th:nth-child(2), #mavTable td:nth-child(2),
+#ltxTable th:nth-child(2), #ltxTable td:nth-child(2),
+#tmtTable th:nth-child(2), #tmtTable td:nth-child(2),
+#legacyTable th:nth-child(2), #legacyTable td:nth-child(2),
+#speaTable th:nth-child(2), #speaTable td:nth-child(2),
+#ltxmxTable th:nth-child(2), #ltxmxTable td:nth-child(2),
+#systemTable th:nth-child(2), #systemTable td:nth-child(2),
+#arkTable th:nth-child(2), #arkTable td:nth-child(2) {
+  width: 28%;
+  white-space: normal;
+}
+
+#uflexTable th:nth-child(3), #uflexTable td:nth-child(3),
+#eagleTable th:nth-child(3), #eagleTable td:nth-child(3),
+#mavTable th:nth-child(3), #mavTable td:nth-child(3),
+#ltxTable th:nth-child(3), #ltxTable td:nth-child(3),
+#tmtTable th:nth-child(3), #tmtTable td:nth-child(3),
+#legacyTable th:nth-child(3), #legacyTable td:nth-child(3),
+#speaTable th:nth-child(3), #speaTable td:nth-child(3),
+#ltxmxTable th:nth-child(3), #ltxmxTable td:nth-child(3),
+#systemTable th:nth-child(3), #systemTable td:nth-child(3),
+#arkTable th:nth-child(3), #arkTable td:nth-child(3),
+#uflexTable th:nth-child(4), #uflexTable td:nth-child(4),
+#eagleTable th:nth-child(4), #eagleTable td:nth-child(4),
+#mavTable th:nth-child(4), #mavTable td:nth-child(4),
+#ltxTable th:nth-child(4), #ltxTable td:nth-child(4),
+#tmtTable th:nth-child(4), #tmtTable td:nth-child(4),
+#legacyTable th:nth-child(4), #legacyTable td:nth-child(4),
+#speaTable th:nth-child(4), #speaTable td:nth-child(4),
+#ltxmxTable th:nth-child(4), #ltxmxTable td:nth-child(4),
+#systemTable th:nth-child(4), #systemTable td:nth-child(4),
+#arkTable th:nth-child(4), #arkTable td:nth-child(4),
+#uflexTable th:nth-child(5), #uflexTable td:nth-child(5),
+#eagleTable th:nth-child(5), #eagleTable td:nth-child(5),
+#mavTable th:nth-child(5), #mavTable td:nth-child(5),
+#ltxTable th:nth-child(5), #ltxTable td:nth-child(5),
+#tmtTable th:nth-child(5), #tmtTable td:nth-child(5),
+#legacyTable th:nth-child(5), #legacyTable td:nth-child(5),
+#speaTable th:nth-child(5), #speaTable td:nth-child(5),
+#ltxmxTable th:nth-child(5), #ltxmxTable td:nth-child(5),
+#systemTable th:nth-child(5), #systemTable td:nth-child(5),
+#arkTable th:nth-child(5), #arkTable td:nth-child(5) {
+  width: 16.66%;
+}
+
+#uflexTable td:nth-child(n+3) .phase-pill,
+#eagleTable td:nth-child(n+3) .phase-pill,
+#mavTable td:nth-child(n+3) .phase-pill,
+#ltxTable td:nth-child(n+3) .phase-pill,
+#tmtTable td:nth-child(n+3) .phase-pill,
+#legacyTable td:nth-child(n+3) .phase-pill,
+#speaTable td:nth-child(n+3) .phase-pill,
+#ltxmxTable td:nth-child(n+3) .phase-pill,
+#systemTable td:nth-child(n+3) .phase-pill,
+#arkTable td:nth-child(n+3) .phase-pill {
+  margin-left: 0;
 }
 /* SETUP phase pill */
 .phase-pill{
@@ -450,6 +537,16 @@ td.cal-due, td.pm-due {
 .pill-attended{ 
   background:#ffd1e6;
   color:#8a0f4c;
+  transition: color 0.4s ease;
+}
+.pill-die-type {
+  background: #dbeafe;
+  color: #1e3a8a;
+  transition: color 0.4s ease;
+}
+.pill-handler {
+  background: #dcfce7;
+  color: #166534;
   transition: color 0.4s ease;
 }
 /* Waiting vs Started styles */
@@ -783,4 +880,113 @@ body.dark-mode .filter-modes label:has(input:checked) span {
     justify-content: center;
   }
 
+}
+
+@media (max-width: 600px) {
+  .page-header {
+    padding: 10px 8px;
+    gap: 8px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .header-right {
+    align-items: center;
+  }
+
+  .filter-modes {
+    width: 100%;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .filter-modes label span {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+
+  .view-tiles-wrap {
+    margin: 6px auto 10px;
+    padding: 0 6px;
+  }
+
+  #table {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #editableTable {
+    width: 980px !important;
+    max-width: none;
+    table-layout: fixed;
+    font-size: 11px;
+  }
+
+  #editableTable th,
+  #editableTable td {
+    padding: 7px 6px;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  #editableTable th:nth-child(1), #editableTable td:nth-child(1) { width: 120px; }
+  #editableTable th:nth-child(2), #editableTable td:nth-child(2) { width: 100px; }
+  #editableTable th:nth-child(3), #editableTable td:nth-child(3) { width: 170px; }
+  #editableTable th:nth-child(4), #editableTable td:nth-child(4) { width: 110px; }
+  #editableTable th:nth-child(5), #editableTable td:nth-child(5) { width: 110px; }
+  #editableTable th:nth-child(6), #editableTable td:nth-child(6) { width: 130px; }
+  #editableTable th:nth-child(7), #editableTable td:nth-child(7) { width: 150px; }
+  #editableTable th:nth-child(8), #editableTable td:nth-child(8) { width: 120px; }
+  #editableTable th:nth-child(9), #editableTable td:nth-child(9) { width: 120px; }
+
+  #editableTable .phase-pill {
+    margin-left: 0;
+    padding: 2px 5px;
+    font-size: 10px;
+  }
+
+  #editableTable .prod-link {
+    padding: 0;
+  }
+
+  #uflexTable, #eagleTable, #mavTable, #ltxTable,
+  #tmtTable, #legacyTable, #speaTable, #ltxmxTable,
+  #systemTable, #arkTable {
+    width: 650px;
+    max-width: none;
+    font-size: 11px;
+  }
+
+  #uflexTable th, #uflexTable td,
+  #eagleTable th, #eagleTable td,
+  #mavTable th, #mavTable td,
+  #ltxTable th, #ltxTable td,
+  #tmtTable th, #tmtTable td,
+  #legacyTable th, #legacyTable td,
+  #speaTable th, #speaTable td,
+  #ltxmxTable th, #ltxmxTable td,
+  #systemTable th, #systemTable td,
+  #arkTable th, #arkTable td {
+    padding: 7px 6px;
+    overflow-wrap: break-word;
+  }
+
+  #uflexTable td:nth-child(2), #eagleTable td:nth-child(2),
+  #mavTable td:nth-child(2), #ltxTable td:nth-child(2),
+  #tmtTable td:nth-child(2), #legacyTable td:nth-child(2),
+  #speaTable td:nth-child(2), #ltxmxTable td:nth-child(2),
+  #systemTable td:nth-child(2), #arkTable td:nth-child(2) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .phase-pill {
+    margin-left: 0;
+    padding: 2px 5px;
+    font-size: 10px;
+  }
 }

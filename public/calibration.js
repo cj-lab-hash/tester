@@ -489,7 +489,11 @@ function extractDieType(rawTitle) {
     /(?:die\s*type|dieType|device)\s*:\s*([^\r\n]+?)(?=\s+(?:qty|quantity|lot\s*#?|time\s*start|time\s*end|handler|$)|$)/i
   );
 
-  return match?.[1]?.trim() || null;
+  const dieType = match?.[1]
+    ?.replace(/^(?:die\s*type|dieType|device)\s*:\s*/i, "")
+    .trim();
+
+  return dieType || null;
 }
 
 function extractIssue(stateShort, stateLong, rawTitle) {

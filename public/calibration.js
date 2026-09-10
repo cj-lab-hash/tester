@@ -907,8 +907,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     }
     tr.style.display = "";
 
-    
-  if (PRESU && isPRESETUP(stateLong)) {
+    if (PRESU && !isPRESETUP(stateLong)) {
       tr.style.display = "none";
       continue;
     }

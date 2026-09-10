@@ -482,6 +482,16 @@ function getElapsedSecondsSince(checkedAt) {
   return Math.max(0, Math.floor((Date.now() - timestampMs) / 1000));
 }
 
+function extractDieType(rawTitle) {
+  if (!rawTitle) return null;
+
+  const match = rawTitle.match(
+    /(?:die\s*type|dieType|device)\s*:\s*([^\r\n]+?)(?=\s+(?:qty|quantity|lot\s*#?|time\s*start|time\s*end|handler|$)|$)/i
+  );
+
+  return match?.[1]?.trim() || null;
+}
+
 function extractIssue(stateShort, stateLong, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
@@ -505,6 +515,7 @@ function extractIssue(stateShort, stateLong, rawTitle) {
 function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   const s = (stateShort || "").toUpperCase().trim();
   const issue = extractIssue(s, stateLong, rawTitle);
+  const dieType = extractDieType(rawTitle);
 
   let result;
   if (s === "UMAINT") result = { label: issue || "UMAINT", css: "ps-red" };
@@ -518,6 +529,11 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
     result = { label, css: "ps-gray" };
   } else if (s === "IDLE") result = { label: issue || "IDLE", css: "ps-yellow" };
   else result = { label: issue || s || "", css: "" };
+
+  if (dieType) {
+    result.dieTypeText = `DIE ${dieType}`;
+    result.dieTypeCss = "phase-pill pill-die-type";
+  }
 
   const PILL_ALLOWED_STATES = new Set(["UMAINT", "SETUP"]);
   if (!PILL_ALLOWED_STATES.has(s)) return result;
@@ -545,6 +561,22 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   }
 
   return result;
+}
+
+function appendStatusPills(container, status) {
+  if (status.pillText) {
+    const phasePill = document.createElement("span");
+    phasePill.textContent = status.pillText;
+    phasePill.className = status.pillCss;
+    container.appendChild(phasePill);
+  }
+
+  if (status.dieTypeText) {
+    const dieTypePill = document.createElement("span");
+    dieTypePill.textContent = status.dieTypeText;
+    dieTypePill.className = status.dieTypeCss;
+    container.appendChild(dieTypePill);
+  }
 }
 
 // ===================== VIEW TOAST ALERTS (from table content) =====================
@@ -658,13 +690,7 @@ async function loadSYSTEMLatest(tableEl) {
       tdStatus.appendChild(span);
     }
 
-    // WAITING/ATTENDED pill (uses your existing logic)
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      tdStatus.appendChild(pill);
-    }
+    appendStatusPills(tdStatus, out);
 
     // color class (UMAINT red, SETUP pink, etc.)
     if (out.css) tdStatus.classList.add(out.css);
@@ -743,12 +769,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       cell.textContent = out.label;
     }
 
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
+    appendStatusPills(cell, out);
 
     // color
     cell.className = cell.className.replace(/ps-\w+/g, "").trim();
@@ -872,12 +893,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
       cell.appendChild(span);
     }
 
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
+    appendStatusPills(cell, out);
 
     if (out.css) cell.classList.add(out.css);
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
@@ -946,12 +962,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
       cell.appendChild(span);
     }
 
-    if (out.pillText) {
-      const pill = document.createElement("span");
-      pill.textContent = out.pillText;
-      pill.className = out.pillCss;
-      cell.appendChild(pill);
-    }
+    appendStatusPills(cell, out);
 
     if (out.css) cell.classList.add(out.css);
     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;

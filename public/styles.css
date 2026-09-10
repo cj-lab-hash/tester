@@ -452,6 +452,11 @@ td.cal-due, td.pm-due {
   color:#8a0f4c;
   transition: color 0.4s ease;
 }
+.pill-die-type {
+  background: #dbeafe;
+  color: #1e3a8a;
+  transition: color 0.4s ease;
+}
 /* Waiting vs Started styles */
 .phase-waiting {
   background: #e5e7eb;   /* light gray */

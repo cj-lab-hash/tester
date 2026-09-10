@@ -551,7 +551,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   }
 
   if (handler) {
-    result.handlerText = `HANDLER ${handler}`;
+    result.handlerText = `HANDLER:${handler}`;
     result.handlerCss = "phase-pill pill-handler";
   }
 

@@ -4,8 +4,13 @@ body {
   align-items: center;
   height: 100vh;
   margin: 0;
+  overflow-x: hidden;
   background-color: white;
   transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 /*dark mode */
@@ -127,9 +132,13 @@ body, .view-tile, .toast, .header-right, .verse-card {
 }
 #table {
   text-align: center;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 }
 table {
   margin: 0 auto;
+  max-width: 100%;
 }
 th, td {
   padding: 10px 14px;
@@ -265,6 +274,7 @@ td.cal-due, td.pm-due {
 .page-header h1{
   grid-column: 2;
   justify-self: center;
+  min-width: 0;
   margin: 0;
   transition: color 0.4s ease;
 }
@@ -466,12 +476,14 @@ td.cal-due, td.pm-due {
   align-items: flex-end;
   gap: 6px;
   justify-self: end;
+  min-width: 0;
 }
 .header-left {
   grid-column: 1;
   display: flex;
   justify-content: center;
   align-items: center;
+  min-width: 0;
 }
 .header-left .verse-card {
   margin-top: 6px;

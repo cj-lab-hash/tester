@@ -702,7 +702,8 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
     if (!stateLong ||
         (!showAllMode && HIDE_STATES.has(state)) ||
-        (TPEDT && !isTPEDowntime(stateLong)) || (PRESU && isPRESETUP(stateLong))) {
+        (TPEDT && !isTPEDowntime(stateLong)) ||
+        (PRESU && !isPRESETUP(stateLong))) {
       tr.style.display = "none";
       continue;
     }

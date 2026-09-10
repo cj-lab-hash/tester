@@ -496,6 +496,16 @@ function extractDieType(rawTitle) {
   return dieType || null;
 }
 
+function extractHandler(rawTitle) {
+  if (!rawTitle) return null;
+
+  const match = rawTitle.match(
+    /handler\s*:\s*([^\r\n]+?)(?=\s+(?:duration|time\s*start|time\s*end|lot\s*#?|device|die\s*type|qty|quantity)|$)/i
+  );
+
+  return match?.[1]?.trim() || null;
+}
+
 function extractIssue(stateShort, stateLong, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
@@ -520,6 +530,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   const s = (stateShort || "").toUpperCase().trim();
   const issue = extractIssue(s, stateLong, rawTitle);
   const dieType = extractDieType(rawTitle);
+  const handler = extractHandler(rawTitle);
 
   let result;
   if (s === "UMAINT") result = { label: issue || "UMAINT", css: "ps-red" };
@@ -537,6 +548,11 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   if (dieType) {
     result.dieTypeText = `DIETYPE:${dieType}`;
     result.dieTypeCss = "phase-pill pill-die-type";
+  }
+
+  if (handler) {
+    result.handlerText = `HANDLER ${handler}`;
+    result.handlerCss = "phase-pill pill-handler";
   }
 
   const PILL_ALLOWED_STATES = new Set(["UMAINT", "SETUP"]);
@@ -580,6 +596,13 @@ function appendStatusPills(container, status) {
     dieTypePill.textContent = status.dieTypeText;
     dieTypePill.className = status.dieTypeCss;
     container.appendChild(dieTypePill);
+  }
+
+  if (status.handlerText) {
+    const handlerPill = document.createElement("span");
+    handlerPill.textContent = status.handlerText;
+    handlerPill.className = status.handlerCss;
+    container.appendChild(handlerPill);
   }
 }
 

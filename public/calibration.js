@@ -464,7 +464,8 @@ function formatHMS(totalSeconds) {
   const mm = Math.floor((s % 3600) / 60);
   const ss = s % 60;
   const pad = n => String(n).padStart(2, "0");
-  return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+  return `${pad(hh)}:${pad(mm)}`;
+  // return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
 }
 
 function extractIssue(stateShort, stateLong, rawTitle) {

@@ -1249,7 +1249,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
     tpetoggle.addEventListener("click", () => {
       TPEDT = tpetoggle.checked;
-      localStorage.setItem("TPEDT",TPEDT);
+
+      if (TPEDT && presetupToggle) {
+        PRESU = false;
+        presetupToggle.checked = false;
+        localStorage.setItem("PRESU", "false");
+
+        if (labelPRE) {
+          labelPRE.textContent = "ALL";
+        }
+      }
+
+      localStorage.setItem("TPEDT", String(TPEDT));
 
       if (labelTPE) {
         labelTPE.textContent = TPEDT
@@ -1264,6 +1275,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const labelPRE = document.querySelector(".label-PRESETUP");
   if (presetupToggle) {
     presetupToggle.checked = PRESU;
+
     if (labelPRE) {
       labelPRE.textContent = PRESU
         ? "PRESETUP"
@@ -1272,6 +1284,32 @@ window.addEventListener("DOMContentLoaded", () => {
 
     presetupToggle.addEventListener("click", () => {
       PRESU = presetupToggle.checked;
+
+      if (PRESU) {
+        TPEDT = false;
+        showAllMode = true;
+
+        if (tpetoggle) {
+          tpetoggle.checked = false;
+          localStorage.setItem("TPEDT", "false");
+          if (labelTPE) {
+            labelTPE.textContent = "ALL DOWNTIMES";
+          }
+        }
+
+        if (toggle) {
+          toggle.checked = true;
+          localStorage.setItem("showAllMode", "true");
+          if (labelText) {
+            labelText.textContent = "ALL STATUS";
+          }
+        }
+      }
+
+      if (PRESU && tpetoggle) {
+        tpetoggle.checked = false;
+      }
+
       localStorage.setItem("PRESU", String(PRESU));
 
       if (labelPRE) {

@@ -637,7 +637,7 @@ td.cal-due, td.pm-due {
 
 /* Hide default checkbox */
 .toggle input,
-.tpetoggle input {
+.tpetoggle input, presetupToggle input {
   display: none;
 }
 

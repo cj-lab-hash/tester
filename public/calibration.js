@@ -66,9 +66,7 @@ let isRefreshing = false;
 
 // Display all status
 
-let showAllMode = localStorage.getItem("showAllMode") !== "false";
-let TPEDT = localStorage.getItem("TPEDT") !="false";
-let PRESU = localStorage.getItem("PRESU") !="false";
+let filterMode = localStorage.getItem("filterMode") || "all";
 // ===================== HELPERS =====================
 // ===================== FIXED normalizeIdent =====================
 function normalizeIdent(id) {
@@ -475,6 +473,15 @@ function formatHMS(totalSeconds) {
   // return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
 }
 
+function getElapsedSecondsSince(checkedAt) {
+  if (!checkedAt) return 0;
+
+  const timestampMs = new Date(checkedAt).getTime();
+  if (Number.isNaN(timestampMs)) return 0;
+
+  return Math.max(0, Math.floor((Date.now() - timestampMs) / 1000));
+}
+
 function extractIssue(stateShort, stateLong, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
@@ -495,7 +502,7 @@ function extractIssue(stateShort, stateLong, rawTitle) {
   return null;
 }
 
-function productionStatusFromDb(stateShort, stateLong, rawTitle) {
+function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   const s = (stateShort || "").toUpperCase().trim();
   const issue = extractIssue(s, stateLong, rawTitle);
 
@@ -518,14 +525,18 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   const phase = getPhaseForState(s, rawTitle);
   if (phase === "ATTENDED") {
     const durSecs = extractDurationSeconds(s, stateLong, rawTitle);
-    const hms = formatHMS(durSecs);
+    const ageSecs = getElapsedSecondsSince(checkedAt);
+    const totalSecs = durSecs == null ? ageSecs : durSecs + ageSecs;
+    const hms = formatHMS(totalSecs);
     result.pillText = hms ? `ATTENDED ${hms}` : "ATTENDED";
     result.pillCss = "phase-pill pill-attended";
   }
 
   if (phase === "WAITING") {
     const durSecs = extractDurationSeconds(s, stateLong, rawTitle);
-    const hms = formatHMS(durSecs);
+    const ageSecs = getElapsedSecondsSince(checkedAt);
+    const totalSecs = durSecs == null ? ageSecs : durSecs + ageSecs;
+    const hms = formatHMS(totalSecs);
     result.pillText = hms ? `WAITING ${hms}` : "WAITING";
     result.pillCss = "phase-pill pill-waiting";
   // } else if (phase === "ATTENDED") {
@@ -629,7 +640,7 @@ async function loadSYSTEMLatest(tableEl) {
       "ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange"
     );
 
-    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
     const url = buildStatusphereUrlFromRow(r.href, id);
 
     // clickable label like other tables
@@ -701,9 +712,9 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     const stateLong = (r.state_long || "").toUpperCase();
 
     if (!stateLong ||
-        (!showAllMode && HIDE_STATES.has(state)) ||
-        (TPEDT && !isTPEDowntime(stateLong)) ||
-        (PRESU && !isPRESETUP(stateLong))) {
+      (filterMode === "downtime" && HIDE_STATES.has(state)) ||
+      (filterMode === "tpe" && !isTPEDowntime(stateLong)) ||
+      (filterMode === "presetup" && !isPRESETUP(stateLong))) {
       tr.style.display = "none";
       continue;
     }
@@ -712,7 +723,8 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     const out = productionStatusFromDb(
       r.state_short,
       r.state_long,
-      r.raw_title
+      r.raw_title,
+      r.checked_at
     );
 
     cell.innerHTML = "";
@@ -839,7 +851,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
     // if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
     // tr.hidden = false;
 
-    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
 
     cell.textContent = "";
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
@@ -892,7 +904,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     if (!r) { tr.hidden = true; continue; }
 
     const state = (r.state_short || "").toUpperCase();
-    if (!showAllMode && HIDE_STATES.has(state)) {
+    if (filterMode === "downtime" && HIDE_STATES.has(state)) {
       // tr.hidden = true;
       tr.style.display = "none";
        continue; 
@@ -901,19 +913,19 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     tr.style.display = "";
 
     const stateLong = (r.state_long || "").toUpperCase();
-    if (TPEDT && !isTPEDowntime(stateLong)) {
+    if (filterMode === "tpe" && !isTPEDowntime(stateLong)) {
       tr.style.display = "none";
       continue;
     }
     tr.style.display = "";
 
-    if (PRESU && !isPRESETUP(stateLong)) {
+    if (filterMode === "presetup" && !isPRESETUP(stateLong)) {
       tr.style.display = "none";
       continue;
     }
     tr.style.display = "";
     
-    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
 
     cell.textContent = "";
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
@@ -1215,112 +1227,20 @@ window.addEventListener("DOMContentLoaded", () => {
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
 
-  const toggle = document.getElementById("toggleModeBtn");
-  const labelText = document.querySelector(".label-text");
-  if (toggle) {
-    toggle.addEventListener("click", () => {
-      showAllMode = toggle.checked;
-      if (showAllMode) {
-        TPEDT = false;
-        tpetoggle.checked = false;
-        localStorage.setItem("TPEDT", "false");
-        if (labelTPE) labelTPE.textContent = "ALL DOWNTIMES";
-      }
-      localStorage.setItem("showAllMode",showAllMode);
+  const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
+    ? filterMode
+    : "all";
+  filterMode = savedFilterMode;
+  const filterControl = document.querySelector("input[name='statusFilter'][value='" + filterMode + "']");
+  if (filterControl) filterControl.checked = true;
 
-      labelText.textContent =
-      showAllMode
-       ? "ALL STATUS"
-        : "DOWNTIME ONLY";
-
-      refreshData();
-    }); 
-  }
-  
-  const tpetoggle = document.getElementById("toggleTPEBtn");
-  const labelTPE = document.querySelector(".label-TPE");
-  if (tpetoggle) {
-    tpetoggle.checked = TPEDT;
-    if (labelTPE) {
-      labelTPE.textContent = TPEDT
-        ? "TPE DOWNTIME ONLY"
-        : "ALL DOWNTIMES";
-    }
-
-    tpetoggle.addEventListener("click", () => {
-      TPEDT = tpetoggle.checked;
-
-      if (TPEDT && presetupToggle) {
-        PRESU = false;
-        presetupToggle.checked = false;
-        localStorage.setItem("PRESU", "false");
-
-        if (labelPRE) {
-          labelPRE.textContent = "ALL";
-        }
-      }
-
-      localStorage.setItem("TPEDT", String(TPEDT));
-
-      if (labelTPE) {
-        labelTPE.textContent = TPEDT
-          ? "TPE DOWNTIME ONLY"
-          : "ALL DOWNTIMES";
-      }
-
+  document.querySelectorAll("input[name='statusFilter']").forEach((control) => {
+    control.addEventListener("change", () => {
+      filterMode = control.value;
+      localStorage.setItem("filterMode", filterMode);
       refreshData();
     });
-  }
-  const presetupToggle = document.getElementById("togglePRESETUPBtn");
-  const labelPRE = document.querySelector(".label-PRESETUP");
-  if (presetupToggle) {
-    presetupToggle.checked = PRESU;
-
-    if (labelPRE) {
-      labelPRE.textContent = PRESU
-        ? "PRESETUP"
-        : "ALL";
-    }
-
-    presetupToggle.addEventListener("click", () => {
-      PRESU = presetupToggle.checked;
-
-      if (PRESU) {
-        TPEDT = false;
-        showAllMode = true;
-
-        if (tpetoggle) {
-          tpetoggle.checked = false;
-          localStorage.setItem("TPEDT", "false");
-          if (labelTPE) {
-            labelTPE.textContent = "ALL DOWNTIMES";
-          }
-        }
-
-        if (toggle) {
-          toggle.checked = true;
-          localStorage.setItem("showAllMode", "true");
-          if (labelText) {
-            labelText.textContent = "ALL STATUS";
-          }
-        }
-      }
-
-      if (PRESU && tpetoggle) {
-        tpetoggle.checked = false;
-      }
-
-      localStorage.setItem("PRESU", String(PRESU));
-
-      if (labelPRE) {
-        labelPRE.textContent = PRESU
-          ? "PRESETUP"
-          : "ALL";
-      }
-
-      refreshData();
-    });
-  }
+  });
 
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);

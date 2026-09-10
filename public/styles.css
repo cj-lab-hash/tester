@@ -624,112 +624,71 @@ td.cal-due, td.pm-due {
     font-size: 12px;
   }
 }
-/* Container */
-.toggle,
-.tpetoggle,
-.presetupToggle {
-  display: inline-flex;
+/* Mutually exclusive status filters */
+.filter-modes {
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f1f5f9;
+}
+
+.filter-modes legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.filter-modes label {
   cursor: pointer;
-  font-weight: 600;
   user-select: none;
 }
 
-/* Hide default checkbox */
-.toggle input,
-.tpetoggle input,
-.presetupToggle input {
-  display: none;
+.filter-modes input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* .tpetoggle {
+.filter-modes label span {
+  display: block;
+  padding: 7px 9px;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
-} */
-
-
-
-/* Slider background */
-.slider {
-  position: relative;
-  width: 50px;
-  height: 26px;
-  background-color: #ccc;
-  border-radius: 50px;
-  transition: 0.3s;
 }
 
-/* Circle inside slider */
-.slider::before {
-  content: "";
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  left: 3px;
-  top: 3px;
-  background: white;
-  border-radius: 50%;
-  transition: 0.3s;
+.filter-modes label:has(input:checked) span {
+  background: #166534;
+  color: #fff;
 }
 
-.slider,
-.TPEslider,
-.PRESETUPslider {
-  position: relative;
-  width: 50px;
-  height: 26px;
-  background-color: #ccc;
-  border-radius: 50px;
-  transition: 0.3s;
-  display: inline-block;
+body.dark-mode .filter-modes {
+  border-color: #3f4a5a;
+  background: #1a1d23;
 }
 
-.slider::before,
-.TPEslider::before,
-.PRESETUPslider::before {
-  content: "";
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  left: 3px;
-  top: 3px;
-  background: white;
-  border-radius: 50%;
-  transition: 0.3s;
+body.dark-mode .filter-modes label span {
+  color: #cbd5e1;
 }
 
-.toggle input:checked + .slider,
-.tpetoggle input:checked + .TPEslider,
-.presetupToggle input:checked + .PRESETUPslider {
-  background-color: #28a745;
+body.dark-mode .filter-modes label:has(input:checked) span {
+  background: #15803d;
+  color: #fff;
 }
 
-.toggle input:checked + .slider::before,
-.tpetoggle input:checked + .TPEslider::before,
-.presetupToggle input:checked + .PRESETUPslider::before {
-  transform: translateX(24px);
-}
-
-.toggle input:not(:checked) + .slider,
-.tpetoggle input:not(:checked) + .TPEslider,
-.presetupToggle input:not(:checked) + .PRESETUPslider {
-  background-color: #dc3545;
-}
-
-.toggle input:not(:checked) + .slider::before,
-.tpetoggle input:not(:checked) + .TPEslider::before,
-.presetupToggle input:not(:checked) + .PRESETUPslider::before {
-  transform: translateX(0);
-}
-/* Label text */
-.label-text {
-  font-size: 14px;
-}
-.label-TPE {
-  font-size: 14px;
-}
-.label-PRESETUP {
-  font-size: 14px;
+@media (max-width: 900px) {
+  .filter-modes {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
 }
 
 /* Bible Verse */

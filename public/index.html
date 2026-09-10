@@ -21,23 +21,25 @@
     
         <div class="header-right">
             <div id="lastSync" class="last-sync">Last Sync: --</div>
-            <!-- <button id="toggleModeBtn">Show: ALL</button> -->
-            <label class="toggle">
-            <input type="checkbox" id="toggleModeBtn" checked>
-            <span class="slider"></span>
-            <span class="label-text">Show All</span>
-            </label>
-            <label class="tpetoggle">
-            <input type="checkbox" id="toggleTPEBtn" checked>
-            <span class="TPEslider"></span>
-            <span class="label-TPE">ALL DOWNTIMES</span>
-            </label>
-            <label class="presetupToggle">
-                <!-- <input type="checkbox" id="togglePRESETUPBtn" checked> -->
-                 <input type="checkbox" id="togglePRESETUPBtn" checked>
-                <span class="PRESETUPslider"></span>
-                <span class="label-PRESETUP">PRE SETUP</span>
-            </label>
+            <fieldset class="filter-modes" aria-label="Status filter">
+                <legend>FILTER</legend>
+                <label>
+                    <input type="radio" name="statusFilter" value="all" checked>
+                    <span>ALL STATUS</span>
+                </label>
+                <label>
+                    <input type="radio" name="statusFilter" value="downtime">
+                    <span>DOWNTIMES ONLY</span>
+                </label>
+                <label>
+                    <input type="radio" name="statusFilter" value="tpe">
+                    <span>TPE DOWNTIMES</span>
+                </label>
+                <label>
+                    <input type="radio" name="statusFilter" value="presetup">
+                    <span>PRESETUP</span>
+                </label>
+            </fieldset>
             <div id="darkModeToggle">
             <span class="label-dark">🌙Dark Mode</span>
             </div>

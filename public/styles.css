@@ -298,16 +298,16 @@ td.cal-due, td.pm-due {
   vertical-align: middle;
   padding: 8px;
 }
-#editableTable th:nth-child(7),
-#editableTable td:nth-child(7),
-#editableTable th:nth-child(8),
-#editableTable td:nth-child(8),
-#editableTable th:nth-child(9),
-#editableTable td:nth-child(9) {
+#editableTable th:nth-child(4),
+#editableTable td:nth-child(4),
+#editableTable th:nth-child(5),
+#editableTable td:nth-child(5),
+#editableTable th:nth-child(6),
+#editableTable td:nth-child(6) {
   white-space: nowrap;
   padding: 6px;
 }
-#editableTable td:nth-child(n+7) .phase-pill {
+#editableTable td:nth-child(n+4):nth-child(-n+6) .phase-pill {
   margin-left: 0;
 }
 #uflexTable th,
@@ -880,4 +880,110 @@ body.dark-mode .filter-modes label:has(input:checked) span {
     justify-content: center;
   }
 
+}
+
+@media (max-width: 600px) {
+  .page-header {
+    padding: 10px 8px;
+    gap: 8px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .header-right {
+    align-items: center;
+  }
+
+  .filter-modes {
+    width: 100%;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .filter-modes label span {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+
+  .view-tiles-wrap {
+    margin: 6px auto 10px;
+    padding: 0 6px;
+  }
+
+  #table {
+    overflow-x: hidden;
+  }
+
+  #editableTable {
+    width: 100% !important;
+    table-layout: fixed;
+    font-size: 10px;
+  }
+
+  #editableTable th,
+  #editableTable td {
+    min-width: 0;
+    padding: 5px 2px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #editableTable th:nth-child(1), #editableTable td:nth-child(1) { width: 14%; }
+  #editableTable th:nth-child(2), #editableTable td:nth-child(2) { width: 10%; }
+  #editableTable th:nth-child(3), #editableTable td:nth-child(3) { width: 15%; }
+  #editableTable th:nth-child(4), #editableTable td:nth-child(4) { width: 10%; }
+  #editableTable th:nth-child(5), #editableTable td:nth-child(5) { width: 10%; }
+  #editableTable th:nth-child(6), #editableTable td:nth-child(6) { width: 12%; }
+  #editableTable th:nth-child(7), #editableTable td:nth-child(7) { width: 11%; }
+  #editableTable th:nth-child(8), #editableTable td:nth-child(8) { width: 9%; }
+  #editableTable th:nth-child(9), #editableTable td:nth-child(9) { width: 9%; }
+
+  #editableTable .phase-pill {
+    margin-left: 0;
+    padding: 1px 2px;
+    font-size: 9px;
+  }
+
+  #editableTable .prod-link {
+    padding: 0;
+  }
+
+  #uflexTable, #eagleTable, #mavTable, #ltxTable,
+  #tmtTable, #legacyTable, #speaTable, #ltxmxTable,
+  #systemTable, #arkTable {
+    width: 100%;
+    font-size: 10px;
+  }
+
+  #uflexTable th, #uflexTable td,
+  #eagleTable th, #eagleTable td,
+  #mavTable th, #mavTable td,
+  #ltxTable th, #ltxTable td,
+  #tmtTable th, #tmtTable td,
+  #legacyTable th, #legacyTable td,
+  #speaTable th, #speaTable td,
+  #ltxmxTable th, #ltxmxTable td,
+  #systemTable th, #systemTable td,
+  #arkTable th, #arkTable td {
+    padding: 5px 3px;
+    overflow-wrap: anywhere;
+  }
+
+  #uflexTable td:nth-child(2), #eagleTable td:nth-child(2),
+  #mavTable td:nth-child(2), #ltxTable td:nth-child(2),
+  #tmtTable td:nth-child(2), #legacyTable td:nth-child(2),
+  #speaTable td:nth-child(2), #ltxmxTable td:nth-child(2),
+  #systemTable td:nth-child(2), #arkTable td:nth-child(2) {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .phase-pill {
+    margin-left: 0;
+    padding: 1px 3px;
+    font-size: 9px;
+  }
 }

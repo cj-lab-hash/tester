@@ -633,14 +633,6 @@ function appendStatusDetails(phaseCell, dieTypeCell, handlerCell, status) {
   }
 }
 
-function ensureStatusDetailCells(row, startIndex) {
-  while (row.cells.length <= startIndex + 2) {
-    row.appendChild(document.createElement("td"));
-  }
-
-  return [row.cells[startIndex], row.cells[startIndex + 1], row.cells[startIndex + 2]];
-}
-
 // ===================== VIEW TOAST ALERTS (from table content) =====================
 function collectIssueAlerts(tableEl) {
   if (!tableEl) return [];
@@ -784,12 +776,17 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
 
+  window.normalizeActTableRows?.();
+
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
     const cell = tr.cells?.[prodColIndex];
     if (!cell) continue;
 
-    const [phaseCell, dieTypeCell, handlerCell] = ensureStatusDetailCells(tr, 6);
+    const phaseCell = tr.cells?.[3];
+    const dieTypeCell = tr.cells?.[4];
+    const handlerCell = tr.cells?.[5];
+    if (!phaseCell || !dieTypeCell || !handlerCell) continue;
 
     const r = map.get(id);
 

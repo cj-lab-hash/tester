@@ -443,7 +443,22 @@
     </section>
     <script>
         // Function to load saved data from the server when the page loads
+        function normalizeActTableRows() {
+            const table = document.getElementById("editableTable");
+            if (!table) return;
+
+            table.querySelectorAll("tbody tr").forEach((row) => {
+                if (row.cells.length >= 9) return;
+
+                const firstOperationalCell = row.cells[3];
+                ["STATUS", "DIE TYPE", "HANDLER"].forEach(() => {
+                    row.insertBefore(document.createElement("td"), firstOperationalCell);
+                });
+            });
+        }
+
         function loadData() {
+            normalizeActTableRows();
             fetch('/api/data') // Fetch saved data
                 .then(response => response.json())
                 .then(data => {

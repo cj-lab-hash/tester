@@ -508,15 +508,21 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   if (!PILL_ALLOWED_STATES.has(s)) return result;
 
   const phase = getPhaseForState(s, rawTitle);
+  if (phase === "ATTENDED") {
+    const durSecs = extractDurationSeconds(s, stateLong, rawTitle);
+    const hms = formatHMS(durSecs);
+    result.pillText = hms ? `ATTENDED ${hms}` : "ATTENDED";
+    result.pillCss = "phase-pill pill-attended";
+  }
 
   if (phase === "WAITING") {
     const durSecs = extractDurationSeconds(s, stateLong, rawTitle);
     const hms = formatHMS(durSecs);
     result.pillText = hms ? `WAITING ${hms}` : "WAITING";
     result.pillCss = "phase-pill pill-waiting";
-  } else if (phase === "ATTENDED") {
-    result.pillText = "ATTENDED";
-    result.pillCss = "phase-pill pill-attended";
+  // } else if (phase === "ATTENDED") {
+  //   result.pillText = "ATTENDED";
+  //   result.pillCss = "phase-pill pill-attended";
   }
 
   return result;

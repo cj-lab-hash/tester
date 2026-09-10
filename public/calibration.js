@@ -473,6 +473,15 @@ function formatHMS(totalSeconds) {
   // return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
 }
 
+function getElapsedSecondsSince(checkedAt) {
+  if (!checkedAt) return 0;
+
+  const timestampMs = new Date(checkedAt).getTime();
+  if (Number.isNaN(timestampMs)) return 0;
+
+  return Math.max(0, Math.floor((Date.now() - timestampMs) / 1000));
+}
+
 function extractIssue(stateShort, stateLong, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
@@ -493,7 +502,7 @@ function extractIssue(stateShort, stateLong, rawTitle) {
   return null;
 }
 
-function productionStatusFromDb(stateShort, stateLong, rawTitle) {
+function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   const s = (stateShort || "").toUpperCase().trim();
   const issue = extractIssue(s, stateLong, rawTitle);
 
@@ -516,14 +525,18 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle) {
   const phase = getPhaseForState(s, rawTitle);
   if (phase === "ATTENDED") {
     const durSecs = extractDurationSeconds(s, stateLong, rawTitle);
-    const hms = formatHMS(durSecs);
+    const ageSecs = getElapsedSecondsSince(checkedAt);
+    const totalSecs = durSecs == null ? ageSecs : durSecs + ageSecs;
+    const hms = formatHMS(totalSecs);
     result.pillText = hms ? `ATTENDED ${hms}` : "ATTENDED";
     result.pillCss = "phase-pill pill-attended";
   }
 
   if (phase === "WAITING") {
     const durSecs = extractDurationSeconds(s, stateLong, rawTitle);
-    const hms = formatHMS(durSecs);
+    const ageSecs = getElapsedSecondsSince(checkedAt);
+    const totalSecs = durSecs == null ? ageSecs : durSecs + ageSecs;
+    const hms = formatHMS(totalSecs);
     result.pillText = hms ? `WAITING ${hms}` : "WAITING";
     result.pillCss = "phase-pill pill-waiting";
   // } else if (phase === "ATTENDED") {
@@ -627,7 +640,7 @@ async function loadSYSTEMLatest(tableEl) {
       "ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange"
     );
 
-    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
     const url = buildStatusphereUrlFromRow(r.href, id);
 
     // clickable label like other tables
@@ -710,7 +723,8 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     const out = productionStatusFromDb(
       r.state_short,
       r.state_long,
-      r.raw_title
+      r.raw_title,
+      r.checked_at
     );
 
     cell.innerHTML = "";
@@ -837,7 +851,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
     // if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
     // tr.hidden = false;
 
-    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
 
     cell.textContent = "";
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
@@ -911,7 +925,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     }
     tr.style.display = "";
     
-    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
+    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
 
     cell.textContent = "";
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");

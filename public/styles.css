@@ -626,7 +626,8 @@ td.cal-due, td.pm-due {
 }
 /* Container */
 .toggle,
-.tpetoggle,presetupToggle {
+.tpetoggle,
+.presetupToggle {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -637,7 +638,8 @@ td.cal-due, td.pm-due {
 
 /* Hide default checkbox */
 .toggle input,
-.tpetoggle input, presetupToggle input {
+.tpetoggle input,
+.presetupToggle input {
   display: none;
 }
 

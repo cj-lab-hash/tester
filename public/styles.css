@@ -693,6 +693,38 @@ td.cal-due, td.pm-due {
 }
 
 /* Circle inside slider */
+/*PRESETUP */
+.PRESETUPslider::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+/* ON state */
+.toggle input:checked + .PRESETUPslider,
+.tpetoggle input:checked + .PRESETUPslider {
+  background-color: #dc3545; /* green */
+}
+
+/* Move circle when ON */
+.toggle input:checked + .PRESETUPslider::before,
+.tpetoggle input:checked + .PRESETUPslider::before {
+  transform: translateX(24px);
+}
+.toggle input:not(:checked) + .PRESETUPslider,
+.tpetoggle input:not(:checked) + .PRESETUPslider {
+  background-color: #28a745; /* red for issues mode */
+}
+.toggle input:not(:checked) + .slider,
+.tpetoggle input:not(:checked) + .slider {
+  background-color: #dc3545; /* red for issues mode */
+}
 .TPEslider::before {
   content: "";
   position: absolute;

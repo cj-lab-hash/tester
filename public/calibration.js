@@ -906,7 +906,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     }
     tr.style.display = "";
 
-    if (PRESU && isPRESETUP(stateLong)) {
+    if (PRESU && !isPRESETUP(stateLong)) {
       tr.style.display = "none";
       continue;
     }
@@ -1266,7 +1266,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (labelPRE) {
       labelPRE.textContent = PRESU
         ? "PRESETUP"
-        : "NO PRESETUP";
+        : "ALL";
     }
 
     presetupToggle.addEventListener("click", () => {
@@ -1274,7 +1274,7 @@ window.addEventListener("DOMContentLoaded", () => {
       if (labelPRE) {
         labelPRE.textContent = PRESU
           ? "PRESETUP"
-          : "NO PRESETUP";
+          : "ALL";
       }
 
       refreshData();

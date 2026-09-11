@@ -1,52 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const crypto = require('crypto');
-require('dotenv').config();
 const pool = require('./db');
 
 
 const app = express();
-const loginSessions = new Set();
 
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-function getSessionToken(req) {
-    const cookies = req.headers.cookie || '';
-    const match = cookies.match(/(?:^|;\s*)tester_session=([^;]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
-}
+app.get('/api/config', (req, res) => {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-app.get('/api/auth-status', (req, res) => {
-    res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
-});
-
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body || {};
-    const expectedUsername = process.env.LOGIN_USERNAME;
-    const expectedPassword = process.env.LOGIN_PASSWORD;
-
-    if (!expectedUsername || !expectedPassword) {
-        return res.status(500).json({ message: 'Login credentials are not configured on the server.' });
+    if (!supabaseUrl || !supabaseAnonKey) {
+        return res.status(500).json({ message: 'Supabase client configuration is missing' });
     }
 
-    if (username !== expectedUsername || password !== expectedPassword) {
-        return res.status(401).json({ message: 'Invalid username or password.' });
-    }
-
-    const token = crypto.randomBytes(32).toString('hex');
-    loginSessions.add(token);
-    res.setHeader('Set-Cookie', `tester_session=${token}; HttpOnly; SameSite=Strict; Path=/`);
-    res.json({ authenticated: true });
-});
-
-app.post('/api/logout', (req, res) => {
-    const token = getSessionToken(req);
-    if (token) loginSessions.delete(token);
-    res.setHeader('Set-Cookie', 'tester_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
-    res.json({ authenticated: false });
+    res.json({ supabaseUrl, supabaseAnonKey });
 });
 
 

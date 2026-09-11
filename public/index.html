@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="circuit.ico" type="image/x-icon">
 </head>
-<body>
+<body class="auth-locked">
         <div class="page-header">
             
     <div class="header-left">
@@ -21,6 +21,7 @@
     
         <div class="header-right">
             <div id="lastSync" class="last-sync">Last Sync: --</div>
+            <button id="loginButton" class="login-button" type="button">LOGIN</button>
             <fieldset class="filter-modes" aria-label="Status filter">
                 <legend>FILTER</legend>
                 <label>
@@ -45,6 +46,21 @@
             </div>
         </div>
     </div>
+
+    <dialog id="loginDialog" class="login-dialog">
+        <form id="loginForm" method="dialog">
+            <h2>LOGIN</h2>
+            <label for="loginUsername">Username</label>
+            <input id="loginUsername" name="username" type="text" autocomplete="username" required>
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+            <p id="loginError" class="login-error" role="alert" hidden></p>
+            <div class="login-actions">
+                <button id="cancelLoginButton" type="button">CANCEL</button>
+                <button type="submit">LOGIN</button>
+            </div>
+        </form>
+    </dialog>
     
     <div class="view-tiles-wrap">
         <div id="viewTiles" class="view-tiles" aria-label="View selector"></div>
@@ -442,6 +458,64 @@
         </div> 
     </section>
     <script>
+        const loginButton = document.getElementById("loginButton");
+        const loginDialog = document.getElementById("loginDialog");
+        const loginForm = document.getElementById("loginForm");
+        const loginError = document.getElementById("loginError");
+
+        function setAuthenticated(authenticated) {
+            document.body.classList.toggle("authenticated", authenticated);
+            document.body.classList.toggle("auth-locked", !authenticated);
+            loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
+            loginButton.setAttribute("aria-label", authenticated ? "Log out" : "Log in");
+        }
+
+        async function checkAuthentication() {
+            const response = await fetch("/api/auth-status");
+            const result = await response.json();
+            setAuthenticated(result.authenticated === true);
+        }
+
+        loginButton.addEventListener("click", async () => {
+            if (document.body.classList.contains("authenticated")) {
+                await fetch("/api/logout", { method: "POST" });
+                setAuthenticated(false);
+                return;
+            }
+
+            loginError.hidden = true;
+            loginForm.reset();
+            loginDialog.showModal();
+        });
+
+        document.getElementById("cancelLoginButton").addEventListener("click", () => loginDialog.close());
+
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            loginError.hidden = true;
+
+            const response = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: document.getElementById("loginUsername").value,
+                    password: document.getElementById("loginPassword").value
+                })
+            });
+            const result = await response.json();
+
+            if (!response.ok) {
+                loginError.textContent = result.message || "Login failed.";
+                loginError.hidden = false;
+                return;
+            }
+
+            loginDialog.close();
+            setAuthenticated(true);
+        });
+
+        checkAuthentication().catch(() => setAuthenticated(false));
+
         // Function to load saved data from the server when the page loads
         function normalizeActTableRows() {
             const table = document.getElementById("editableTable");

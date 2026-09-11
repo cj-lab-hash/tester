@@ -990,3 +990,104 @@ body.dark-mode .filter-modes label:has(input:checked) span {
     font-size: 10px;
   }
 }
+
+.auth-locked #editableTable th:nth-child(5),
+.auth-locked #editableTable td:nth-child(5),
+.auth-locked #editableTable th:nth-child(6),
+.auth-locked #editableTable td:nth-child(6),
+.auth-locked #uflexTable th:nth-child(4),
+.auth-locked #uflexTable td:nth-child(4),
+.auth-locked #uflexTable th:nth-child(5),
+.auth-locked #uflexTable td:nth-child(5),
+.auth-locked #eagleTable th:nth-child(4),
+.auth-locked #eagleTable td:nth-child(4),
+.auth-locked #eagleTable th:nth-child(5),
+.auth-locked #eagleTable td:nth-child(5),
+.auth-locked #mavTable th:nth-child(4),
+.auth-locked #mavTable td:nth-child(4),
+.auth-locked #mavTable th:nth-child(5),
+.auth-locked #mavTable td:nth-child(5),
+.auth-locked #ltxTable th:nth-child(4),
+.auth-locked #ltxTable td:nth-child(4),
+.auth-locked #ltxTable th:nth-child(5),
+.auth-locked #ltxTable td:nth-child(5),
+.auth-locked #tmtTable th:nth-child(4),
+.auth-locked #tmtTable td:nth-child(4),
+.auth-locked #tmtTable th:nth-child(5),
+.auth-locked #tmtTable td:nth-child(5),
+.auth-locked #legacyTable th:nth-child(4),
+.auth-locked #legacyTable td:nth-child(4),
+.auth-locked #legacyTable th:nth-child(5),
+.auth-locked #legacyTable td:nth-child(5),
+.auth-locked #speaTable th:nth-child(4),
+.auth-locked #speaTable td:nth-child(4),
+.auth-locked #speaTable th:nth-child(5),
+.auth-locked #speaTable td:nth-child(5),
+.auth-locked #ltxmxTable th:nth-child(4),
+.auth-locked #ltxmxTable td:nth-child(4),
+.auth-locked #ltxmxTable th:nth-child(5),
+.auth-locked #ltxmxTable td:nth-child(5),
+.auth-locked #systemTable th:nth-child(4),
+.auth-locked #systemTable td:nth-child(4),
+.auth-locked #systemTable th:nth-child(5),
+.auth-locked #systemTable td:nth-child(5),
+.auth-locked #arkTable th:nth-child(4),
+.auth-locked #arkTable td:nth-child(4),
+.auth-locked #arkTable th:nth-child(5),
+.auth-locked #arkTable td:nth-child(5) {
+  display: none;
+}
+
+.login-button,
+.login-actions button {
+  border: 1px solid #2f6f68;
+  background: #82c4b3;
+  color: #102522;
+  padding: 7px 12px;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-button:hover,
+.login-actions button:hover {
+  filter: brightness(0.94);
+}
+
+.login-dialog {
+  border: 1px solid #2f6f68;
+  border-radius: 6px;
+  padding: 22px;
+  min-width: 300px;
+}
+
+.login-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.login-dialog h2 {
+  margin: 0 0 16px;
+}
+
+.login-dialog label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 700;
+}
+
+.login-dialog input {
+  margin-top: 4px;
+  padding: 8px;
+}
+
+.login-error {
+  color: #a30505;
+  font-weight: 700;
+}
+
+.login-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}

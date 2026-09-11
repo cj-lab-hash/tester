@@ -531,7 +531,7 @@ function extractIssue(stateShort, stateLong, rawTitle) {
     "NO INVENTORY","PLANNED IDLE","INACTIVE",
     "PRODUCT EVAL","INCOMPLETE RESOURCES",
     "QA FAIL","STANDBY/IDLE","LOT COMPLETION",
-    "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION"
+    "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION", "KGU RELOAD", "KGU RETEST"
   ];
   for (const k of known) if (text.includes(k)) return k;
   return null;
@@ -571,6 +571,8 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
 
   if (s === "SETUP" && issue === "TEMP CONVERSION") return result;
   if (s === "SETUP" && issue === "KGU GENERATION") return result;
+  if (s === "SETUP" && issue === "KGU RELOAD") return result;
+  if (s === "SETUP" && issue === "KGU RETEST") return result;
 
   const phase = getPhaseForState(s, rawTitle);
   if (phase === "ATTENDED") {

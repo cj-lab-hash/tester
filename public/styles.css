@@ -1091,3 +1091,89 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   gap: 8px;
   margin-top: 18px;
 }
+
+@media (max-width: 600px) {
+  .auth-locked .login-button {
+    align-self: stretch;
+    min-height: 42px;
+    font-size: 14px;
+  }
+
+  .auth-locked #editableTable {
+    width: 100% !important;
+    max-width: 100%;
+    table-layout: auto;
+  }
+
+  .auth-locked #editableTable th,
+  .auth-locked #editableTable td {
+    padding: 7px 4px;
+    font-size: 10px;
+  }
+
+  .auth-locked #editableTable th:nth-child(1),
+  .auth-locked #editableTable td:nth-child(1) {
+    width: 24%;
+  }
+
+  .auth-locked #editableTable th:nth-child(2),
+  .auth-locked #editableTable td:nth-child(2) {
+    width: 19%;
+  }
+
+  .auth-locked #editableTable th:nth-child(3),
+  .auth-locked #editableTable td:nth-child(3) {
+    width: 32%;
+  }
+
+  .auth-locked #editableTable th:nth-child(4),
+  .auth-locked #editableTable td:nth-child(4) {
+    width: 25%;
+  }
+
+  .auth-locked #uflexTable,
+  .auth-locked #eagleTable,
+  .auth-locked #mavTable,
+  .auth-locked #ltxTable,
+  .auth-locked #tmtTable,
+  .auth-locked #legacyTable,
+  .auth-locked #speaTable,
+  .auth-locked #ltxmxTable,
+  .auth-locked #systemTable,
+  .auth-locked #arkTable {
+    width: 100%;
+    max-width: 100%;
+    table-layout: auto;
+    font-size: 10px;
+  }
+
+  .auth-locked #uflexTable th,
+  .auth-locked #uflexTable td,
+  .auth-locked #eagleTable th,
+  .auth-locked #eagleTable td,
+  .auth-locked #mavTable th,
+  .auth-locked #mavTable td,
+  .auth-locked #ltxTable th,
+  .auth-locked #ltxTable td,
+  .auth-locked #tmtTable th,
+  .auth-locked #tmtTable td,
+  .auth-locked #legacyTable th,
+  .auth-locked #legacyTable td,
+  .auth-locked #speaTable th,
+  .auth-locked #speaTable td,
+  .auth-locked #ltxmxTable th,
+  .auth-locked #ltxmxTable td,
+  .auth-locked #systemTable th,
+  .auth-locked #systemTable td,
+  .auth-locked #arkTable th,
+  .auth-locked #arkTable td {
+    padding: 7px 4px;
+  }
+
+  .login-dialog {
+    width: calc(100vw - 24px);
+    min-width: 0;
+    max-width: 360px;
+    padding: 18px;
+  }
+}

@@ -440,33 +440,17 @@ function getEqptStateSegments(rawTitle) {
 
 function getPhaseForState(stateShort, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
-  if (!s) {
-    console.log("[getPhaseForState] Empty State");
-      return null;
-    }
+  if (!s) return null;
   
+
   const seg = getEqptStateSegments(rawTitle);
   const idx = seg.indexOf(s);
-  if (idx === -1) {
-    console.log("getPhaseForSatete] State not found",s);
-    return null;
-  }
-
+  if (idx === -1)
+   return null;
   const detail1 = seg[idx + 1] || null;
   const detail2 = seg[idx + 2] || null;
-
-  console.log("[getPhaseForState] State:",s);
-  console.log("[getPhaseForState] detail1:", detail1);
-  console.log("[getPhaseForState] detail2:", detail2);
-  if (!detail1) {
-    console.log("[getPhaseForState] Result: null");
-    return null;
-      }
-
-  // return detail2 ? "ATTENDED" : "WAITING";
-const result=detail2 ? "ATTENDED" : "WAITING";
-console.log("[getPhaseForState] Result:", result);
-return result;
+  if (!detail1) return null;
+  return detail2 ? "ATTENDED" : "WAITING";
 }
 
 function extractDurationSeconds(stateShort, stateLong, rawTitle) {

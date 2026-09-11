@@ -441,11 +441,12 @@ function getEqptStateSegments(rawTitle) {
 function getPhaseForState(stateShort, rawTitle) {
   const s = (stateShort || "").toUpperCase().trim();
   if (!s) return null;
+  
 
   const seg = getEqptStateSegments(rawTitle);
   const idx = seg.indexOf(s);
-  if (idx === -1) return null;
-
+  if (idx === -1)
+   return null;
   const detail1 = seg[idx + 1] || null;
   const detail2 = seg[idx + 2] || null;
   if (!detail1) return null;
@@ -530,7 +531,7 @@ function extractIssue(stateShort, stateLong, rawTitle) {
     "NO INVENTORY","PLANNED IDLE","INACTIVE",
     "PRODUCT EVAL","INCOMPLETE RESOURCES",
     "QA FAIL","STANDBY/IDLE","LOT COMPLETION",
-    "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM"
+    "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION", "KGU RELOAD", "KGU RETEST"
   ];
   for (const k of known) if (text.includes(k)) return k;
   return null;
@@ -565,8 +566,13 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
     result.handlerCss = "phase-pill pill-handler";
   }
 
-  const PILL_ALLOWED_STATES = new Set(["UMAINT", "SETUP"]);
+  const PILL_ALLOWED_STATES = new Set(["UMAINT", "SETUP", "PMCAL", "NO PRODUCT"]);
   if (!PILL_ALLOWED_STATES.has(s)) return result;
+
+  if (s === "SETUP" && issue === "TEMP CONVERSION") return result;
+  if (s === "SETUP" && issue === "KGU GENERATION") return result;
+  if (s === "SETUP" && issue === "KGU RELOAD") return result;
+  if (s === "SETUP" && issue === "KGU RETEST") return result;
 
   const phase = getPhaseForState(s, rawTitle);
   if (phase === "ATTENDED") {

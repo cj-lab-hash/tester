@@ -1,14 +1,24 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 import { loadVerseFromAPI } from "./bible.js";
 // ===================== CONFIG =====================
-const SUPABASE_URL = "https://pnrbdohtrvbrmvabvkxc.supabase.co";
-const SUPABASE_KEY = "sb_publishable_YAq1ZIeaJdjx4w0G4DwY3g_tXAZHuVk";
+let supabase;
+
+async function initializeSupabase() {
+  const response = await fetch("/api/config");
+  if (!response.ok) throw new Error("Unable to load Supabase configuration");
+
+  const { supabaseUrl, supabaseAnonKey } = await response.json();
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase client configuration is missing");
+  }
+
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+}
 
 const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
 const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
 const lastIssueCounts = new Map();
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const HIDE_STATES = new Set([
   "PRODN",
   "ENGG",
@@ -215,7 +225,7 @@ function showToast({ type = "gray", title, message, onClick }) {
   if (onClick) toast.addEventListener("click", onClick);
 
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 10_000);
+  setTimeout(() => toast.remove(), 5_000);
 }
 
 function classifyIssue(stateLong = "", rawTitle = "") {
@@ -1314,7 +1324,14 @@ async function refreshData() {
 // ===================== BOOT =====================
 const UI_REFRESH_MS = 60 * 1000;
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await initializeSupabase();
+  } catch (error) {
+    console.error("Supabase initialization failed:", error);
+    return;
+  }
+
   renderViewTiles();
   setView(getCurrentView());
   refreshData();

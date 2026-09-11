@@ -566,7 +566,7 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
     result.handlerCss = "phase-pill pill-handler";
   }
 
-  const PILL_ALLOWED_STATES = new Set(["UMAINT", "SETUP", "PMCAL"]);
+  const PILL_ALLOWED_STATES = new Set(["UMAINT", "SETUP", "PMCAL", "NO PRODUCT"]);
   if (!PILL_ALLOWED_STATES.has(s)) return result;
 
   if (s === "SETUP" && issue === "TEMP CONVERSION") return result;

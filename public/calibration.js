@@ -457,9 +457,9 @@ function getPhaseForState(stateShort, rawTitle) {
 
   console.log("[getPhaseForState] State:",s);
   console.log("[getPhaseForState] detail1:", detail1);
-  console.log("[getPhaseForState] detail2", detail2);
+  console.log("[getPhaseForState] detail2:", detail2);
   if (!detail1) {
-    console.log("{getPhaseForState] Result: null");
+    console.log("[getPhaseForState] Result: null");
     return null;
       }
 

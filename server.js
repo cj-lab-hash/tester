@@ -348,6 +348,16 @@ app.post(
       return res.status(500).json(error);
    }
 
+   data.forEach(row => {
+    const text = `${row.state_long || ""} ${row.raw_title || ""}`;
+    if (text.toLocaleUpperCase().includes("YIELD")) {
+        console.log(
+            row.equipment_id,
+            row.state_short,
+            row.state_long
+        );
+    }
+   });
 const filteredData = data.filter(row => {
     const state = (row.state_short || "").toUpperCase();
     const text = `${row.state_long || ""} ${row.raw_title || ""}`.toUpperCase();

@@ -598,7 +598,7 @@
         function saveEdit(td, newValue) {
             var index = td.getAttribute('data-index'); // Get the index for the cell
 
-            td.oldValue = td.textContent;
+            const oldValue = td.textContent;
             td.innerHTML = newValue;
 
             

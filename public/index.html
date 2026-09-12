@@ -624,7 +624,7 @@
                     throw new Error("Unauthorized");
                 }
                 if (!response.ok) {
-                    td.innerHTML = td.oldValue;
+                    td.innerHTML = oldValue;
                     throw new Error("Save failed");
                 }
                 return response.json();
@@ -633,7 +633,7 @@
                 console.log(result.message);
             })
             .catch(error => {
-                td.innerHTML = td.oldValue;
+                td.innerHTML = oldValue;
                 console.error('Error saving data:', error);
             });
         }

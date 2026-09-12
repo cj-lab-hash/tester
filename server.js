@@ -363,7 +363,7 @@ const filteredData = data.filter(row => {
     const text = `${row.state_long || ""} ${row.raw_title || ""}`.toUpperCase();
 
     return !(
-        state === "ENGG" && text.includes("YIELD ISSUE_ENGG")
+        state === "ENGG" && text.includes("YIELD ISSUE_ENG")
     );
 });
 

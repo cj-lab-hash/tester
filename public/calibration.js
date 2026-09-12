@@ -179,6 +179,7 @@ const data =await response.json();
 
 // ===================== TOASTS =====================
 function showToast({ type = "gray", title, message, onClick }) {
+  
   const container = document.getElementById("toastContainer");
   if (!container) return;
 
@@ -215,6 +216,7 @@ function showToast({ type = "gray", title, message, onClick }) {
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 5_000);
 }
+window.showToast = showToast;
 
 function classifyIssue(stateLong = "", rawTitle = "") {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();

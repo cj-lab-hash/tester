@@ -67,6 +67,59 @@ app.post('/api/logout', (req, res) => {
     res.json({ authenticated: false });
 });
 
+function getIssuePriority(row) {
+
+  const text = 
+  `${row.state_long || ""} ${row.raw_title || ""}`.toUpperCase();
+
+  if (text.includes("YIELD ISSUE")) return 1;
+  if (text.includes("CONTACT ISSUE")) return 2;
+  if (text.includes("RKGU FAIL")) return 3;
+  if (text.includes("SYSTEM PROBLEM") ||
+  text.includes("SYSTEM ISSUE")) return 4;
+  if (text.includes("HANDLER PROBLEM")) return 5;
+  if (text.includes("QUALIFICATION FAIL DFL")) return 6;
+  if (text.includes("HW CHECKER")) return 7;
+  if (text.includes("QA FAIL")) return 8;
+
+  const state = (row.state_short || "").toUpperCase();
+
+  if (state === "SETUP") return 20;
+  if (state === "UMAINT") return 21;
+  if (state === "PMCAL") return 22;
+  if (state === "LOT") return 23;
+  if (state === "PRODN") return 24;
+  if (state === "ENGG") return 25;
+
+  return 999;
+}
+function extractDurationSeconds(rawTitle = "") {
+
+  const text = rawTitle.toUpperCase();
+
+  const match = text.match(
+    /DURATION\s*:\s*([\d.]+)\s*(DAYS?|HRS?|HOURS?|MINS?|MINUTES?|SECS?|SECONDS?)/i
+  );
+
+  if (!match) return 0;
+
+  const value = parseFloat(match[1]);
+
+  if (Number.isNaN(value)) return 0;
+
+  const unit = match[2];
+
+  if (unit.startsWith("DAY"))
+    return value * 86400;
+
+  if (unit.startsWith("HR") || unit.startsWith("HOUR"))
+    return value * 3600;
+
+  if (unit.startsWith("MIN"))
+    return value * 60;
+
+  return value;
+}
 app.post('/api/statusphere-latest', async (req, res) => {
 
     try {
@@ -87,7 +140,24 @@ app.post('/api/statusphere-latest', async (req, res) => {
 
         if (error) throw error;
 
-        res.json(data);
+        // res.json(data);
+        data.sort((a, b) => {
+
+        const pa = getIssuePriority(a);
+        const pb = getIssuePriority(b);
+
+        if (pa !== pb) {
+            return pa - pb;
+        }
+
+        const da = extractDurationSeconds(a.raw_title);
+
+        const db = extractDurationSeconds(b.raw_title);
+        return db - da;
+
+        });
+
+    res.json(data);
 
     } catch (err) {
 
@@ -278,7 +348,24 @@ app.post(
       return res.status(500).json(error);
    }
 
-   res.json(data);
+//    res.json(data);
+data.sort((a, b) => {
+
+  const pa = getIssuePriority(a);
+  const pb = getIssuePriority(b);
+
+  if (pa !== pb) {
+    return pa - pb;
+  }
+
+  const da = extractDurationSeconds(a.raw_title);
+
+  const db = extractDurationSeconds(b.raw_title);
+
+  return db - da;
+});
+
+res.json(data);
 
  });
 

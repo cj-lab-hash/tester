@@ -1048,11 +1048,12 @@ const data = await response.json();
   renderProductionStatusUnified(actTable, data);
 }
 
+
+
 async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "state_long" }) {
   const tbody = document.getElementById(tbodyId);
   if (!tableEl || !tbody) return;
 
-  // const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
 
   
   const response = await fetch(
@@ -1276,6 +1277,26 @@ async function refreshData() {
       }
       const data = await response.json();
 
+      // data.sort((a, b) => {
+
+      //   const pa = getIssuePriority(a);
+      //   const pb = getIssuePriority(b);
+      //   if (pa !== pb) {
+      //     return pa - pb;
+      //   }
+      //   const da = extractDurationSeconds(
+      //     a.state_short,
+      //     a.state_long,
+      //     a.raw_title
+      //   ) || 0;
+
+      //   const db = extractDurationSeconds(
+      //     b.state_short,
+      //     b.state_long,
+      //     b.raw_title
+      //   ) || 0;
+      //   return db - da;
+      // });
       renderProductionStatusUnified(tableEl, data);
       showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt);
       return;

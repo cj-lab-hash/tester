@@ -594,13 +594,14 @@
         }
 
         // Function to save edited data to the server
+        let loginToastShown = false;
         function saveEdit(td, newValue) {
             var index = td.getAttribute('data-index'); // Get the index for the cell
 
-            // Update the cell's innerHTML
+            const oldValue = td.textContent;
             td.innerHTML = newValue;
 
-            // Send the updated value to the server
+            
             fetch('/api/save', {
                 method: 'POST',
                 headers: {
@@ -608,9 +609,34 @@
                 },
                 body: JSON.stringify({ index: index, value: newValue })
             })
-            .then(response => response.json())
-            .then(result => console.log(result.message))
-            .catch(error => console.error('Error saving data:', error));
+            .then (response => {
+                if (response.status === 401) {
+                    td.innerHTML = oldValue;
+                    if (!loginToastShown) {
+                        loginToastShown = true;
+                        console.log(typeof showToast);
+                        showToast({
+                            type:"yellow",
+                            title:"Login Required",
+                            message: "Please log in to save changes.",
+                        });
+                        setTimeout(() => { loginToastShown = false; }, 5000);
+                    }
+                    throw new Error("Unauthorized");
+                }
+                if (!response.ok) {
+                    td.innerHTML = oldValue;
+                    throw new Error("Save failed");
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log(result.message);
+            })
+            .catch(error => {
+                td.innerHTML = oldValue;
+                console.error('Error saving data:', error);
+            });
         }
 
        

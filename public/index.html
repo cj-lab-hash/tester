@@ -611,7 +611,7 @@
             })
             .then (response => {
                 if (response.status === 401) {
-                    td.innerHTML = old.value;
+                    td.innerHTML = oldValue;
                     if (!loginToastShown) {
                         loginToastShown = true;
                         showToast({

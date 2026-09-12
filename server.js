@@ -74,13 +74,14 @@ function getIssuePriority(row) {
 
   if (text.includes("YIELD ISSUE")) return 1;
   if (text.includes("CONTACT ISSUE")) return 2;
-  if (text.includes("RKGU FAIL")) return 3;
-  if (text.includes("SYSTEM PROBLEM") ||
-  text.includes("SYSTEM ISSUE")) return 4;
-  if (text.includes("HANDLER PROBLEM")) return 5;
-  if (text.includes("QUALIFICATION FAIL DFL")) return 6;
+  if (text.includes("QUALIFICATION FAIL DFL")) return 3;
+  if (text.includes("RKGU FAIL")) return 4;
+  if (text.includes("QA FAIL")) return 5;
+  if (text.includes("HANDLER PROBLEM")) return 6;
   if (text.includes("HW CHECKER")) return 7;
-  if (text.includes("QA FAIL")) return 8;
+  if (text.includes("SYSTEM PROBLEM") ||
+  text.includes("SYSTEM ISSUE")) return 8;
+
 
   const state = (row.state_short || "").toUpperCase();
 

@@ -614,6 +614,7 @@
                     td.innerHTML = oldValue;
                     if (!loginToastShown) {
                         loginToastShown = true;
+                        console.log(typeof showToast);
                         showToast({
                             type:"yellow",
                             title:"Login Required",

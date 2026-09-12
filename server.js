@@ -67,7 +67,7 @@ app.post('/api/logout', (req, res) => {
     res.json({ authenticated: false });
 });
 
-app.post('/api/statusphere-latest', requireAuth, async (req, res) => {
+app.post('/api/statusphere-latest', async (req, res) => {
 
     try {
 
@@ -100,7 +100,6 @@ app.post('/api/statusphere-latest', requireAuth, async (req, res) => {
 });
 
 app.post('/api/calibration-plans',
-requireAuth,
 async (req,res)=>{
 
     const { ids } = req.body;
@@ -119,13 +118,12 @@ async (req,res)=>{
 
 app.get(
   '/api/last-sync',
-  requireAuth,
   async (req,res)=>{
 
     const { data, error } = await supabase
       .from('statusphere_equipment')
       .select('checked_at')
-      .order('checked_at',{ascending:false})
+      .order('checked_at',{ ascending:false })
       .limit(1);
 
     if(error){
@@ -138,7 +136,6 @@ app.get(
 
 app.get(
  '/api/statusphere-equipment',
- requireAuth,
  async(req,res)=>{
     const { data, error } = await supabase
     .from('statusphere_equipment')
@@ -150,9 +147,9 @@ app.get(
     }
 res.json(data); 
 });
+
 app.post(
     '/api/statusphere-newscrape',
-    requireAuth,
     async(req,res)=>{
         const { ids } = req.body;
         const { data, error } = await supabase
@@ -179,7 +176,6 @@ app.post(
 // });
 app.get(
     '/api/alerts',
-    requireAuth,
     async (req, res) => {
         try {
             const { data: latestRows, error: latestErrors } =
@@ -255,7 +251,6 @@ app.get(
 );
 app.post(
  '/api/pattern-search',
- requireAuth,
  async(req,res)=>{
 
    const { patterns, orderBy } = req.body;
@@ -310,7 +305,6 @@ app.post("/api/save",requireAuth, async (req, res) => {
 });
     app.get(
  '/api/system-problems',
- requireAuth,
  async(req,res)=>{
 
    const { data, error } =
@@ -337,7 +331,7 @@ app.post("/api/save",requireAuth, async (req, res) => {
 
  });
 
-    app.get('/api/data',requireAuth, async (req, res) => {
+    app.get('/api/data', async (req, res) => {
         try {
             console.log('Fetching data from database...');
             const result = await pool.query(

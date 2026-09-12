@@ -348,8 +348,17 @@ app.post(
       return res.status(500).json(error);
    }
 
-//    res.json(data);
-data.sort((a, b) => {
+const filteredData = data.filter(row => {
+    const state = (row.state_short || "").toUpperCase();
+    const text = `${row.state_long || ""} ${row.raw_title || ""}`.toUpperCase();
+
+    return !(
+        state === "ENGG" && text.includes("YIELD ISSUE_ENGG")
+    );
+});
+
+filteredData.sort((a, b) => {
+
 
   const pa = getIssuePriority(a);
   const pb = getIssuePriority(b);
@@ -365,7 +374,7 @@ data.sort((a, b) => {
   return db - da;
 });
 
-res.json(data);
+res.json(filteredData);
 
  });
 

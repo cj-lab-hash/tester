@@ -1,19 +1,6 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 import { loadVerseFromAPI } from "./bible.js";
 // ===================== CONFIG =====================
-let supabase;
 
-async function initializeSupabase() {
-  const response = await fetch("/api/config");
-  if (!response.ok) throw new Error("Unable to load Supabase configuration");
-
-  const { supabaseUrl, supabaseAnonKey } = await response.json();
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase client configuration is missing");
-  }
-
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-}
 
 const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
@@ -65,7 +52,7 @@ const VIEWS = [
 ];
 
 // ===================== STATE =====================
-let lastStatusphereCheckedAt = null;
+// let lastStatusphereCheckedAt = null;
 let lastSyncShownAt = null;
 let lastSyncFetchedAtMs = 0;
 let lastAlertScrapeTs = null;
@@ -130,19 +117,13 @@ async function updateLastSyncIndicator() {
   if (shouldFetch) {
     lastSyncFetchedAtMs = nowMs;
 
-    const { data, error } = await supabase
-      .from("statusphere_equipment")
-      .select("checked_at")
-      .order("checked_at", { ascending: false })
-      .limit(1);
-
-    if (error) {
-      console.error("Last Sync fetch error:", error.message);
-      el.textContent = "Last Sync: (error)";
+    const response = await fetch('/api/last-sync');
+    if (!response.ok) {
+      el.textContent = 'Last Sync: (error)';
       return;
     }
-
-    const latest = data?.[0]?.checked_at;
+    const latestData = await response.json();
+    const latest = latestData?.checked_at;
     lastSyncShownAt = latest || null;
   }
 
@@ -161,17 +142,24 @@ async function updateLastSyncIndicator() {
 async function statusphereHasNewScrape(ids) {
   if (!ids?.length) return false;
 
-  const { data, error } = await supabase
-    .from("statusphere_equipment")
-    .select("checked_at")
-    .in("equipment_id", ids)
-    .order("checked_at", { ascending: false })
-    .limit(1);
-
-  if (error) {
-    console.error("Statusphere checked_at check failed:", error.message);
-    return true; // fail-open
-  }
+const response = await fetch(
+  '/api/statusphere-newscrape',
+{
+  method:'POST',
+  headers:{
+    'Content-Type':'application/json'
+  },
+  body:JSON.stringify({
+    patterns,
+    orderBy
+  })
+}
+);
+if(!response.ok){
+  console.error('New Scrape error');
+  return;
+}
+const data =await response.json();
 
   const latest = data?.[0]?.checked_at;
   if (!latest) return false;
@@ -249,79 +237,85 @@ function classifyIssue(stateLong = "", rawTitle = "") {
 
 // Alerts for ALL groups based on DB “latest scrape timestamp”
 async function alertIssuesAllGroupsIfNewScrape() {
-  const { data: d1, error: e1 } = await supabase
-    .from("statusphere_equipment")
-    .select("checked_at")
-    .order("checked_at", { ascending: false })
-    .limit(1);
 
-  if (e1) {
-    console.error("Alert check failed:", e1.message);
+  const response = await fetch('/api/alerts');
+
+  if (!response.ok) {
+    console.error('Alert fetch failed');
     return;
   }
 
-  const latestTs = d1?.[0]?.checked_at;
+  const result = await response.json();
+
+  const latestTs = result.latestTs;
+
   if (!latestTs) return;
 
   if (latestTs === lastAlertScrapeTs) return;
+
   lastAlertScrapeTs = latestTs;
 
-  const { data: rows, error: e2 } = await supabase
-    .from("statusphere_equipment")
-    .select("equipment_id, state_long, raw_title, href")
-    .eq("checked_at", latestTs);
-
-  if (e2) {
-    console.error("Alert rows fetch failed:", e2.message);
-    return;
-  }
-
-  const buckets = {
-    "CONTACT ISSUE": [],
-    "YIELD ISSUE": [],
-    "RKGU FAIL": [],
-    "SYSTEM ISSUE": [],
-    "QUALIFICATION FAILURE": [],
-    "HW CHECKER ISSUE": [],
-    "QA FAILURE": [],
-    "HANDLER PROBLEM": [],
-  };
-
-  for (const r of (rows || [])) {
-    const issue = classifyIssue(r.state_long, r.raw_title);
-    if (!issue) continue;
-    buckets[issue].push({ id: r.equipment_id, href: r.href });
-  }
+  const buckets = result.buckets || {};
 
   for (const [issueName, list] of Object.entries(buckets)) {
+
     if (!list.length) continue;
-    
-    const prevCount = lastIssueCounts.get(issueName) || 0;
+
+    const prevCount =
+      lastIssueCounts.get(issueName) || 0;
+
     const newCount = list.length;
 
-    if (newCount>prevCount) {
+    if (newCount > prevCount) {
       playAlertSound();
     }
-    lastIssueCounts.set(issueName,newCount);
-    
-    const type =
-      issueName === "RKGU FAIL" ? "pink" :
-      issueName.includes("SYSTEM") ? "yellow" :
-      "red";
 
-    const preview = list.slice(0, 6).map(x => x.id).join(", ") + (list.length > 6 ? " ..." : "");
+    lastIssueCounts.set(
+      issueName,
+      newCount
+    );
+
+    const type =
+      issueName === "RKGU FAIL"
+        ? "pink"
+        : issueName.includes("SYSTEM")
+        ? "yellow"
+        : "red";
+
+    const preview =
+      list
+        .slice(0, 6)
+        .map(x => x.id)
+        .join(", ")
+      + (list.length > 6 ? " ..." : "");
 
     showToast({
       type,
       title: `${issueName}: ${list.length}`,
       message: preview,
       onClick: () => {
+
         const first = list[0];
-        const url = buildStatusphereUrlFromRow(first.href, first.id);
-        if (url) window.open(url, "_blank", "noopener");
+
+        const url =
+          buildStatusphereUrlFromRow(
+            first.href,
+            first.id
+          );
+
+        if (url) {
+          window.open(
+            url,
+            "_blank",
+            "noopener"
+          );
+        }
+
       }
     });
+
   }
+
 }
 
 // ===================== SCHEDULES (ACT) =====================
@@ -389,16 +383,21 @@ function setCellStatus(td, type, scheduleText) {
 }
 
 async function fetchPlansFor(ids) {
-  const { data, error } = await supabase
-    .from("calibration_plans")
-    .select("identification, cal_schedule, pm_schedule")
-    .in("identification", ids);
-
-  if (error) {
-    console.error("Supabase fetch error:", error.message);
-    return [];
-  }
-  return data || [];
+  const response = await fetch(
+    '/api/calibration-plans',
+    {
+      method:'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ids })
+    }
+  );
+if (!response.ok) {
+  console.error('Calibration plans fetch failed');
+  return [];
+}
+return await response.json();
 }
 
 async function renderSchedulesAndHighlights(tableEl) {
@@ -712,16 +711,14 @@ async function loadSYSTEMLatest(tableEl) {
   const tbody = document.getElementById("systemTbody");
   if (!tableEl || !tbody) return;
 
-  const { data, error } = await supabase
-    .from("statusphere_equipment_latest")
-    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-    .or("state_long.ilike.%SYSTEM PROBLEM%,raw_title.ilike.%SYSTEM PROBLEM%")
-    .order("checked_at", { ascending: false });
-
-  if (error) {
-    console.error("SYSTEM latest fetch error:", error.message);
-    return;
-  }
+const response = await fetch(
+  '/api/system-problems'
+);
+if (!response.ok){
+  console.error('System fetch error');
+  return;
+}
+const data = await response.json();
 
   tbody.innerHTML = "";
   const frag = document.createDocumentFragment();
@@ -870,67 +867,6 @@ function playAlertSound() {
     // browser might block autoplay until user interacts
   });
 }
-// ===================== ACT: Render status by IDs (latest view) =====================
-// async function renderProductionStatusFromStatusphere(tableEl) {
-//   if (!tableEl) return;
-
-//   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
-//   const ids = rows.map(tr => normalizeIdent(tr.cells?.[0]?.textContent)).filter(Boolean);
-//   if (!ids.length) return;
-
-//   const { data, error } = await supabase
-//     .from("statusphere_equipment_latest")
-//     .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-//     .in("equipment_id", ids);
-
-//   if (error) {
-//     console.error("Statusphere fetch error:", error.message);
-//     return;
-//   }
-
-//   const map = new Map((data || []).map(r => [normalizeIdent(r.equipment_id), r]));
-//   const prodColIndex = Number(tableEl.dataset.prodCol ?? 2);
-
-//   for (const tr of rows) {
-//     const id = normalizeIdent(tr.cells?.[0]?.textContent);
-//     const cell = tr.cells?.[prodColIndex];
-//     if (!cell) continue;
-
-//     const r = map.get(id);
-//     if (!r) continue;
-
-//     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title);
-
-//     cell.textContent = "";
-//     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
-
-//     const url = buildStatusphereUrlFromRow(r.href, id);
-
-//     if (url) {
-//       const a = document.createElement("a");
-//       a.href = url;
-//       a.target = "_blank";
-//       a.rel = "noopener noreferrer";
-//       a.textContent = out.label;
-//       a.classList.add("prod-link");
-//       cell.appendChild(a);
-//     } else {
-//       const span = document.createElement("span");
-//       span.textContent = out.label;
-//       cell.appendChild(span);
-//     }
-
-//     if (out.pillText) {
-//       const pill = document.createElement("span");
-//       pill.textContent = out.pillText;
-//       pill.className = out.pillCss;
-//       cell.appendChild(pill);
-//     }
-
-//     if (out.css) cell.classList.add(out.css);
-//     cell.title = `State: ${r.state_short}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
-//   }
-// }
 // ======================LOAD DATA NO FILTERING =============================================
 function renderProductionStatusFromDataAll(tableEl, dataRows) {
   if (!tableEl) return;
@@ -1089,15 +1025,25 @@ async function refreshACT(actTable) {
 
   if (!ids.length) return;
 
-  const { data, error } = await supabase
-    .from("statusphere_equipment_latest") // ✅ FIXED spelling
-    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-    .in("equipment_id", ids);
-
-  if (error) {
-    console.error("Fetch error:", error.message);
-    return;
-  }
+const response = await fetch(
+    '/api/statusphere-latest',
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids })
+    }
+);
+if (!response.ok) {
+  console.error("Fetch failed");
+  return;
+}
+const data = await response.json();
+  // if (error) {
+  //   console.error("Fetch error:", error.message);
+  //   return;
+  // }
 
   renderProductionStatusUnified(actTable, data);
 }
@@ -1106,18 +1052,27 @@ async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "sta
   const tbody = document.getElementById(tbodyId);
   if (!tableEl || !tbody) return;
 
-  const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
+  // const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
 
-  const { data, error } = await supabase
-    .from("statusphere_equipment_latest")
-    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-    .or(orFilter)
-    .order(orderBy, { ascending: false });
-
-  if (error) {
-    console.error(`Latest fetch error for ${tbodyId}:`, error.message);
+  
+  const response = await fetch(
+    '/api/pattern-search',
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        patterns,
+        orderBy
+      })
+    }
+  );
+  if (!response.ok){
+    console.error("Latest fetch error");
     return;
   }
+const data = await response.json();
 
   tbody.innerHTML = "";
   const frag = document.createDocumentFragment();
@@ -1148,18 +1103,26 @@ async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long"
   const tbody = document.getElementById(tbodyId);
   if (!tableEl || !tbody) return;
   
-  const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
+  // const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
 
-  const { data, error } = await supabase
-    .from("statusphere_equipment_latest")
-    .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-    .or(orFilter)
-    .order(orderBy, { ascending: false });
-    
-  if (error) {
-    console.error(`Latest fetch error for ${tbodyId}}:`, error.message);
+  const response = await fetch(
+    '/api/pattern-search',
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        patterns,
+        orderBy
+      })
+    }
+  );
+  if (!response.ok){
+    console.error('Latest fetch error');
     return;
   }
+const data = await response.json();
 
   // ✅ build table rows
   tbody.innerHTML = "";
@@ -1297,15 +1260,21 @@ async function refreshData() {
         normalizeIdent(tr.cells?.[0]?.textContent)
       ).filter(Boolean);
 
-      const { data, error } = await supabase
-        .from("statusphere_equipment_latest")
-        .select("equipment_id, state_short, state_long, raw_title, checked_at, href")
-        .in("equipment_id", ids);
-
-      if (error) {
-        console.error(error.message);
+      const response = await fetch(
+        '/api/statusphere-latest',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':'application/json'
+          },
+          body:JSON.stringify({ ids })
+        }
+      );
+      if (!response.ok) {
+        console.error("Fetch error");
         return;
       }
+      const data = await response.json();
 
       renderProductionStatusUnified(tableEl, data);
       showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt);
@@ -1331,12 +1300,8 @@ async function refreshData() {
 const UI_REFRESH_MS = 60 * 1000;
 
 window.addEventListener("DOMContentLoaded", async () => {
-  try {
-    await initializeSupabase();
-  } catch (error) {
-    console.error("Supabase initialization failed:", error);
-    return;
-  }
+
+  
 
   renderViewTiles();
   setView(getCurrentView());

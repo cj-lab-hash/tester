@@ -12,12 +12,20 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const APP_VERSION = process.env.RENDER_GIT_COMMIT || 'dev';
+
+app.get('/api/version', (req, res) => {
+    res.json({ version: APP_VERSION });
+});
+
 
 const app = express();
 const loginSessions = new Set();
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
+
+
 function getSessionToken(req) {
     const cookies = req.headers.cookie || '';
     const match = cookies.match(/(?:^|;\s*)tester_session=([^;]+)/);
@@ -36,6 +44,8 @@ function requireAuth(req, res, next) {
 
     next();
 }
+
+
 
 app.get('/api/auth-status', (req, res) => {
     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });

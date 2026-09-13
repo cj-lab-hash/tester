@@ -12,11 +12,6 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const APP_VERSION = process.env.RENDER_GIT_COMMIT || 'dev';
-
-app.get('/api/version', (req, res) => {
-    res.json({ version: APP_VERSION });
-});
 
 
 const app = express();
@@ -45,6 +40,11 @@ function requireAuth(req, res, next) {
     next();
 }
 
+const APP_VERSION = process.env.RENDER_GIT_COMMIT || 'dev';
+
+app.get('/api/version', (req, res) => {
+    res.json({ version: APP_VERSION });
+});
 
 
 app.get('/api/auth-status', (req, res) => {

@@ -20,6 +20,7 @@
   },
   "description": "",
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "javascript-obfuscator": "^5.7.0"
   }
 }

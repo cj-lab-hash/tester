@@ -54,7 +54,7 @@ async function checkForUpdates() {
         title: 'Update Available',
         message: 'Refreshing dashboard...'
       });
-      
+
       console.warn("RELOAD WOULD HAPPEN NOW");
       setTimeout(() => location.reload(), 10000);
       
@@ -1391,5 +1391,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);
   setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
+  setInterval(checkForUpdates, 60_000);
   
 });

@@ -238,7 +238,7 @@ function showToast({ type = "gray", title, message, onClick }) {
   if (onClick) toast.addEventListener("click", onClick);
 
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 5_000);
+  setTimeout(() => toast.remove(), 8_000);
 }
 window.showToast = showToast;
 

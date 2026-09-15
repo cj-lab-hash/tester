@@ -1,6 +1,6 @@
 import { loadVerseFromAPI } from "./bible.js";
 // ===================== CONFIG =====================
-let currentVersion = null;
+
 
 const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
@@ -26,25 +26,27 @@ const PRE_SETUP = new Set ([
 "PRE SETUP"
 ]);
 
+let currentVersion = localStorage.getItem('appVersion');
 
-async function checkForUpdates(){
-
+async function checkForUpdates() {
   const response = await fetch('/api/version');
   const data = await response.json();
-  console.log("CHECKING VERSION");
+
   if (!currentVersion) {
-    console.log ("Server version: ", data.version);
-    console.log ("Current version:", currentVersion);
     currentVersion = data.version;
+    localStorage.setItem('appVersion', data.version);
     return;
   }
 
-  if (currentVersion != data.version) {
+  if (currentVersion !== data.version) {
     showToast({
-      type:'yellow',
-      title:'Update Available',
-      message:'refreshing dashboard...'
+      type: 'yellow',
+      title: 'Update Available',
+      message: 'refreshing dashboard...'
     });
+
+    localStorage.setItem('appVersion', data.version);
+
     setTimeout(() => {
       location.reload();
     }, 2000);
@@ -1378,5 +1380,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);
   setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
-  setInterval(checkForUpdates, 5000);
+  setInterval(checkForUpdates, 60_000);
 });

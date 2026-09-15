@@ -31,6 +31,7 @@ async function checkForUpdates(){
 
   const response = await fetch('/api/version');
   const data = await response.json();
+  console.log("CHECKING VERSION");
   if (!currentVersion) {
     console.log ("Server version: ", data.version);
     console.log ("Current version:", currentVersion);
@@ -1351,7 +1352,7 @@ const UI_REFRESH_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
 
   
-
+  console.log("DOM LOADED")
   renderViewTiles();
   setView(getCurrentView());
   refreshData();
@@ -1377,4 +1378,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);
   setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
+  setInterval(checkForUpdates, 5000);
 });

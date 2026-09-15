@@ -49,11 +49,9 @@ async function checkForUpdates() {
       currentVersion = data.version;
       localStorage.setItem('appVersion', data.version);
       console.log("SHOWING VERSION TOAST");
-      showToast({
-        type: 'yellow',
-        title: 'Update Available',
-        message: 'Refreshing dashboard...'
-      });
+      showUpdateToast(
+            'Refreshing dashboard...'
+          );
 
       console.warn("RELOAD WOULD HAPPEN NOW");
       setTimeout(() => location.reload(), 10000);
@@ -228,6 +226,7 @@ function showToast({ type = "gray", title, message, onClick }) {
 
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
+
   toast.dataset.title = title;
 
   const badge = document.createElement("span");
@@ -253,10 +252,37 @@ function showToast({ type = "gray", title, message, onClick }) {
   if (onClick) toast.addEventListener("click", onClick);
 
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 8_000);
+  setTimeout(() => toast.remove(), 10000);
 }
 window.showToast = showToast;
+function showUpdateToast(message) {
 
+    const container =
+        document.getElementById(
+            "updateToastContainer"
+        );
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const toast =
+        document.createElement("div");
+
+    toast.className =
+        "toast toast-yellow";
+
+    toast.innerHTML = `
+        <div class="toast-title">
+            🚀 Update Available
+        </div>
+        <div class="toast-sub">
+            ${message}
+        </div>
+    `;
+
+    container.appendChild(toast);
+}
 function classifyIssue(stateLong = "", rawTitle = "") {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
 

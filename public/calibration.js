@@ -32,6 +32,8 @@ async function checkForUpdates(){
   const response = await fetch('/api/version');
   const data = await response.json();
   if (!currentVersion) {
+    console.log ("Server version: ", data.version);
+    console.log ("Current version:", currentVersion);
     currentVersion = data.version;
     return;
   }

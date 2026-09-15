@@ -41,18 +41,21 @@ async function checkForUpdates() {
       localStorage.setItem('appVersion', data.version);
       return;
     }
+    // console.log("Current Version:", currentVersion);
+    // console.log("Server Version:", data.version);
 
     if (currentVersion !== data.version) {
+      console.warn("VERSION CHANGED");
       currentVersion = data.version;
       localStorage.setItem('appVersion', data.version);
+      // console.log("SHOWING VERSION TOAST");
+      showUpdateToast(
+            'Refreshing dashboard...'
+          );
 
-      showToast({
-        type: 'yellow',
-        title: 'Update Available',
-        message: 'Refreshing dashboard...'
-      });
-
-      setTimeout(() => location.reload(), 2000);
+      console.warn("RELOAD WOULD HAPPEN NOW");
+      setTimeout(() => location.reload(), 10000);
+      
     }
   } catch (err) {
     console.error('Version check failed:', err);
@@ -223,6 +226,7 @@ function showToast({ type = "gray", title, message, onClick }) {
 
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
+
   toast.dataset.title = title;
 
   const badge = document.createElement("span");
@@ -248,10 +252,37 @@ function showToast({ type = "gray", title, message, onClick }) {
   if (onClick) toast.addEventListener("click", onClick);
 
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 8_000);
+  setTimeout(() => toast.remove(), 10000);
 }
 window.showToast = showToast;
+function showUpdateToast(message) {
 
+    const container =
+        document.getElementById(
+            "updateToastContainer"
+        );
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const toast =
+        document.createElement("div");
+
+    toast.className =
+        "toast toast-yellow";
+
+    toast.innerHTML = `
+        <div class="toast-title">
+            🚀 Update Available
+        </div>
+        <div class="toast-sub">
+            ${message}
+        </div>
+    `;
+
+    container.appendChild(toast);
+}
 function classifyIssue(stateLong = "", rawTitle = "") {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
 
@@ -1386,5 +1417,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);
   setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
+  setInterval(checkForUpdates, 60_000);
   
 });

@@ -118,6 +118,11 @@ body.dark-mode .toast {
 body.dark-mode .toast-sub {
   color:#ffffff; 
 }
+body.dark-mode #updateToastContainer .toast{
+  background: #3a2f14;
+  border: 2px solid #f59e0b;
+  color: #ffffff;
+}
 #darkModeToggle {
   font-size: 14px;
   cursor: pointer;
@@ -664,6 +669,37 @@ td.cal-due, td.pm-due {
 .toast-title{ font-weight: 800; }
 .toast-sub{ color:#4b5563; }
 
+#updateToastContainer{
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  bottom: auto;
+
+  z-index: 10001;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#toastContainer{
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+
+  z-index: 10000;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#updateToastContainer .toast{
+  min-width: 320px;
+  border: 2px solid #f59e0b;
+  background: #fef3c7;
+  color: #111827;
+  font-weight: 700;
+}
 
 /* wrapper (optional: match your table width) */
 .view-tiles-wrap{
@@ -1176,4 +1212,4 @@ body.dark-mode .filter-modes label:has(input:checked) span {
     max-width: 360px;
     padding: 18px;
   }
-}
+}

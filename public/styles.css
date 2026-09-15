@@ -1026,11 +1026,14 @@ body.dark-mode .filter-modes label:has(input:checked) span {
     font-size: 10px;
   }
 }
-
+.auth-locked #editableTable th:nth-child(2),
+.auth-locked #editableTable td:nth-child(2),
 .auth-locked #editableTable th:nth-child(5),
 .auth-locked #editableTable td:nth-child(5),
 .auth-locked #editableTable th:nth-child(6),
 .auth-locked #editableTable td:nth-child(6),
+.auth-locked #editableTable th:nth-child(7),
+.auth-locked #editableTable td:nth-child(7),
 .auth-locked #uflexTable th:nth-child(4),
 .auth-locked #uflexTable td:nth-child(4),
 .auth-locked #uflexTable th:nth-child(5),

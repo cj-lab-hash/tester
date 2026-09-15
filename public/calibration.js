@@ -41,14 +41,14 @@ async function checkForUpdates() {
       localStorage.setItem('appVersion', data.version);
       return;
     }
-    console.log("Current Version:", currentVersion);
-    console.log("Server Version:", data.version);
+    // console.log("Current Version:", currentVersion);
+    // console.log("Server Version:", data.version);
 
     if (currentVersion !== data.version) {
       console.warn("VERSION CHANGED");
       currentVersion = data.version;
       localStorage.setItem('appVersion', data.version);
-      console.log("SHOWING VERSION TOAST");
+      // console.log("SHOWING VERSION TOAST");
       showUpdateToast(
             'Refreshing dashboard...'
           );

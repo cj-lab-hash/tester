@@ -1,6 +1,6 @@
 import { loadVerseFromAPI } from "./bible.js";
 // ===================== CONFIG =====================
-
+let currentVersion = null;
 
 const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
@@ -25,6 +25,30 @@ const TPE_DOWNTIME = new Set([
 const PRE_SETUP = new Set ([
 "PRE SETUP"
 ]);
+
+
+async function checkForUpdates(){
+
+  const response = await fetch('/api/version');
+  const data = await response.json();
+  if (!currentVersion) {
+    currentVersion = data.version;
+    return;
+  }
+
+  if (currentVersion != data.version) {
+    showToast({
+      type:'yellow',
+      title:'Update Available',
+      message:'refreshing dashboard...'
+    });
+    setTimeout(() => {
+      location.reload();
+    }, 2000);
+  }
+}
+
+
 function isTPEDowntime(stateLong) {
   const state = (stateLong || "").toUpperCase();
   return [...TPE_DOWNTIME].some(issue => state.includes(issue));
@@ -214,7 +238,7 @@ function showToast({ type = "gray", title, message, onClick }) {
   if (onClick) toast.addEventListener("click", onClick);
 
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 5_000);
+  setTimeout(() => toast.remove(), 8_000);
 }
 window.showToast = showToast;
 

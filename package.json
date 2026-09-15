@@ -4,6 +4,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build-js": "terser public/calibration.js -c -m -o public/calibration.min.js && javascript-obfuscator public/calibration.min.js --output public/calibration.min.js",
+    "prestart": "npm run build-js",
     "start": "node server.js"
   },
   "keywords": [],
@@ -21,6 +23,7 @@
   "description": "",
   "devDependencies": {
     "concurrently": "^9.1.2",
-    "javascript-obfuscator": "^5.7.0"
+    "javascript-obfuscator": "^5.7.0",
+    "terser": "^5.51.2"
   }
 }

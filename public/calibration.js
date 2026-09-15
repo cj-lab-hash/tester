@@ -41,18 +41,23 @@ async function checkForUpdates() {
       localStorage.setItem('appVersion', data.version);
       return;
     }
+    console.log("Current Version:", currentVersion);
+    console.log("Server Version:", data.version);
 
     if (currentVersion !== data.version) {
+      console.warn("VERSION CHANGED");
       currentVersion = data.version;
       localStorage.setItem('appVersion', data.version);
-
+      console.log("SHOWING VERSION TOAST");
       showToast({
         type: 'yellow',
         title: 'Update Available',
         message: 'Refreshing dashboard...'
       });
-
-      setTimeout(() => location.reload(), 2000);
+      
+      console.warn("RELOAD WOULD HAPPEN NOW");
+      setTimeout(() => location.reload(), 10000);
+      
     }
   } catch (err) {
     console.error('Version check failed:', err);

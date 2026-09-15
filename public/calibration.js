@@ -1,6 +1,6 @@
 import { loadVerseFromAPI } from "./bible.js";
 // ===================== CONFIG =====================
-let currentVersion = null;
+
 
 const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
@@ -26,29 +26,39 @@ const PRE_SETUP = new Set ([
 "PRE SETUP"
 ]);
 
+let currentVersion = localStorage.getItem('appVersion');
 
-async function checkForUpdates(){
+async function checkForUpdates() {
+  try {
+    const response = await fetch('/api/version');
 
-  const response = await fetch('/api/version');
-  const data = await response.json();
-  if (!currentVersion) {
-    currentVersion = data.version;
-    return;
-  }
+    if (!response.ok) return;
 
-  if (currentVersion != data.version) {
-    showToast({
-      type:'yellow',
-      title:'Update Available',
-      message:'refreshing dashboard...'
-    });
-    setTimeout(() => {
-      location.reload();
-    }, 2000);
+    const data = await response.json();
+
+    if (!currentVersion) {
+      currentVersion = data.version;
+      localStorage.setItem('appVersion', data.version);
+      return;
+    }
+
+    if (currentVersion !== data.version) {
+      currentVersion = data.version;
+      localStorage.setItem('appVersion', data.version);
+
+      showToast({
+        type: 'yellow',
+        title: 'Update Available',
+        message: 'Refreshing dashboard...'
+      });
+
+      setTimeout(() => location.reload(), 2000);
+    }
+  } catch (err) {
+    console.error('Version check failed:', err);
   }
 }
-
-
+   
 function isTPEDowntime(stateLong) {
   const state = (stateLong || "").toUpperCase();
   return [...TPE_DOWNTIME].some(issue => state.includes(issue));
@@ -76,7 +86,7 @@ const VIEWS = [
 ];
 
 // ===================== STATE =====================
-// let lastStatusphereCheckedAt = null;
+let lastStatusphereCheckedAt = null;
 let lastSyncShownAt = null;
 let lastSyncFetchedAtMs = 0;
 let lastAlertScrapeTs = null;
@@ -1349,13 +1359,14 @@ const UI_REFRESH_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
 
   
-
+  
   renderViewTiles();
   setView(getCurrentView());
   refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
+  checkForUpdates();
 
   const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
     ? filterMode
@@ -1375,4 +1386,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(refreshData, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, 15_000);
   setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
+  
 });

@@ -100,17 +100,28 @@ app.get('/api/dashboard-data', async (req, res) => {
         // if (systemResult.error) throw systemResult.error;
 
         const rows = latestResult.data || [];
+        const filteredRows = rows.filter(r => {
+        const state = (r.state_short || "").toUpperCase();
 
+        const text =
+                `${r.state_long || ""} ${r.raw_title || ""}`
+                    .toUpperCase();
+
+                return !(
+                    state === "ENGG" &&
+                    text.includes("YIELD ISSUE_ENG")
+                );
+                });
         const dashboard = {
 
-            ACT: sortDashboardRows(rows.filter(r =>
+            ACT: sortDashboardRows(filteredRows.filter(r =>
                 /^(TERCAT|QUARTET|DUO|SZ)/i.test(
                     r.equipment_id
                 )
             )
             ),
 
-            UFLEX: sortDashboardRows(rows.filter(r =>
+            UFLEX: sortDashboardRows(filteredRows.filter(r =>
                 /^MICROFLEX/i.test(r.equipment_id) ||
                 /^TERFLEX/i.test(r.equipment_id) ||
                 /IFLEX/i.test(r.equipment_id) ||
@@ -118,26 +129,26 @@ app.get('/api/dashboard-data', async (req, res) => {
             )
         ),
 
-            EAGLE: sortDashboardRows(rows.filter(r =>
+            EAGLE: sortDashboardRows(filteredRows.filter(r =>
                 /^EAGLE88/i.test(
                     r.equipment_id
                 )
             )
         ),
 
-            MAV: sortDashboardRows(rows.filter(r =>
+            MAV: sortDashboardRows(filteredRows.filter(r =>
                 /^MAV/i.test(r.equipment_id) ||
                 /^TERMAG/i.test(r.equipment_id)
             )
         ),
 
-            TMT: sortDashboardRows(rows.filter(r =>
+            TMT: sortDashboardRows(filteredRows.filter(r =>
                 /^ASL1K/i.test(r.equipment_id) ||
                 /^ASL4K/i.test(r.equipment_id)
             )
         ),
 
-            LEGACY: sortDashboardRows(rows.filter(r =>
+            LEGACY: sortDashboardRows(filteredRows.filter(r =>
                 /^KTS/i.test(r.equipment_id) ||
                 /^STS50/i.test(r.equipment_id) ||
                 /^MPS/i.test(r.equipment_id) ||
@@ -147,35 +158,35 @@ app.get('/api/dashboard-data', async (req, res) => {
             )
         ),
 
-            SPEA: sortDashboardRows(rows.filter(r =>
+            SPEA: sortDashboardRows(filteredRows.filter(r =>
                 /^DOT400/i.test(
                     r.equipment_id
                 )
             )
         ),
 
-            LTXMX: sortDashboardRows(rows.filter(r =>
+            LTXMX: sortDashboardRows(filteredRows.filter(r =>
                 /^LTXMX/i.test(
                     r.equipment_id
                 )
             )
         ),
 
-            LTX: sortDashboardRows(rows.filter(r =>
+            LTX: sortDashboardRows(filteredRows.filter(r =>
                 /^LTX0/i.test(
                     r.equipment_id
                 )
             )
         ),
 
-            ARK: sortDashboardRows(rows.filter(r =>
+            ARK: sortDashboardRows(filteredRows.filter(r =>
                 /^KVDM2/i.test(r.equipment_id) ||
                 /^ASL3K/i.test(r.equipment_id) ||
                 /^RFX/i.test(r.equipment_id)
             )
         ),
 
-            SYSTEM: rows.filter(r => {
+            SYSTEM: filteredRows.filter(r => {
                 const text =
                     `${r.state_long || ""} ${r.raw_title || ""}`
                     .toUpperCase();

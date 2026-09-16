@@ -26,6 +26,8 @@ const PRE_SETUP = new Set ([
 "PRE SETUP"
 ]);
 
+let dashboardCache = {};
+let plansMap = new Map();
 let currentVersion = localStorage.getItem('appVersion');
 
 async function checkForUpdates() {
@@ -186,9 +188,12 @@ const response = await fetch(
   headers:{
     'Content-Type':'application/json'
   },
+  // body:JSON.stringify({
+  //   patterns,
+  //   orderBy
+  // })
   body:JSON.stringify({
-    patterns,
-    orderBy
+    ids 
   })
 }
 );
@@ -449,33 +454,36 @@ function setCellStatus(td, type, scheduleText) {
   return status.state;
 }
 
-async function fetchPlansFor(ids) {
-  const response = await fetch(
-    '/api/calibration-plans',
-    {
-      method:'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ ids })
-    }
-  );
-if (!response.ok) {
-  console.error('Calibration plans fetch failed');
-  return [];
-}
-return await response.json();
-}
+// async function fetchPlansFor(ids) {
+//   const response = await fetch(
+//     '/api/calibration-plans',
+//     {
+//       method:'POST',
+//       headers: {
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({ ids })
+//     }
+//   );
+// if (!response.ok) {
+//   console.error('Calibration plans fetch failed');
+//   return [];
+// }
+// return await response.json();
+// }
 
 async function renderSchedulesAndHighlights(tableEl) {
   if (!tableEl) return;
 
   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
-  const ids = rows.map(tr => normalizeIdent(tr.cells?.[0]?.textContent)).filter(Boolean);
-  if (!ids.length) return;
+  // const ids = rows.map(tr => normalizeIdent(tr.cells?.[0]?.textContent)).filter(Boolean);
+  // if (!ids.length) return;
+  if (!rows.length) return;
 
-  const plans = await fetchPlansFor(ids);
-  const map = new Map(plans.map(p => [normalizeIdent(p.identification), p]));
+  // const plans = await fetchPlansFor(ids);
+  // const map = new Map(plans.map(p => [normalizeIdent(p.identification), p]));
+  const map = plansMap;
+
 
   for (const tr of rows) {
     tr.classList.remove("row-overdue", "row-due-soon", "row-critical", "row-due");
@@ -774,76 +782,76 @@ function showViewAlertsOncePerChange(viewName, tableEl, scrapeTs) {
   }
 }
 // ===================== RENDER: SYSTEM PROBLEM ONLY (same style as other tables) =====================
-async function loadSYSTEMLatest(tableEl) {
-  const tbody = document.getElementById("systemTbody");
-  if (!tableEl || !tbody) return;
+// async function loadSYSTEMLatest(tableEl) {
+//   const tbody = document.getElementById("systemTbody");
+//   if (!tableEl || !tbody) return;
 
-const response = await fetch(
-  '/api/system-problems'
-);
-if (!response.ok){
-  console.error('System fetch error');
-  return;
-}
-const data = await response.json();
+// const response = await fetch(
+//   '/api/system-problems'
+// );
+// if (!response.ok){
+//   console.error('System fetch error');
+//   return;
+// }
+// const data = await response.json();
 
-  tbody.innerHTML = "";
-  const frag = document.createDocumentFragment();
+//   tbody.innerHTML = "";
+//   const frag = document.createDocumentFragment();
 
-  for (const r of (data || [])) {
-    const tr = document.createElement("tr");
+//   for (const r of (data || [])) {
+//     const tr = document.createElement("tr");
 
-    // Column 1: TESTER NAME
-    const tdName = document.createElement("td");
-    const id = normalizeIdent(r.equipment_id) || r.equipment_id;
-    tdName.textContent = id;
-    tr.appendChild(tdName);
+//     // Column 1: TESTER NAME
+//     const tdName = document.createElement("td");
+//     const id = normalizeIdent(r.equipment_id) || r.equipment_id;
+//     tdName.textContent = id;
+//     tr.appendChild(tdName);
 
-    // Column 2: PRODUCTION STATUS (same behavior as other tables)
-    const tdStatus = document.createElement("td");
-    tdStatus.textContent = "";
-    tdStatus.classList.remove(
-      "ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange"
-    );
+//     // Column 2: PRODUCTION STATUS (same behavior as other tables)
+//     const tdStatus = document.createElement("td");
+//     tdStatus.textContent = "";
+//     tdStatus.classList.remove(
+//       "ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange"
+//     );
 
-    const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
-    const url = buildStatusphereUrlFromRow(r.href, id);
+//     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
+//     const url = buildStatusphereUrlFromRow(r.href, id);
 
-    // clickable label like other tables
-    if (url) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
-      tdStatus.appendChild(a);
-    } else {
-      const span = document.createElement("span");
-      span.textContent = out.label;
-      tdStatus.appendChild(span);
-    }
+//     // clickable label like other tables
+//     if (url) {
+//       const a = document.createElement("a");
+//       a.href = url;
+//       a.target = "_blank";
+//       a.rel = "noopener noreferrer";
+//       a.textContent = out.label;
+//       a.classList.add("prod-link");
+//       tdStatus.appendChild(a);
+//     } else {
+//       const span = document.createElement("span");
+//       span.textContent = out.label;
+//       tdStatus.appendChild(span);
+//     }
 
-    const tdPhase = document.createElement("td");
-    const tdDieType = document.createElement("td");
-    const tdHandler = document.createElement("td");
-    appendStatusDetails(tdPhase, tdDieType, tdHandler, out);
+//     const tdPhase = document.createElement("td");
+//     const tdDieType = document.createElement("td");
+//     const tdHandler = document.createElement("td");
+//     appendStatusDetails(tdPhase, tdDieType, tdHandler, out);
 
-    // color class (UMAINT red, SETUP pink, etc.)
-    if (out.css) tdStatus.classList.add(out.css);
+//     // color class (UMAINT red, SETUP pink, etc.)
+//     if (out.css) tdStatus.classList.add(out.css);
 
-    // hover tooltip (optional, but helpful)
-    tdStatus.title = `State: ${r.state_short || ""}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
+//     // hover tooltip (optional, but helpful)
+//     tdStatus.title = `State: ${r.state_short || ""}\n${r.state_long || ""}\nUpdated: ${r.checked_at || ""}`;
 
-    tr.appendChild(tdStatus);
-    tr.appendChild(tdPhase);
-    tr.appendChild(tdDieType);
-    tr.appendChild(tdHandler);
-    frag.appendChild(tr);
-  }
+//     tr.appendChild(tdStatus);
+//     tr.appendChild(tdPhase);
+//     tr.appendChild(tdDieType);
+//     tr.appendChild(tdHandler);
+//     frag.appendChild(tr);
+//   }
 
-  tbody.appendChild(frag);
-}
+//   tbody.appendChild(frag);
+// }
 
 function renderProductionStatusUnified(tableEl, dataRows) {
   if (!tableEl) return;
@@ -1082,155 +1090,219 @@ if(localStorage.getItem('theme') === 'dark') {
   labelDark.textContent = "🌙 Dark Mode";
 }
 
+async function loadDashboardCache() {
 
+    const response =
+        await fetch('/api/dashboard-data');
 
-async function refreshACT(actTable) {
-  const rows = Array.from(actTable.querySelectorAll("tbody tr"));
-  const ids = rows.map(tr =>
-    normalizeIdent(tr.cells?.[0]?.textContent)
-  ).filter(Boolean);
-
-  if (!ids.length) return;
-
-const response = await fetch(
-    '/api/statusphere-latest',
-    {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ids })
+    if (!response.ok) {
+        throw new Error(
+            'Dashboard fetch failed'
+        );
     }
-);
-if (!response.ok) {
-  console.error("Fetch failed");
-  return;
+
+    dashboardCache =
+        await response.json();
+        plansMap.clear();
+    
+    (dashboardCache.plans || []).forEach(plan => {
+
+      plansMap.set(
+        normalizeIdent(
+          plan.identification
+        ),
+        plan
+      );
+
+    });
 }
-const data = await response.json();
-  // if (error) {
-  //   console.error("Fetch error:", error.message);
-  //   return;
-  // }
-
-  renderProductionStatusUnified(actTable, data);
-}
 
 
+// async function refreshACT(actTable) {
+// //   const rows = Array.from(actTable.querySelectorAll("tbody tr"));
+// //   const ids = rows.map(tr =>
+// //     normalizeIdent(tr.cells?.[0]?.textContent)
+// //   ).filter(Boolean);
 
-async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "state_long" }) {
+// //   if (!ids.length) return;
+
+// // const response = await fetch(
+// //     '/api/statusphere-latest',
+// //     {
+// //         method: 'POST',
+// //         headers: {
+// //             'Content-Type': 'application/json'
+// //         },
+// //         body: JSON.stringify({ ids })
+// //     }
+// // );
+// // if (!response.ok) {
+// //   console.error("Fetch failed");
+// //   return;
+// // }
+// // const data = await response.json();
+// //   // if (error) {
+// //   //   console.error("Fetch error:", error.message);
+// //   //   return;
+// //   // }
+//   if (!dashboardCache.ACT) {
+//   console.error("ACT dashboard cache not loaded");
+//     return;
+//   }
+
+//   renderProductionStatusUnified(actTable, dashboardCache.ACT);
+// }
+
+function loadFromCache({
+  tableEl,
+  tbodyId,
+  data
+}) {
   const tbody = document.getElementById(tbodyId);
-  if (!tableEl || !tbody) return;
 
-
-  
-  const response = await fetch(
-    '/api/pattern-search',
-    {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        patterns,
-        orderBy
-      })
-    }
-  );
-  if (!response.ok){
-    console.error("Latest fetch error");
-    return;
-  }
-const data = await response.json();
+  if (!tbody) return;
 
   tbody.innerHTML = "";
-  const frag = document.createDocumentFragment();
-  // console.log("Loaded rows:", data?.length);
-  for (const r of (data || [])) {
-    const tr = document.createElement("tr");
 
-    const tdName = document.createElement("td");
-    tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
-    tr.appendChild(tdName);
-
-    const tdProd = document.createElement("td");
-    const tdPhase = document.createElement("td");
-    const tdDieType = document.createElement("td");
-    const tdHandler = document.createElement("td");
-    tr.appendChild(tdProd);
-    tr.appendChild(tdPhase);
-    tr.appendChild(tdDieType);
-    tr.appendChild(tdHandler);
-
-    frag.appendChild(tr);
-  }
-  tbody.appendChild(frag);
-
-  renderProductionStatusFromDataNonPMCAL(tableEl, data);
-}
-async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long" }) {
-  const tbody = document.getElementById(tbodyId);
-  if (!tableEl || !tbody) return;
-  
-  // const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
-
-  const response = await fetch(
-    '/api/pattern-search',
-    {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        patterns,
-        orderBy
-      })
-    }
-  );
-  if (!response.ok){
-    console.error('Latest fetch error');
-    return;
-  }
-const data = await response.json();
-
-  // ✅ build table rows
-  tbody.innerHTML = "";
   const frag = document.createDocumentFragment();
 
   for (const r of (data || [])) {
-    const tr = document.createElement("tr");
-    const tdName = document.createElement("td");
-    const tdProd = document.createElement("td");
-    const tdPhase = document.createElement("td");
-    const tdDieType = document.createElement("td");
-    const tdHandler = document.createElement("td");
 
-    tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
-    tr.appendChild(tdName);
-    tr.appendChild(tdProd);
-    tr.appendChild(tdPhase);
-    tr.appendChild(tdDieType);
-    tr.appendChild(tdHandler);
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${normalizeIdent(r.equipment_id) || r.equipment_id}</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    `;
+
     frag.appendChild(tr);
   }
 
   tbody.appendChild(frag);
 
-  // ✅ render ALL statuses (no filtering)
-  renderProductionStatusFromDataAll(tableEl, data);
+  renderProductionStatusFromDataNonPMCAL(
+    tableEl,
+    data
+  );
 }
+
+// async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "state_long" }) {
+//   const tbody = document.getElementById(tbodyId);
+//   if (!tableEl || !tbody) return;
+
+
+  
+//   const response = await fetch(
+//     '/api/pattern-search',
+//     {
+//       method:'POST',
+//       headers:{
+//         'Content-Type':'application/json'
+//       },
+//       body:JSON.stringify({
+//         patterns,
+//         orderBy
+//       })
+//     }
+//   );
+//   if (!response.ok){
+//     console.error("Latest fetch error");
+//     return;
+//   }
+// const data = await response.json();
+
+//   tbody.innerHTML = "";
+//   const frag = document.createDocumentFragment();
+//   // console.log("Loaded rows:", data?.length);
+//   for (const r of (data || [])) {
+//     const tr = document.createElement("tr");
+
+//     const tdName = document.createElement("td");
+//     tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
+//     tr.appendChild(tdName);
+
+//     const tdProd = document.createElement("td");
+//     const tdPhase = document.createElement("td");
+//     const tdDieType = document.createElement("td");
+//     const tdHandler = document.createElement("td");
+//     tr.appendChild(tdProd);
+//     tr.appendChild(tdPhase);
+//     tr.appendChild(tdDieType);
+//     tr.appendChild(tdHandler);
+
+//     frag.appendChild(tr);
+//   }
+//   tbody.appendChild(frag);
+
+//   renderProductionStatusFromDataNonPMCAL(tableEl, data);
+// }
+// async function LoadAllLatest({tableEl, tbodyId, patterns, orderBy = "state_long" }) {
+//   const tbody = document.getElementById(tbodyId);
+//   if (!tableEl || !tbody) return;
+  
+//   // const orFilter = patterns.map(p => `equipment_id.ilike.${p}`).join(",");
+
+//   const response = await fetch(
+//     '/api/pattern-search',
+//     {
+//       method:'POST',
+//       headers:{
+//         'Content-Type':'application/json'
+//       },
+//       body:JSON.stringify({
+//         patterns,
+//         orderBy
+//       })
+//     }
+//   );
+//   if (!response.ok){
+//     console.error('Latest fetch error');
+//     return;
+//   }
+// const data = await response.json();
+
+//   // ✅ build table rows
+//   tbody.innerHTML = "";
+//   const frag = document.createDocumentFragment();
+
+//   for (const r of (data || [])) {
+//     const tr = document.createElement("tr");
+//     const tdName = document.createElement("td");
+//     const tdProd = document.createElement("td");
+//     const tdPhase = document.createElement("td");
+//     const tdDieType = document.createElement("td");
+//     const tdHandler = document.createElement("td");
+
+//     tdName.textContent = normalizeIdent(r.equipment_id) || r.equipment_id;
+//     tr.appendChild(tdName);
+//     tr.appendChild(tdProd);
+//     tr.appendChild(tdPhase);
+//     tr.appendChild(tdDieType);
+//     tr.appendChild(tdHandler);
+//     frag.appendChild(tr);
+//   }
+
+//   tbody.appendChild(frag);
+
+//   // ✅ render ALL statuses (no filtering)
+//   renderProductionStatusFromDataAll(tableEl, data);
+// }
 // View-specific loaders (all optimized)
 const viewLoaders = {
-  UFLEX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"uflexTbody",  patterns:["MICROFLEX%","TERFLEX%","%IFLEX%","%NIGP4%"] }),
-  EAGLE:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"eagleTbody",  patterns:["EAGLE88%"] }),
-  SPEA:   (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"speaTbody",   patterns:["DOT400%"] }),
-  LTXMX:  (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"ltxmxTbody",  patterns:["LTXMX%"] }),
-  MAV:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"mavTbody",    patterns:["MAV10%","MAV20%","TERMAG20%"] }),
-  TMT:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"tmtTbody",    patterns:["ASL1K%","ASL4K%"] }),
-  LEGACY: (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"legacyTbody", patterns:["KTS%","STS50%","MPS%","NOISE%","TERA360Z%","SC212%"] }),
-  LTX:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"ltxTbody",    patterns:["LTX0%"] }),
-  ARK:    (tableEl) => loadLatestByPatterns({ tableEl, tbodyId:"arkTbody",    patterns:["KVDM2%","ASL3K%","RFX%"] }),
+  UFLEX:  (tableEl) => loadFromCache({ tableEl, tbodyId:"uflexTbody",  data: dashboardCache.UFLEX }),
+  EAGLE:  (tableEl) => loadFromCache({ tableEl, tbodyId:"eagleTbody",  data:dashboardCache.EAGLE }),
+  SPEA:   (tableEl) => loadFromCache({ tableEl, tbodyId:"speaTbody",   data:dashboardCache.SPEA }),
+  LTXMX:  (tableEl) => loadFromCache({ tableEl, tbodyId:"ltxmxTbody",  data:dashboardCache.LTXMX }),
+  MAV:    (tableEl) => loadFromCache({ tableEl, tbodyId:"mavTbody",    data:dashboardCache.MAV }),
+  TMT:    (tableEl) => loadFromCache({ tableEl, tbodyId:"tmtTbody",    data:dashboardCache.TMT }),
+  LEGACY: (tableEl) => loadFromCache({ tableEl, tbodyId:"legacyTbody", data:dashboardCache.LEGACY }),
+  LTX:    (tableEl) => loadFromCache({ tableEl, tbodyId:"ltxTbody",    data:dashboardCache.LTX }),
+  ARK:    (tableEl) => loadFromCache({ tableEl, tbodyId:"arkTbody",    data:dashboardCache.ARK }),
   // SYSTEM: (tableEl) => loadSYSTEMLatest({ tableEl, tbodyId:"systemTbody", patterns:["SYSTEM%"] }),
-  SYSTEM: (tableEl) => loadSYSTEMLatest(tableEl),
+  SYSTEM: (tableEl) => loadFromCache({ tableEl, tbodyId:"systemTbody",    data:dashboardCache.SYSTEM }),
 };
 
 // ===================== TILES UI =====================
@@ -1323,27 +1395,11 @@ async function refreshData() {
       window.normalizeActTableRows?.();
       await renderSchedulesAndHighlights(tableEl);
 
-      const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
-      const ids = rows.map(tr =>
-        normalizeIdent(tr.cells?.[0]?.textContent)
-      ).filter(Boolean);
-
-      const response = await fetch(
-        '/api/statusphere-latest',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':'application/json'
-          },
-          body:JSON.stringify({ ids })
-        }
-      );
-      if (!response.ok) {
-        console.error("Fetch error");
+      renderProductionStatusUnified(tableEl, dashboardCache.ACT);
+      if (!dashboardCache.ACT?.length) {
+        console.warn('ACT cache empty');
         return;
       }
-      const data = await response.json();
-
       // data.sort((a, b) => {
 
       //   const pa = getIssuePriority(a);
@@ -1364,7 +1420,7 @@ async function refreshData() {
       //   ) || 0;
       //   return db - da;
       // });
-      renderProductionStatusUnified(tableEl, data);
+      // renderProductionStatusUnified(tableEl, data);
       showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt);
       return;
     }
@@ -1385,7 +1441,7 @@ async function refreshData() {
 }
 
 // ===================== BOOT =====================
-const UI_REFRESH_MS = 60 * 1000;
+const UI_REFRESH_MS = 180 * 1000;
 
 window.addEventListener("DOMContentLoaded", async () => {
 
@@ -1393,12 +1449,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   renderViewTiles();
   setView(getCurrentView());
-  refreshData();
+  // refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
+  await loadDashboardCache();
 
+  refreshData();  
   const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
     ? filterMode
     : "all";
@@ -1414,9 +1472,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  setInterval(refreshData, UI_REFRESH_MS);
-  setInterval(updateLastSyncIndicator, 15_000);
-  setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
-  setInterval(checkForUpdates, 60_000);
+  // setInterval(refreshData, UI_REFRESH_MS);
+  setInterval(async () => {
+
+  await loadDashboardCache();
+
+  refreshData();
+
+}, UI_REFRESH_MS);
+  setInterval(updateLastSyncIndicator, 180_000);
+  setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
+  setInterval(checkForUpdates, 180_000);
   
 });

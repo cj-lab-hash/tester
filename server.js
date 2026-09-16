@@ -51,6 +51,168 @@ app.get('/api/auth-status', (req, res) => {
     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
 });
 
+app.get('/api/dashboard-data', async (req, res) => {
+    try {
+
+        const [
+            latestResult,
+            plansResult,
+            // systemResult
+        ] = await Promise.all([
+
+            supabase
+                .from('statusphere_equipment_latest')
+                .select(`
+                    equipment_id,
+                    state_short,
+                    state_long,
+                    raw_title,
+                    checked_at,
+                    href
+                `),
+
+            supabase
+                .from('calibration_plans')
+                .select(`
+                    identification,
+                    cal_schedule,
+                    pm_schedule
+                `),
+
+            // supabase
+            //     .from('statusphere_equipment_latest')
+            //     .select(`
+            //         equipment_id,
+            //         state_short,
+            //         state_long,
+            //         raw_title,
+            //         checked_at,
+            //         href
+            //     `)
+            //     .or(
+            //         'state_long.ilike.%SYSTEM PROBLEM%,raw_title.ilike.%SYSTEM PROBLEM%'
+            //     )
+
+        ]);
+
+        if (latestResult.error) throw latestResult.error;
+        if (plansResult.error) throw plansResult.error;
+        // if (systemResult.error) throw systemResult.error;
+
+        const rows = latestResult.data || [];
+        const filteredRows = rows.filter(r => {
+        const state = (r.state_short || "").toUpperCase();
+
+        const text =
+                `${r.state_long || ""} ${r.raw_title || ""}`
+                    .toUpperCase();
+
+                return !(
+                    state === "ENGG" &&
+                    text.includes("YIELD ISSUE_ENG")
+                );
+                });
+        const dashboard = {
+
+            ACT: sortDashboardRows(filteredRows.filter(r =>
+                /^(TERCAT|QUARTET|DUO|SZ)/i.test(
+                    r.equipment_id
+                )
+            )
+            ),
+
+            UFLEX: sortDashboardRows(filteredRows.filter(r =>
+                /^MICROFLEX/i.test(r.equipment_id) ||
+                /^TERFLEX/i.test(r.equipment_id) ||
+                /IFLEX/i.test(r.equipment_id) ||
+                /NIGP4/i.test(r.equipment_id)
+            )
+        ),
+
+            EAGLE: sortDashboardRows(filteredRows.filter(r =>
+                /^EAGLE88/i.test(
+                    r.equipment_id
+                )
+            )
+        ),
+
+            MAV: sortDashboardRows(filteredRows.filter(r =>
+                /^MAV/i.test(r.equipment_id) ||
+                /^TERMAG/i.test(r.equipment_id)
+            )
+        ),
+
+            TMT: sortDashboardRows(filteredRows.filter(r =>
+                /^ASL1K/i.test(r.equipment_id) ||
+                /^ASL4K/i.test(r.equipment_id)
+            )
+        ),
+
+            LEGACY: sortDashboardRows(filteredRows.filter(r =>
+                /^KTS/i.test(r.equipment_id) ||
+                /^STS50/i.test(r.equipment_id) ||
+                /^MPS/i.test(r.equipment_id) ||
+                /^NOISE/i.test(r.equipment_id) ||
+                /^SC212/i.test(r.equipment_id) ||
+                /^TERA360Z/i.test(r.equipment_id)
+            )
+        ),
+
+            SPEA: sortDashboardRows(filteredRows.filter(r =>
+                /^DOT400/i.test(
+                    r.equipment_id
+                )
+            )
+        ),
+
+            LTXMX: sortDashboardRows(filteredRows.filter(r =>
+                /^LTXMX/i.test(
+                    r.equipment_id
+                )
+            )
+        ),
+
+            LTX: sortDashboardRows(filteredRows.filter(r =>
+                /^LTX0/i.test(
+                    r.equipment_id
+                )
+            )
+        ),
+
+            ARK: sortDashboardRows(filteredRows.filter(r =>
+                /^KVDM2/i.test(r.equipment_id) ||
+                /^ASL3K/i.test(r.equipment_id) ||
+                /^RFX/i.test(r.equipment_id)
+            )
+        ),
+
+            SYSTEM: filteredRows.filter(r => {
+                const text =
+                    `${r.state_long || ""} ${r.raw_title || ""}`
+                    .toUpperCase();
+
+                return (
+                    text.includes("SYSTEM PROBLEM") ||
+                    text.includes("SYSTEM ISSUE")
+                );
+                }),
+
+            plans: plansResult.data || []
+        };
+
+        res.json(dashboard);
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            message: err.message
+        });
+
+    }
+});
+
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body || {};
     const expectedUsername = process.env.LOGIN_USERNAME;
@@ -77,6 +239,27 @@ app.post('/api/logout', (req, res) => {
     res.json({ authenticated: false });
 });
 
+function sortDashboardRows(rows) {
+  return [...rows].sort((a, b) => {
+
+    const pa = getIssuePriority(a);
+    const pb = getIssuePriority(b);
+
+    if (pa !== pb) {
+      return pa - pb;
+    }
+
+    const da = extractDurationSeconds(
+      a.raw_title
+    );
+
+    const db = extractDurationSeconds(
+      b.raw_title
+    );
+
+    return db - da;
+  });
+}
 function getIssuePriority(row) {
 
   const text = 

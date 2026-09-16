@@ -1442,21 +1442,22 @@ async function refreshData() {
 
 // ===================== BOOT =====================
 const UI_REFRESH_MS = 180 * 1000;
-
+const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
 
   
   
   renderViewTiles();
   setView(getCurrentView());
-  // refreshData();
+  await loadDashboardCache();
+  await refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
-  await loadDashboardCache();
+  
 
-  refreshData();  
+  // refreshData();  
   const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
     ? filterMode
     : "all";
@@ -1477,11 +1478,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await loadDashboardCache();
 
-  refreshData();
+  await refreshData();
 
 }, UI_REFRESH_MS);
-  setInterval(updateLastSyncIndicator, 180_000);
+  setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
   setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
-  setInterval(checkForUpdates, 180_000);
+  setInterval(checkForUpdates, 300_000);
   
 });

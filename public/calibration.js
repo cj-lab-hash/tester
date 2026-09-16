@@ -1385,7 +1385,7 @@ async function refreshData() {
 }
 
 // ===================== BOOT =====================
-const UI_REFRESH_MS = 60 * 1000;
+const UI_REFRESH_MS = 180 * 1000;
 
 window.addEventListener("DOMContentLoaded", async () => {
 
@@ -1415,8 +1415,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   setInterval(refreshData, UI_REFRESH_MS);
-  setInterval(updateLastSyncIndicator, 15_000);
-  setInterval(alertIssuesAllGroupsIfNewScrape, 30_000);
-  setInterval(checkForUpdates, 60_000);
+  setInterval(updateLastSyncIndicator, 180_000);
+  setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
+  setInterval(checkForUpdates, 180_000);
   
 });

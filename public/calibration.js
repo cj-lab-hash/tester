@@ -611,6 +611,49 @@ function extractIssue(stateShort, stateLong, rawTitle) {
   return null;
 }
 
+function updatePhaseTimers() {
+
+  document
+    .querySelectorAll(
+      ".pill-attended, .pill-waiting"
+    )
+    .forEach(pill => {
+
+      const baseSeconds =
+        Number(
+          pill.dataset.baseSeconds || 0
+        );
+
+      const checkedAt =
+        pill.dataset.checkedAt;
+
+      if (!checkedAt) return;
+
+      const ageSecs =
+        Math.floor(
+          (Date.now() -
+            new Date(
+              checkedAt
+            ).getTime()
+          ) / 1000
+        );
+
+      const totalSecs =
+        baseSeconds +
+        ageSecs;
+
+      const text =
+        pill.classList.contains(
+          "pill-attended"
+        )
+          ? "ATTENDED"
+          : "WAITING";
+
+      pill.textContent =
+        `${text} ${formatHMS(totalSecs)}`;
+    });
+}
+
 function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
   const s = (stateShort || "").toUpperCase().trim();
   const issue = extractIssue(s, stateLong, rawTitle);
@@ -656,6 +699,8 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
     const hms = formatHMS(totalSecs);
     result.pillText = hms ? `ATTENDED ${hms}` : "ATTENDED";
     result.pillCss = "phase-pill pill-attended";
+    result.baseSeconds = durSecs || 0;
+    result.checkedAt = checkedAt;
   }
 
   if (phase === "WAITING") {
@@ -665,9 +710,8 @@ function productionStatusFromDb(stateShort, stateLong, rawTitle, checkedAt) {
     const hms = formatHMS(totalSecs);
     result.pillText = hms ? `WAITING ${hms}` : "WAITING";
     result.pillCss = "phase-pill pill-waiting";
-  // } else if (phase === "ATTENDED") {
-  //   result.pillText = "ATTENDED";
-  //   result.pillCss = "phase-pill pill-attended";
+    result.baseSeconds = durSecs || 0;
+    result.checkedAt = checkedAt;
   }
 
   return result;
@@ -705,6 +749,8 @@ function appendStatusDetails(phaseCell, dieTypeCell, handlerCell, status) {
     const phasePill = document.createElement("span");
     phasePill.textContent = status.pillText;
     phasePill.className = status.pillCss;
+    phasePill.dataset.baseSeconds = status.baseSeconds || 0;
+    phasePill.dataset.checkedAt = status.checkedAt || "";
     phaseCell.appendChild(phasePill);
   }
 
@@ -1442,21 +1488,22 @@ async function refreshData() {
 
 // ===================== BOOT =====================
 const UI_REFRESH_MS = 180 * 1000;
-
+const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
 
   
   
   renderViewTiles();
   setView(getCurrentView());
-  // refreshData();
+  await loadDashboardCache();
+  await refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
-  await loadDashboardCache();
+  
 
-  refreshData();  
+  // refreshData();  
   const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
     ? filterMode
     : "all";
@@ -1477,11 +1524,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await loadDashboardCache();
 
-  refreshData();
+  await refreshData();
 
 }, UI_REFRESH_MS);
-  setInterval(updateLastSyncIndicator, 180_000);
+  setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
   setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
-  setInterval(checkForUpdates, 180_000);
-  
+  setInterval(checkForUpdates, 300_000);
+  setInterval(updatePhaseTimers, 60_000);
 });

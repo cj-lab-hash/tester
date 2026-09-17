@@ -132,18 +132,18 @@ function normalizeIdent(id) {
 
 
 function buildStatusphereUrlFromRow(rowHref, equipmentId) {
-  // const url = rowHref;
- if (rowHref) {
-     const cleanHref = rowHref.replace(/&amp;amp;/g, "&");
-     if (/^https?:\/\//i.test(cleanHref)) return cleanHref;
-     return STATUSPHERE_BASE.replace(/\/+$/, "/") + cleanHref.replace(/^\/+/, "");
-   }
+  
+  if (rowHref) {
+    const cleanHref = rowHref.replace(/&amp;amp;/g, "&");
+    if (/^https?:\/\//i.test(cleanHref)) return cleanHref;
+    return STATUSPHERE_BASE.replace(/\/+$/, "/") + cleanHref.replace(/^\/+/, "");
+  }
 
-   if (equipmentId) {
-     return `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(equipmentId)}`;
-   }
+  if (equipmentId) {
+    return `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(equipmentId)}`;
+  }
 
-  return;
+  return null;
 }
 
 // ===================== LAST SYNC =====================
@@ -961,30 +961,35 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
     if (url) {
       const a = document.createElement("a");
-      a.href = url;
-      // a.href = `/comments.html?equipment_id=${id}`;
-      // a.addEventListener("click", async (e) => {
-      //   e.preventDefault();
-      //   await fetch("/api/comments/request", {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json"
-      //     },
-      //     body: JSON.stringify({
-      //       equipment_id: id,
-      //       statusphere_url: url
-      //     })
-      //   });
-      //   window.open(
-      //     `/comments.html?equipment_id=${id}`,
-      //     "_blank"
-      //   );
-      // };
-      a.target = "_blank";
+      // a.href = url;
+      // a.target = "_blank";
+      a.href = `comments.html?equipment_id=${id}`;
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
       a.classList.add("prod-link");
       cell.appendChild(a);
+      a.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        await fetch("/api/comments/request", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            equipment_id: id,
+            statusphere_url: url
+          })
+        });
+        window.open(
+          `/comments.html?equipment_id=${id}`,
+          "_blank"
+        );
+      })
+      // a.rel = "noopener noreferrer";
+      // a.textContent = out.label;
+      // a.classList.add("prod-link");
+      // cell.appendChild(a);
     } else {
       cell.textContent = out.label;
     }

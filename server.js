@@ -314,6 +314,31 @@ function extractDurationSeconds(rawTitle = "") {
 
   return value;
 }
+app.post ('/api/commenst/request', async (req,res) => {
+    const {
+        equipment_id,
+        statusphere_url
+    } = req.body;
+    const { error } =
+    await supabase
+    .from('comment_requests')
+    .upsert(
+        {
+            equipment_id,
+            statusphere_url,
+            status: "pending"
+        },
+        { 
+            onConflict: 'equipment_id'
+        }
+    );
+    if ( error ) {
+        return res.status(500).json(error);
+    }
+    res.json({
+        success: true
+    });
+});
 app.post('/api/statusphere-latest', async (req, res) => {
 
     try {
@@ -603,8 +628,6 @@ app.post("/api/save",requireAuth, async (req, res) => {
         res.status(500).json({ message: 'Error saving data' });
     }
 });
-
-
     app.get(
  '/api/system-problems',
  async(req,res)=>{

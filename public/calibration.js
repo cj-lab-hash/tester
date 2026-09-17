@@ -961,8 +961,26 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
     if (url) {
       const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
+      // a.href = url;
+      a.href = `/comments.html?equipment_id=${id}`;
+      a.addEventListener("click", async (e) => {
+        e.preventDefault();
+        await fetch("/api/comments/request", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            equipment_id: id,
+            statusphere_url: url
+          })
+        });
+        window.open(
+          `/comments.html?equipment_id=${id}`,
+          "_blank"
+        );
+      };
+      // a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
       a.classList.add("prod-link");

@@ -603,6 +603,33 @@ app.post("/api/save",requireAuth, async (req, res) => {
         res.status(500).json({ message: 'Error saving data' });
     }
 });
+
+app.post(
+    '/api/comments/request", async (req, res) =>
+    const {
+        equipment_id,
+        statusphere_url
+    } = req.body;
+const { error } = 
+    await supabase
+        .from("comment_requests")
+        .upsert(
+            {
+                equipment_id,
+                statusphere_url,
+                status: "pending"
+            },
+            {
+                conflict: "equipment_id"
+            }
+        );
+if (error) {
+    return res.status(500).json(error);
+}
+    res.json({
+        success: true
+    });
+});
     app.get(
  '/api/system-problems',
  async(req,res)=>{

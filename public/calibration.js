@@ -132,16 +132,16 @@ function normalizeIdent(id) {
 
 
 function buildStatusphereUrlFromRow(rowHref, equipmentId) {
-  const url = rowHref;
-  // if (rowHref) {
-  //   const cleanHref = rowHref.replace(/&amp;amp;/g, "&");
-  //   if (/^https?:\/\//i.test(cleanHref)) return cleanHref;
-  //   return STATUSPHERE_BASE.replace(/\/+$/, "/") + cleanHref.replace(/^\/+/, "");
-  // }
+  // const url = rowHref;
+ if (rowHref) {
+     const cleanHref = rowHref.replace(/&amp;amp;/g, "&");
+     if (/^https?:\/\//i.test(cleanHref)) return cleanHref;
+     return STATUSPHERE_BASE.replace(/\/+$/, "/") + cleanHref.replace(/^\/+/, "");
+   }
 
-  // if (equipmentId) {
-  //   return `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(equipmentId)}`;
-  // }
+   if (equipmentId) {
+     return `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(equipmentId)}`;
+   }
 
   return;
 }

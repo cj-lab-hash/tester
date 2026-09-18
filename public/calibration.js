@@ -20,7 +20,8 @@ const TPE_DOWNTIME = new Set([
   "CONTACT ISSUE",
   "QUALIFICATION FAIL DFL",
   "TPE VERIFICATION",
-  "QA FAIL"
+  "QA FAIL",
+  "HW CHECKER PROBLEM"
 ]);
 const PRE_SETUP = new Set ([
 "PRE SETUP"

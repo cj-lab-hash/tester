@@ -982,10 +982,10 @@ function renderProductionStatusUnified(tableEl, dataRows) {
           })
         });
 
-        window.open(
-          `/comments.html?equipment_id=${id}`,
-          "_blank"
-        );
+        // window.open(
+        //   `/comments.html?equipment_id=${id}`,
+        //   "_blank"
+        // );
       })
     } else {
       cell.textContent = out.label;

@@ -963,7 +963,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       const a = document.createElement("a");
       // a.href = url;
       // a.target = "_blank";
-      a.href = `comments.html?equipment_id=${id}`;
+      a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
       a.classList.add("prod-link");

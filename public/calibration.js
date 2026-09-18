@@ -959,38 +959,50 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
     const url = buildStatusphereUrlFromRow(r.href, id);
     const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
-    if (commenturl) {
-      const a = document.createElement("a");
-      a.href = commenturl;
-      a.target = "_blank";
-      // a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
-      cell.appendChild(a);
-      a.addEventListener("click", async (e) => {
-        e.preventDefault();
+    // if (commenturl) {
+    //   const a = document.createElement("a");
+    //   a.href = commenturl;
+    //   a.target = "_blank";
+    //   // a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
+    //   a.rel = "noopener noreferrer";
+    //   a.textContent = out.label;
+    //   a.classList.add("prod-link");
+    //   cell.appendChild(a);
+    //   a.addEventListener("click", async (e) => {
+    //     e.preventDefault();
 
-        await fetch("/api/comments/request", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            equipment_id: id,
-            statusphere_url: url
-          })
-        });
+    //     await fetch("/api/comments/request", {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json"
+    //       },
+    //       body: JSON.stringify({
+    //         equipment_id: id,
+    //         statusphere_url: url
+    //       })
+    //     });
 
         // window.open(
         //   `/comments.html?equipment_id=${id}`,
         //   "_blank"
         // );
-      })
+    //   })
+    // } else {
+    //   cell.textContent = out.label;
+    // }
+    if (commenturl) {
+      const a = document.createElement("a");
+      a.href = commenturl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = out.label;
+      a.classList.add("prod-link");
+      cell.appendChild(a);
     } else {
-      cell.textContent = out.label;
+      const span = document.createElement("span");
+      span.textContent = out.label;
+      cell.appendChild(span);
     }
-
     appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     // color

@@ -381,7 +381,7 @@ const STATUSPHERE_BASE =
 app.get("/api/redirect/:equipmentId", (req, res) => {
   const id = req.params.equipmentId;
 
-  if (isAuthenticated(req)) {
+  if (requireAuth(req)) {
     return res.redirect(
       `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`
     );

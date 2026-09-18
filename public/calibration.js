@@ -981,15 +981,12 @@ function renderProductionStatusUnified(tableEl, dataRows) {
             statusphere_url: url
           })
         });
+
         window.open(
           `/comments.html?equipment_id=${id}`,
           "_blank"
         );
       })
-      // a.rel = "noopener noreferrer";
-      // a.textContent = out.label;
-      // a.classList.add("prod-link");
-      // cell.appendChild(a);
     } else {
       cell.textContent = out.label;
     }
@@ -1258,7 +1255,20 @@ function loadFromCache({
     data
   );
 }
-
+async function deleteComments() {
+  try {
+    const response = await fetch(
+      '/api/request-cleanup',
+      {
+        method: "DELETE"
+      }
+    );
+    const result = await response.json();
+    console.log(result);
+  } catch (error) {
+    console.error("Error occurred while deleting data:", error);
+  }
+}
 // async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "state_long" }) {
 //   const tbody = document.getElementById(tbodyId);
 //   if (!tableEl || !tbody) return;
@@ -1555,4 +1565,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   setInterval(checkForUpdates, 300_000);
   setInterval(updatePhaseTimers, 60_000);
+  setInterval(deleteComments, 300_000);
 });

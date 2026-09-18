@@ -314,7 +314,7 @@ function extractDurationSeconds(rawTitle = "") {
 
   return value;
 }
-app.post ('/api/commenst/request', async (req,res) => {
+app.post ('/api/comments/request', async (req,res) => {
     const {
         equipment_id,
         statusphere_url
@@ -339,6 +339,42 @@ app.post ('/api/commenst/request', async (req,res) => {
         success: true
     });
 });
+app.delete ('/api/request-cleanup', async (req, res) => {
+    try {
+        const cutoff = new Date(
+            Date.now() - 3 * 60 *1000
+        ).toISOString();
+
+        
+    const { error } = await supabase
+        .from('comment_requests')
+        .delete()
+        .in("status", ["completed", "failed"])
+        .lt("processed_at", cutoff);
+
+        if (error) {
+            console.error("Request cleanup error:", error);
+            
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+        }
+    console.log("Old processed requests cleaned");
+    return res.json({
+        success: true
+        });
+    } catch (error) {
+    console.error("Request cleanup failed:", error);
+
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+    
+    
 app.post('/api/statusphere-latest', async (req, res) => {
 
     try {

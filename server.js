@@ -375,17 +375,22 @@ app.delete ('/api/request-cleanup', async (req, res) => {
 });
     
 
-app.get ('/api/redirect/:equipmentId', (req, res) => {
-    const id = req.params.equipmentId;
-    if (req.session?.user) {
-        return res.redirect(
-            `https://ajax-xt2d.onrender.com/?equipmentID=${id}`
-        );
-    }
+const STATUSPHERE_BASE =
+  "http://statusphere.maxim-ic.com/dp/";
+
+app.get("/api/redirect/:equipmentId", (req, res) => {
+  const id = req.params.equipmentId;
+
+  if (req.session?.user) {
     return res.redirect(
-        buildStatusphereUrlFromRow(null, id)
+      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`
     );
-});    
+  }
+
+  return res.redirect(
+    `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(id)}`
+  );
+});
 app.post('/api/statusphere-latest', async (req, res) => {
 
     try {

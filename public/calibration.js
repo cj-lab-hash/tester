@@ -990,9 +990,9 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     // } else {
     //   cell.textContent = out.label;
     // }
-    if (commenturl) {
+    if (url) {
       const a = document.createElement("a");
-      a.href = commenturl;
+      a.href = `/api/redirect/${encodeURIComponent(id)}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
@@ -1127,9 +1127,9 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
 
     const url = buildStatusphereUrlFromRow(r.href, id);
     const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
-    if (commenturl) {
+    if (url) {
       const a = document.createElement("a");
-      a.href = commenturl;
+      a.href = `/api/redirect/${encodeURIComponent(id)}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;

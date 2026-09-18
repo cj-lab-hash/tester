@@ -1565,5 +1565,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   setInterval(checkForUpdates, 300_000);
   setInterval(updatePhaseTimers, 60_000);
-  setInterval(deleteComments, 300_000);
+  setInterval(deleteComments, 180_000);
 });

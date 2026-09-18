@@ -380,8 +380,12 @@ const STATUSPHERE_BASE =
 
 app.get("/api/redirect/:equipmentId", (req, res) => {
   const id = req.params.equipmentId;
+  const token = getSessionToken(req);
 
-  if (requireAuth(req)) {
+  console.log("Token:", token);
+  console.log("Authentication status:", loginSessions.has(token));
+
+  if (loginSessions.has(token)) {
     return res.redirect(
       `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`
     );

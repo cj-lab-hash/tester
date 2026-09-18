@@ -354,7 +354,7 @@ app.delete ('/api/request-cleanup', async (req, res) => {
 
         if (error) {
             console.error("Request cleanup error:", error);
-            
+
         return res.status(500).json({
             success: false,
             error: error.message
@@ -374,7 +374,18 @@ app.delete ('/api/request-cleanup', async (req, res) => {
     }
 });
     
-    
+
+app.get ('/api/redirect/:equipmentId', (req, res) => {
+    const id = req.params.equipmentId;
+    if (req.session?.user) {
+        return res.redirect(
+            `https://ajax-xt2d.onrender.com/?equipmentID=${id}`
+        );
+    }
+    return res.redirect(
+        buildStatusphereUrlFromRow(null, id)
+    );
+});    
 app.post('/api/statusphere-latest', async (req, res) => {
 
     try {

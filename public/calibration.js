@@ -958,12 +958,12 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     cell.innerHTML = "";
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-
-    if (url) {
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    if (commenturl) {
       const a = document.createElement("a");
-      // a.href = url;
-      // a.target = "_blank";
-      a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
+      a.href = commenturl;
+      a.target = "_blank";
+      // a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
       a.classList.add("prod-link");
@@ -1042,10 +1042,10 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-
-    if (url) {
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    if (commenturl) {
       const a = document.createElement("a");
-      a.href = url;
+      a.href = commenturl;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
@@ -1114,10 +1114,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-
-    if (url) {
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    if (commenturl) {
       const a = document.createElement("a");
-      a.href = url;
+      a.href = commenturl;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;

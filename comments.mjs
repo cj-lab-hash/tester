@@ -73,7 +73,7 @@ async function processQueue() {
     }
 
     if (!requests?.length) {
-      console.log("No pending requests.");
+      console.log("Waiting for new request.");
       return;
     }
 
@@ -107,52 +107,52 @@ async function processQueue() {
         //
         // DEBUG SCREENSHOT #1
         //
-        await page.screenshot({
-          path: `debug_${equipmentId}.png`,
-          fullPage: true
-        });
+        // await page.screenshot({
+        //   path: `debug_${equipmentId}.png`,
+        //   fullPage: true
+        // });
 
         const title = await page.title();
 
-        console.log(
-          "Page title:",
-          title
-        );
+        // console.log(
+        //   "Page title:",
+        //   title
+        // );
 
         const html =
           await page.content();
 
-        console.log(
-          html.substring(0, 1000)
-        );
+        // console.log(
+        //   html.substring(0, 1000)
+        // );
 
         //
         // ACCESS DENIED CHECK
         //
-        if (
-          html.includes("Access denied") ||
-          html.includes("not authorized") ||
-          title.includes("Access denied")
-        ) {
-          await page.screenshot({
-            path: `access_denied_${equipmentId}.png`,
-            fullPage: true
-          });
+        // if (
+        //   html.includes("Access denied") ||
+        //   html.includes("not authorized") ||
+        //   title.includes("Access denied")
+        // ) {
+        //   await page.screenshot({
+        //     path: `access_denied_${equipmentId}.png`,
+        //     fullPage: true
+        //   });
 
-          await page.close();
+        //   await page.close();
 
-          throw new Error(
-            "Statusphere access denied"
-          );
-        }
+        //   throw new Error(
+        //     "Statusphere access denied"
+        //   );
+        // }
 
         //
         // SUCCESS SCREENSHOT
         //
-        await page.screenshot({
-          path: `success_${equipmentId}.png`,
-          fullPage: true
-        });
+        // await page.screenshot({
+        //   path: `success_${equipmentId}.png`,
+        //   fullPage: true
+        // });
 
         await page.close();
 
@@ -208,13 +208,13 @@ async function processQueue() {
             expires_at: new Date(Date.now() + 3 * 60 * 1000).toISOString()
           });
         });
-        console.log(
-          JSON.stringify(
-            scrapedRows.slice(0, 6),
-            null,
-            2
-          )
-        );
+        // console.log(
+        //   JSON.stringify(
+        //     scrapedRows.slice(0, 6),
+        //     null,
+        //     2
+        //   )
+        // );
         const testerRow = {
           equipment_id: equipmentId,
           history: scrapedRows.map(r => ({
@@ -227,16 +227,16 @@ async function processQueue() {
         };
         const top5Rows = scrapedRows.slice(0, 10);
 
-        console.log(
-          `Found ${top5Rows.length} rows`
-        );
-        console.log("Table count:", $("table").length);
-        $("table").each((i, table) => {
-          console.log(
-            `Table ${i} rows:`,
-            $(table).find("tr").length
-          );
-        });
+        // console.log(
+        //   `Found ${top5Rows.length} rows`
+        // );
+        // console.log("Table count:", $("table").length);
+        // $("table").each((i, table) => {
+        //   console.log(
+        //     `Table ${i} rows:`,
+        //     $(table).find("tr").length
+        //   );
+        // });
 
 
         const {

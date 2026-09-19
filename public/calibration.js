@@ -1277,7 +1277,7 @@ async function deleteComments() {
       }
     );
     const result = await response.json();
-    console.log(result);
+    // console.log(result);
   } catch (error) {
     console.error("Error occurred while deleting data:", error);
   }

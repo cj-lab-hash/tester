@@ -481,7 +481,7 @@
                 document.body.classList.toggle("auth-locked", !authenticated);
                 loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
                 loginButton.setAttribute("arial-label", authenticated ? "Log out" : "Log in");
-                userPermissions.peColumns = permissions.permissions === true;
+                userPermissions.comments = permissions.permissions === true;
                 // userPermissions.comments = permissions.comments === true;
                 document.body.classList.toggle("can-view-comments", userPermissions.comments);
                 document.body.classList.toggle("comments-locked", !userPermissions.comments);

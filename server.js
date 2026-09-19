@@ -405,7 +405,7 @@ app.delete ('/api/request-cleanup', async (req, res) => {
             error: error.message
         });
         }
-    console.log("Old processed requests cleaned");
+    // console.log("Old processed requests cleaned");
     return res.json({
         success: true
         });

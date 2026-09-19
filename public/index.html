@@ -21,6 +21,7 @@
     
         <div class="header-right">
             <div id="lastSync" class="last-sync">Last Sync: --</div>
+            <div id="currentUser" class="current-user">Not Logged In</div>
             <button id="loginButton" class="login-button" type="button">LOGIN</button>
             <fieldset class="filter-modes" aria-label="Status filter">
                 <legend>FILTER</legend>
@@ -466,7 +467,7 @@
         const loginDialog = document.getElementById("loginDialog");
         const loginForm = document.getElementById("loginForm");
         const loginError = document.getElementById("loginError");
-
+        const currentUser = document.getElementById("currentUser");
         // function setAuthenticated(authenticated) {
         //     document.body.classList.toggle("authenticated", authenticated);
         //     document.body.classList.toggle("auth-locked", !authenticated);
@@ -480,7 +481,7 @@
                 document.body.classList.toggle("authenticated", authenticated);
                 document.body.classList.toggle("auth-locked", !authenticated);
                 loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
-                loginButton.setAttribute("arial-label", authenticated ? "Log out" : "Log in");
+                loginButton.setAttribute("aria-label", authenticated ? "Log out" : "Log in");
                 userPermissions.comments = permissions.permissions === true;
                 // userPermissions.comments = permissions.comments === true;
                 document.body.classList.toggle("can-view-comments", userPermissions.comments);
@@ -489,6 +490,7 @@
         async function checkAuthentication() {
             const response = await fetch("/api/auth-status");
             const result = await response.json();
+            console.log("result=", result);
             setAuthenticated(result.authenticated === true, result);
         }
 

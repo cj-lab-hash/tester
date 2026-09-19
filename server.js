@@ -451,6 +451,10 @@ app.get("/api/redirect/:equipmentId", (req, res) => {
   const timestamp = Math.trunc(Date.now() / 1000);
   const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
+  console.log("Current Payload:", payload);
+  console.log("Current Signature:", signature);
+
+
 
     if (session?.comments) {
     return res.redirect(

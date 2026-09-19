@@ -133,6 +133,7 @@ function normalizeIdent(id) {
 
 
 function buildStatusphereUrlFromRow(rowHref, equipmentId) {
+  
   if (rowHref) {
     const cleanHref = rowHref.replace(/&amp;amp;/g, "&");
     if (/^https?:\/\//i.test(cleanHref)) return cleanHref;
@@ -958,19 +959,51 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     cell.innerHTML = "";
 
     const url = buildStatusphereUrlFromRow(r.href, id);
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    // if (commenturl) {
+    //   const a = document.createElement("a");
+    //   a.href = commenturl;
+    //   a.target = "_blank";
+    //   // a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
+    //   a.rel = "noopener noreferrer";
+    //   a.textContent = out.label;
+    //   a.classList.add("prod-link");
+    //   cell.appendChild(a);
+    //   a.addEventListener("click", async (e) => {
+    //     e.preventDefault();
 
+    //     await fetch("/api/comments/request", {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json"
+    //       },
+    //       body: JSON.stringify({
+    //         equipment_id: id,
+    //         statusphere_url: url
+    //       })
+    //     });
+
+        // window.open(
+        //   `/comments.html?equipment_id=${id}`,
+        //   "_blank"
+        // );
+    //   })
+    // } else {
+    //   cell.textContent = out.label;
+    // }
     if (url) {
       const a = document.createElement("a");
-      a.href = url;
+      a.href = `/api/redirect/${encodeURIComponent(id)}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
       a.classList.add("prod-link");
       cell.appendChild(a);
     } else {
-      cell.textContent = out.label;
+      const span = document.createElement("span");
+      span.textContent = out.label;
+      cell.appendChild(span);
     }
-
     appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     // color
@@ -1022,10 +1055,10 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
       const a = document.createElement("a");
-      a.href = url;
+      a.href = `/api/redirect/${encodeURIComponent(id)}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
@@ -1094,10 +1127,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
       const a = document.createElement("a");
-      a.href = url;
+      a.href = `/api/redirect/${encodeURIComponent(id)}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
@@ -1235,7 +1268,20 @@ function loadFromCache({
     data
   );
 }
-
+async function deleteComments() {
+  try {
+    const response = await fetch(
+      '/api/request-cleanup',
+      {
+        method: "DELETE"
+      }
+    );
+    const result = await response.json();
+    console.log(result);
+  } catch (error) {
+    console.error("Error occurred while deleting data:", error);
+  }
+}
 // async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "state_long" }) {
 //   const tbody = document.getElementById(tbodyId);
 //   if (!tableEl || !tbody) return;
@@ -1532,4 +1578,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   setInterval(checkForUpdates, 300_000);
   setInterval(updatePhaseTimers, 60_000);
+  setInterval(deleteComments, 180_000);
 });

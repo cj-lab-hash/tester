@@ -314,6 +314,87 @@ function extractDurationSeconds(rawTitle = "") {
 
   return value;
 }
+app.post ('/api/comments/request', async (req,res) => {
+    const {
+        equipment_id,
+        statusphere_url
+    } = req.body;
+    const { error } =
+    await supabase
+    .from('comment_requests')
+    .upsert(
+        {
+            equipment_id,
+            statusphere_url,
+            status: "pending"
+        },
+        { 
+            onConflict: 'equipment_id'
+        }
+    );
+    if ( error ) {
+        return res.status(500).json(error);
+    }
+    res.json({
+        success: true
+    });
+});
+app.delete ('/api/request-cleanup', async (req, res) => {
+    try {
+        const cutoff = new Date(
+            Date.now() - 3 * 60 *1000
+        ).toISOString();
+
+        
+    const { error } = await supabase
+        .from('comment_requests')
+        .delete()
+        .in("status", ["completed", "failed"])
+        .lt("processed_at", cutoff);
+
+        if (error) {
+            console.error("Request cleanup error:", error);
+
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+        }
+    console.log("Old processed requests cleaned");
+    return res.json({
+        success: true
+        });
+    } catch (error) {
+    console.error("Request cleanup failed:", error);
+
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+    
+
+const STATUSPHERE_BASE =
+  "http://statusphere.maxim-ic.com/dp/";
+
+app.get("/api/redirect/:equipmentId", (req, res) => {
+  const id = req.params.equipmentId;
+  const token = getSessionToken(req);
+
+  console.log("Token:", token);
+  console.log("Authentication status:", loginSessions.has(token));
+
+  if (loginSessions.has(token)) {
+    return res.redirect(
+      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`
+    );
+  }
+
+  return res.redirect(
+    `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(id)}`
+  );
+});
 app.post('/api/statusphere-latest', async (req, res) => {
 
     try {

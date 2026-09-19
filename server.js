@@ -232,7 +232,9 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body || {};
-
+    const loginTime = new Date().toLocaleDateString;
+    const clientIp = req.headers['x-forwarded-for'] ||
+                     req.socket.remoteAddress;
 
     const token = crypto.randomBytes(32).toString('hex');
     let session = null;
@@ -242,7 +244,9 @@ app.post('/api/login', (req, res) => {
     ) {
         session = {
             username,
-            comments: false
+            comments: false,
+            ip: clientIp,
+            loginTime
         };
 
     } else if (
@@ -252,9 +256,8 @@ app.post('/api/login', (req, res) => {
         session = {
             username,
             comments: true,
-            ip: req.headers["x-forwarded-for"] ||
-                req.socket.remoteAddress,
-            loginTime: new Date().toLocaleDateString()
+            ip: clientIp,
+            loginTime
         };
     }
     if (!session) {
@@ -268,12 +271,15 @@ app.post('/api/login', (req, res) => {
         `Set-Cookie`,
         `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
     );
+
+    console.log("Username:", username);
+    console.log("Comments user:", process.env.COMMENTS_USERNAME);
+    
     res.json({
         authenticated: true,
         comments: session.comments
     });
-    console.log("Username:", username);
-    console.log("Comments user:", process.env.COMMENTS_USERNAME);
+    
     
     
     

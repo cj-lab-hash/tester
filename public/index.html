@@ -487,7 +487,12 @@
                 document.body.classList.toggle("can-view-comments", userPermissions.comments);
                 document.body.classList.toggle("comments-locked", !userPermissions.comments);
                 if (authenticated) {
-                    currentUser.textContent = `Logged in as: ${permissions.username}`;
+                    const accessLevel = 
+                    permissions.comments
+                    ? "Complete Access"
+                    : "Complete View";
+                    // currentUser.textContent = `Logged in as: ${permissions.username}`;
+                    currentUser = accessLevel;
                 } else {
                     currentUser.textContent = "Not Logged In";
                 }

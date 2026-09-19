@@ -442,7 +442,7 @@ app.get("/api/redirect/:equipmentId", (req, res) => {
   console.log("Token:", token);
   console.log("Authentication status:", loginSessions.has(token));
   const timestamp = Math.trunc(Date.now() / 1000);
-  const payload = `${id}:${timestamp}`;
+  const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
 
     if (session?.comments) {

@@ -232,16 +232,7 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body || {};
-    // const expectedUsername = process.env.LOGIN_USERNAME;
-    // const expectedPassword = process.env.LOGIN_PASSWORD;
 
-    // if (!expectedUsername || !expectedPassword) {
-    //     return res.status(500).json({ message: 'Login credentials are not configured on the server.' });
-    // }
-
-    // if (username !== expectedUsername || password !== expectedPassword) {
-    //     return res.status(401).json({ message: 'Invalid username or password.' });
-    // }
 
     const token = crypto.randomBytes(32).toString('hex');
     let session = null;
@@ -260,7 +251,10 @@ app.post('/api/login', (req, res) => {
     ) {
         session = {
             username,
-            comments: true
+            comments: true,
+            ip: req.headers["x-forwarded-for"] ||
+                req.socket.remoteAddress,
+            loginTime: new Date().toLocaleDateString()
         };
     }
     if (!session) {
@@ -268,9 +262,7 @@ app.post('/api/login', (req, res) => {
             message: 'Invalid username or password'
         });
     }
-    // loginSessions.set(token, {
-    // username,
-    // comments: false
+
     loginSessions.set(token, session);
     res.setHeader(
         `Set-Cookie`,
@@ -282,9 +274,8 @@ app.post('/api/login', (req, res) => {
     });
     console.log("Username:", username);
     console.log("Comments user:", process.env.COMMENTS_USERNAME);
-    // loginSessions.add(token);
-    // res.setHeader('Set-Cookie', `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`);
-    // res.json({ authenticated: true });
+    
+    
     
 });
 
@@ -297,10 +288,8 @@ app.post('/api/logout', (req, res) => {
 app.get('/api/active-user', (req, res) => {
     const activeUsers = loginSessions.size;
     console.log("Active Users:", activeUsers);
-    res.json({
-        activeUsers
+    res.json({activeUsers, sessions: Array.from(loginSessions.values())
     });
-    
 });
 function sortDashboardRows(rows) {
   return [...rows].sort((a, b) => {
@@ -451,8 +440,7 @@ app.get("/api/redirect/:equipmentId", (req, res) => {
   const timestamp = Math.trunc(Date.now() / 1000);
   const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
-  console.log("Current Payload:", payload);
-  console.log("Current Signature:", signature);
+
 
 
 

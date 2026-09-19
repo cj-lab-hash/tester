@@ -268,7 +268,10 @@ app.post('/api/login', (req, res) => {
             message: 'Invalid username or password'
         });
     }
-    loginSessions.set(token, session);
+    loginSessions.set(token, {
+    username,
+    comments: false
+});
     // loginSessions.add(token);
     res.setHeader('Set-Cookie', `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`);
     res.json({ authenticated: true });
@@ -423,7 +426,7 @@ const STATUSPHERE_BASE =
 app.get("/api/redirect/:equipmentId", (req, res) => {
   const id = req.params.equipmentId;
   const token = getSessionToken(req);
-
+ const session = loginSessions.get(token);
   console.log("Token:", token);
   console.log("Authentication status:", loginSessions.has(token));
 

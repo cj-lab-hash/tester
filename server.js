@@ -232,16 +232,16 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body || {};
-    const expectedUsername = process.env.LOGIN_USERNAME;
-    const expectedPassword = process.env.LOGIN_PASSWORD;
+    // const expectedUsername = process.env.LOGIN_USERNAME;
+    // const expectedPassword = process.env.LOGIN_PASSWORD;
 
-    if (!expectedUsername || !expectedPassword) {
-        return res.status(500).json({ message: 'Login credentials are not configured on the server.' });
-    }
+    // if (!expectedUsername || !expectedPassword) {
+    //     return res.status(500).json({ message: 'Login credentials are not configured on the server.' });
+    // }
 
-    if (username !== expectedUsername || password !== expectedPassword) {
-        return res.status(401).json({ message: 'Invalid username or password.' });
-    }
+    // if (username !== expectedUsername || password !== expectedPassword) {
+    //     return res.status(401).json({ message: 'Invalid username or password.' });
+    // }
 
     const token = crypto.randomBytes(32).toString('hex');
     let session = null;
@@ -268,13 +268,24 @@ app.post('/api/login', (req, res) => {
             message: 'Invalid username or password'
         });
     }
-    loginSessions.set(token, {
-    username,
-    comments: false
-});
+    // loginSessions.set(token, {
+    // username,
+    // comments: false
+    loginSessions.set(token, session);
+    res.setHeaders(
+        `Set-Cookie`,
+        `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+    );
+    res.json({
+        authenticated: true,
+        comments: session.comments
+    });
+
     // loginSessions.add(token);
     res.setHeader('Set-Cookie', `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`);
     res.json({ authenticated: true });
+    console.log("Username:", username);
+    console.log("Comments user:", process.env.COMMENTS_USERNAME);
 });
 
 app.post('/api/logout', (req, res) => {
@@ -395,15 +406,15 @@ app.delete ('/api/request-cleanup', async (req, res) => {
         .from('comment_requests')
         .delete()
         .in("status", ["completed", "failed"])
-        .lt("processed_at", cutoff);
+        .lt("created_at", cutoff);
 
         if (error) {
             console.error("Request cleanup error:", error);
 
-        return res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        // return res.status(500).json({
+        //     success: false,
+        //     error: error.message
+        // });
         }
     // console.log("Old processed requests cleaned");
     return res.json({

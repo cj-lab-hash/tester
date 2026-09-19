@@ -130,6 +130,9 @@ body.dark-mode #updateToastContainer .toast{
   display: inline-block;
   transition: background-color 0.4s ease, color 0.4s ease;
 }
+body.dark-mode .current-user {
+  color: #93c5fd;
+}
 body, .view-tile, .toast, .header-right, .verse-card {
   transition: background-color 0.3s ease,
               color 0.3s ease,
@@ -167,7 +170,11 @@ input {
 width: 100%;
 box-sizing: border-box;
 }
-
+.current-user {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2563eb;
+}
 td.cal-overdue, td.pm-overdue {
   background: #ffd6d6; /* light red */
   font-weight: 700;

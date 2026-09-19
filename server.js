@@ -288,7 +288,7 @@ app.post('/api/logout', (req, res) => {
 app.get('/api/active-user', (req, res) => {
     const activeUsers = loginSessions.size;
     console.log("Active Users:", activeUsers);
-    res.json({activeUsers, sessions: Array.from(loginSessions.values())
+    res.json({activeUsers, session: Array.from(loginSessions.values())
     });
 });
 function sortDashboardRows(rows) {

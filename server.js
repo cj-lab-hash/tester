@@ -284,7 +284,7 @@ app.post('/api/login', (req, res) => {
     console.log("Comments user:", process.env.COMMENTS_USERNAME);
     // loginSessions.add(token);
     // res.setHeader('Set-Cookie', `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`);
-    res.json({ authenticated: true });
+    // res.json({ authenticated: true });
     
 });
 

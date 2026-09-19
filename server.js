@@ -11,7 +11,7 @@ const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
+const SHARED_KEY = process.env.SHARED_KEY;
 
 
 const app = express();
@@ -437,20 +437,24 @@ const STATUSPHERE_BASE =
 app.get("/api/redirect/:equipmentId", (req, res) => {
   const id = req.params.equipmentId;
   const token = getSessionToken(req);
- const session = loginSessions.get(token);
+  const session = loginSessions.get(token);
+
   console.log("Token:", token);
   console.log("Authentication status:", loginSessions.has(token));
-
+  const payload = Math.trunc(Date.now() / 1000);
+  const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
 //   if (loginSessions.has(token)) {
     if (session?.comments) {
     return res.redirect(
-      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`
+      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${timestamp}&sig=${signature}`
     );
   }
 
+  
   return res.redirect(
     `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(id)}`
   );
+   
 });
 app.post('/api/statusphere-latest', async (req, res) => {
 

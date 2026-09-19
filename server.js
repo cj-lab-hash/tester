@@ -294,7 +294,14 @@ app.post('/api/logout', (req, res) => {
     res.setHeader('Set-Cookie', 'tester_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
     res.json({ authenticated: false });
 });
-
+app.get('/api/active-user', (req, res) => {
+    const activeUsers = loginSessions.size;
+    console.log("Active Users:", activeUsers);
+    res.json({
+        activeUsers
+    });
+    
+});
 function sortDashboardRows(rows) {
   return [...rows].sort((a, b) => {
 

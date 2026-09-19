@@ -232,7 +232,9 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body || {};
-    const loginTime = new Date().toLocaleDateString;
+    const loginTime = new Date().toISOString();
+    const loginDateObj = new Date(loginTime);
+    const localTime = loginDateObj.toLocaleTimeString()
     const clientIp = req.headers['x-forwarded-for'] ||
                      req.socket.remoteAddress;
 
@@ -246,7 +248,7 @@ app.post('/api/login', (req, res) => {
             username,
             comments: false,
             ip: clientIp,
-            loginTime
+            localTime
         };
 
     } else if (
@@ -257,7 +259,7 @@ app.post('/api/login', (req, res) => {
             username,
             comments: true,
             ip: clientIp,
-            loginTime
+            localTime
         };
     }
     if (!session) {
@@ -274,7 +276,7 @@ app.post('/api/login', (req, res) => {
 
     console.log("Username:", username);
     console.log("Comments user:", process.env.COMMENTS_USERNAME);
-    
+
     res.json({
         authenticated: true,
         comments: session.comments
@@ -441,7 +443,7 @@ app.get("/api/redirect/:equipmentId", (req, res) => {
   const token = getSessionToken(req);
   const session = loginSessions.get(token);
 
-  console.log("Token:", token);
+//   console.log("Token:", token);
   console.log("Authentication status:", loginSessions.has(token));
   const timestamp = Math.trunc(Date.now() / 1000);
   const payload = `${timestamp}`;

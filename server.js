@@ -272,7 +272,7 @@ app.post('/api/login', (req, res) => {
     // username,
     // comments: false
     loginSessions.set(token, session);
-    res.setHeaders(
+    res.setHeader(
         `Set-Cookie`,
         `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
     );
@@ -280,12 +280,12 @@ app.post('/api/login', (req, res) => {
         authenticated: true,
         comments: session.comments
     });
-
-    // loginSessions.add(token);
-    res.setHeader('Set-Cookie', `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`);
-    res.json({ authenticated: true });
     console.log("Username:", username);
     console.log("Comments user:", process.env.COMMENTS_USERNAME);
+    // loginSessions.add(token);
+    // res.setHeader('Set-Cookie', `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`);
+    res.json({ authenticated: true });
+    
 });
 
 app.post('/api/logout', (req, res) => {

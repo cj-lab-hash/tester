@@ -482,10 +482,15 @@
                 document.body.classList.toggle("auth-locked", !authenticated);
                 loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
                 loginButton.setAttribute("aria-label", authenticated ? "Log out" : "Log in");
-                userPermissions.comments = permissions.permissions === true;
-                // userPermissions.comments = permissions.comments === true;
+                // userPermissions.comments = permissions.permissions === true;
+                userPermissions.comments = permissions.comments === true;
                 document.body.classList.toggle("can-view-comments", userPermissions.comments);
                 document.body.classList.toggle("comments-locked", !userPermissions.comments);
+                if (authenticated) {
+                    currentUser.textContent = `Logged in as: ${permissions.username}`;
+                } else {
+                    currentUser.textContent = "Not Logged In";
+                }
             }
         async function checkAuthentication() {
             const response = await fetch("/api/auth-status");

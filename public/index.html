@@ -461,28 +461,44 @@
     <div id="updateToastContainer" class="toast-container"></div>
     <div id="toastContainer" class="toast-container"></div>
     <script>
+        let userPermissions = {comments: false};
         const loginButton = document.getElementById("loginButton");
         const loginDialog = document.getElementById("loginDialog");
         const loginForm = document.getElementById("loginForm");
         const loginError = document.getElementById("loginError");
 
-        function setAuthenticated(authenticated) {
-            document.body.classList.toggle("authenticated", authenticated);
-            document.body.classList.toggle("auth-locked", !authenticated);
-            loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
-            loginButton.setAttribute("aria-label", authenticated ? "Log out" : "Log in");
-        }
-
+        // function setAuthenticated(authenticated) {
+        //     document.body.classList.toggle("authenticated", authenticated);
+        //     document.body.classList.toggle("auth-locked", !authenticated);
+        //     loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
+        //     loginButton.setAttribute("aria-label", authenticated ? "Log out" : "Log in");
+        // }
+            function setAuthenticated(
+                authenticated, 
+                permissions = {} 
+            ) {
+                document.body.classList.toggle("authenticated", authenticated);
+                document.body.classList.toggle("auth-locked", !authenticated);
+                loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
+                loginButton.setAttribute("arial-label", authenticated ? "Log out" : "Log in");
+                userPermissions.peColumns = permissions.permissions === true;
+                // userPermissions.comments = permissions.comments === true;
+                document.body.classList.toggle("can-view-comments", userPermissions.comments);
+                document.body.classList.toggle("comments-locked", !userPermissions.comments);
+            }
         async function checkAuthentication() {
             const response = await fetch("/api/auth-status");
             const result = await response.json();
-            setAuthenticated(result.authenticated === true);
+            setAuthenticated(result.authenticated === true, result);
         }
 
         loginButton.addEventListener("click", async () => {
             if (document.body.classList.contains("authenticated")) {
                 await fetch("/api/logout", { method: "POST" });
-                setAuthenticated(false);
+                setAuthenticated(false, {
+                    peColumns: false,
+                    comments: false
+                });
                 return;
             }
 
@@ -514,7 +530,8 @@
             }
 
             loginDialog.close();
-            setAuthenticated(true);
+            // setAuthenticated(true);
+            await checkAuthentication();
         });
 
         checkAuthentication().catch(() => setAuthenticated(false));

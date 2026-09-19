@@ -15,7 +15,8 @@ const supabase = createClient(
 
 
 const app = express();
-const loginSessions = new Set();
+// const loginSessions = new Set();
+const loginSessions = new Map();
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -47,8 +48,24 @@ app.get('/api/version', (req, res) => {
 });
 
 
+// app.get('/api/auth-status', (req, res) => {
+//     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
+// });
 app.get('/api/auth-status', (req, res) => {
-    res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
+    const token = getSessionToken(req);
+
+    if (!loginSessions.has(token)) {
+        return res.json({
+            authenticated:false
+        });
+    }
+    const session = loginSessions.get(token);
+
+    res.json({
+        authenticated: true,
+        comments: session.comments,
+        username: session.username
+    });
 });
 
 app.get('/api/dashboard-data', async (req, res) => {
@@ -227,7 +244,32 @@ app.post('/api/login', (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    loginSessions.add(token);
+    let session = null;
+    if (
+        username === process.env.LOGIN_USERNAME &&
+        password === process.env.LOGIN_PASSWORD
+    ) {
+        session = {
+            username,
+            comments: false
+        };
+
+    } else if (
+        username === process.env.COMMENTS_USERNAME &&
+        password === process.env.COMMENTS_PASSWORD
+    ) {
+        session = {
+            username,
+            comments: true
+        };
+    }
+    if (!session) {
+        return res.status(401).json({
+            message: 'Invalid username or password'
+        });
+    }
+    loginSessions.set(token, session);
+    // loginSessions.add(token);
     res.setHeader('Set-Cookie', `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`);
     res.json({ authenticated: true });
 });
@@ -385,7 +427,8 @@ app.get("/api/redirect/:equipmentId", (req, res) => {
   console.log("Token:", token);
   console.log("Authentication status:", loginSessions.has(token));
 
-  if (loginSessions.has(token)) {
+//   if (loginSessions.has(token)) {
+    if (session?.comments) {
     return res.redirect(
       `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`
     );

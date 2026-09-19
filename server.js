@@ -441,12 +441,13 @@ app.get("/api/redirect/:equipmentId", (req, res) => {
 
   console.log("Token:", token);
   console.log("Authentication status:", loginSessions.has(token));
-  const payload = Math.trunc(Date.now() / 1000);
+  const timestamp = Math.trunc(Date.now() / 1000);
+  const payload = `${id}:${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
-//   if (loginSessions.has(token)) {
+
     if (session?.comments) {
     return res.redirect(
-      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${timestamp}&sig=${signature}`
+      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
     );
   }
 

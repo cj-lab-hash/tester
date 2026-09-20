@@ -101,7 +101,7 @@ function setAuthenticated(
 async function checkAuthentication() {
 const response = await fetch("/api/auth-status");
 const result = await response.json();
-console.log("result=", result);
+// console.log("result=", result);
 setAuthenticated(result.authenticated === true, result);
 }
 
@@ -225,6 +225,53 @@ function editCell(td) {
                 if (event.key === "Enter") {
                     input.blur(); // Trigger blur event to save edit
                 }
+            });
+}
+ let loginToastShown = false;
+ function saveEdit(td, newValue) {
+            var index = td.getAttribute('data-index'); // Get the index for the cell
+            const oldValue = td.textContent;
+            // td.innerHTML = newValue;
+            td.textContent = newValue;
+
+            
+            fetch('/api/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ index: index, value: newValue })
+            })
+            .then (response => {
+                if (response.status === 401) {
+                    // td.innerHTML = oldValue;
+                    td.textContent = oldValue;
+                    if (!loginToastShown) {
+                        loginToastShown = true;
+                        console.log(typeof showToast);
+                        showToast({
+                            type:"yellow",
+                            title:"Login Required",
+                            message: "Please log in to save changes.",
+                        });
+                        setTimeout(() => { loginToastShown = false; }, 5000);
+                    }
+                    throw new Error("Unauthorized");
+                }
+                if (!response.ok) {
+                    // td.innerHTML = oldValue;
+                    td.textContent = oldValue;
+                    throw new Error("Save failed");
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log(result.message);
+            })
+            .catch(error => {
+                // td.innerHTML = oldValue;
+                td.textContent = oldValue;
+                console.error('Error saving data:', error);
             });
 }
 

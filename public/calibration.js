@@ -20,7 +20,8 @@ const TPE_DOWNTIME = new Set([
   "CONTACT ISSUE",
   "QUALIFICATION FAIL DFL",
   "TPE VERIFICATION",
-  "QA FAIL"
+  "QA FAIL",
+  "HW CHECKER PROBLEM"
 ]);
 const PRE_SETUP = new Set ([
 "PRE SETUP"
@@ -29,6 +30,12 @@ const PRE_SETUP = new Set ([
 let dashboardCache = {};
 let plansMap = new Map();
 let currentVersion = localStorage.getItem('appVersion');
+let userPermissions = {comments: false};
+const loginButton = document.getElementById("loginButton");
+const loginDialog = document.getElementById("loginDialog");
+const loginForm = document.getElementById("loginForm");
+const loginError = document.getElementById("loginError");
+const currentUser = document.getElementById("currentUser");
 
 async function checkForUpdates() {
   try {
@@ -63,7 +70,212 @@ async function checkForUpdates() {
     console.error('Version check failed:', err);
   }
 }
-   
+
+            
+
+function setAuthenticated(
+                authenticated, 
+                permissions = {} 
+            ) {
+                document.body.classList.toggle("authenticated", authenticated);
+                document.body.classList.toggle("auth-locked", !authenticated);
+                loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
+                loginButton.setAttribute("aria-label", authenticated ? "Log out" : "Log in");
+                // userPermissions.comments = permissions.permissions === true;
+                userPermissions.comments = permissions.comments === true;
+                document.body.classList.toggle("can-view-comments", userPermissions.comments);
+                document.body.classList.toggle("comments-locked", !userPermissions.comments);
+                if (authenticated) {
+                    const accessLevel = 
+                    permissions.comments
+                    ? "Complete Access"
+                    : "Complete View";
+                    // currentUser.textContent = `Logged in as: ${permissions.username}`;
+                    currentUser.textContent = accessLevel;
+                } else {
+                    currentUser.textContent = "View only";
+                }
+            }
+        
+        
+async function checkAuthentication() {
+const response = await fetch("/api/auth-status");
+const result = await response.json();
+// console.log("result=", result);
+setAuthenticated(result.authenticated === true, result);
+}
+
+loginButton.addEventListener("click", async () => {
+            if (document.body.classList.contains("authenticated")) {
+                await fetch("/api/logout", { method: "POST" });
+                setAuthenticated(false, {
+                    peColumns: false,
+                    comments: false
+                });
+                return;
+            }
+
+            loginError.hidden = true;
+            loginForm.reset();
+            loginDialog.showModal();
+});
+document.getElementById("cancelLoginButton").addEventListener("click", () => loginDialog.close());
+
+loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            loginError.hidden = true;
+
+            const response = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: document.getElementById("loginUsername").value,
+                    password: document.getElementById("loginPassword").value
+                })
+            });
+            const result = await response.json();
+
+            if (!response.ok) {
+                loginError.textContent = result.message || "Login failed.";
+                loginError.hidden = false;
+                return;
+            }
+
+            loginDialog.close();
+            // setAuthenticated(true);
+            await checkAuthentication();
+});
+// checkAuthentication().catch(() => setAuthenticated(false));
+
+      // Function to load saved data from the server when the page loads
+        function normalizeActTableRows() {
+            const table = document.getElementById("editableTable");
+            if (!table) return;
+
+            table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
+                if (row.cells.length >= 9) {
+                    row.cells[6].dataset.field = "docking";
+                    return;
+                }
+
+                const firstOperationalCell = row.cells[3];
+                firstOperationalCell.dataset.field = "docking";
+                firstOperationalCell.dataset.legacyIndex = String(3 + rowIndex * 9);
+                ["STATUS", "DIE TYPE", "HANDLER"].forEach(() => {
+                    row.insertBefore(document.createElement("td"), firstOperationalCell);
+                });
+            });
+}
+
+function loadData() {
+            normalizeActTableRows();
+            fetch('/api/data') // Fetch saved data
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById("editableTable");
+                    table.querySelectorAll("tbody tr").forEach((row) => {
+                        const dockingCell = row.querySelector('[data-field="docking"]');
+                        const index = dockingCell?.getAttribute('data-index');
+                        if (!index) return;
+
+                        const legacyIndex = dockingCell.getAttribute('data-legacy-index');
+                        const currentKey = `cell${index}`;
+                        const legacyKey = `cell${legacyIndex}`;
+                        const savedValue = Object.prototype.hasOwnProperty.call(data, currentKey)
+                            ? data[currentKey]
+                            : (legacyIndex && Object.prototype.hasOwnProperty.call(data, legacyKey)
+                                ? data[legacyKey]
+                                : undefined);
+
+                        if (savedValue !== undefined) {
+                            // dockingCell.innerHTML = savedValue;
+                            dockingCell.textContent = savedValue;
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading data:', error));
+                
+                // console.log("Manual table-data load running...");
+
+}
+
+function editCell(td) {
+            // var currentText = td.innerHTML;
+            var currentText = td.textContent;
+            var input = document.createElement("input");
+            input.type = "text";
+            input.value = currentText;
+            if (td.querySelector("input")) {
+    return;
+}
+            // td.innerHTML = "";
+            td.textContent = "";
+            td.appendChild(input);
+            input.focus();
+
+            input.addEventListener("blur", function() {
+                setTimeout(() => {
+                    if (document.body.contains(td)) { // Ensure the cell is still in the DOM
+                        saveEdit(td, input.value);
+                    }
+                }, 0);
+            });
+
+            input.addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                    input.blur(); // Trigger blur event to save edit
+                }
+            });
+}
+ let loginToastShown = false;
+ function saveEdit(td, newValue) {
+            var index = td.getAttribute('data-index'); // Get the index for the cell
+            const oldValue = td.textContent;
+            // td.innerHTML = newValue;
+            td.textContent = newValue;
+
+            
+            fetch('/api/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ index: index, value: newValue })
+            })
+            .then (response => {
+                if (response.status === 401) {
+                    // td.innerHTML = oldValue;
+                    td.textContent = oldValue;
+                    if (!loginToastShown) {
+                        loginToastShown = true;
+                        console.log(typeof showToast);
+                        showToast({
+                            type:"yellow",
+                            title:"Login Required",
+                            message: "Please log in to save changes.",
+                        });
+                        setTimeout(() => { loginToastShown = false; }, 5000);
+                    }
+                    throw new Error("Unauthorized");
+                }
+                if (!response.ok) {
+                    // td.innerHTML = oldValue;
+                    td.textContent = oldValue;
+                    throw new Error("Save failed");
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log(result.message);
+            })
+            .catch(error => {
+                // td.innerHTML = oldValue;
+                td.textContent = oldValue;
+                console.error('Error saving data:', error);
+            });
+}
+
+
 function isTPEDowntime(stateLong) {
   const state = (stateLong || "").toUpperCase();
   return [...TPE_DOWNTIME].some(issue => state.includes(issue));
@@ -132,6 +344,7 @@ function normalizeIdent(id) {
 
 
 function buildStatusphereUrlFromRow(rowHref, equipmentId) {
+  
   if (rowHref) {
     const cleanHref = rowHref.replace(/&amp;amp;/g, "&");
     if (/^https?:\/\//i.test(cleanHref)) return cleanHref;
@@ -910,7 +1123,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
 
-  window.normalizeActTableRows?.();
+  normalizeActTableRows();
 
   for (const tr of rows) {
     const id = normalizeIdent(tr.cells?.[0]?.textContent);
@@ -957,19 +1170,51 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     cell.innerHTML = "";
 
     const url = buildStatusphereUrlFromRow(r.href, id);
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    // if (commenturl) {
+    //   const a = document.createElement("a");
+    //   a.href = commenturl;
+    //   a.target = "_blank";
+    //   // a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
+    //   a.rel = "noopener noreferrer";
+    //   a.textContent = out.label;
+    //   a.classList.add("prod-link");
+    //   cell.appendChild(a);
+    //   a.addEventListener("click", async (e) => {
+    //     e.preventDefault();
 
+    //     await fetch("/api/comments/request", {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json"
+    //       },
+    //       body: JSON.stringify({
+    //         equipment_id: id,
+    //         statusphere_url: url
+    //       })
+    //     });
+
+        // window.open(
+        //   `/comments.html?equipment_id=${id}`,
+        //   "_blank"
+        // );
+    //   })
+    // } else {
+    //   cell.textContent = out.label;
+    // }
     if (url) {
       const a = document.createElement("a");
-      a.href = url;
+      a.href = `/api/redirect/${encodeURIComponent(id)}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
       a.classList.add("prod-link");
       cell.appendChild(a);
     } else {
-      cell.textContent = out.label;
+      const span = document.createElement("span");
+      span.textContent = out.label;
+      cell.appendChild(span);
     }
-
     appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     // color
@@ -1021,10 +1266,10 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
       const a = document.createElement("a");
-      a.href = url;
+      a.href = `/api/redirect/${encodeURIComponent(id)}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
@@ -1093,10 +1338,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-
+    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
       const a = document.createElement("a");
-      a.href = url;
+      a.href = `/api/redirect/${encodeURIComponent(id)}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
@@ -1234,7 +1479,20 @@ function loadFromCache({
     data
   );
 }
-
+async function deleteComments() {
+  try {
+    const response = await fetch(
+      '/api/request-cleanup',
+      {
+        method: "DELETE"
+      }
+    );
+    const result = await response.json();
+    // console.log(result);
+  } catch (error) {
+    console.error("Error occurred while deleting data:", error);
+  }
+}
 // async function loadLatestByPatterns({ tableEl, tbodyId, patterns, orderBy = "state_long" }) {
 //   const tbody = document.getElementById(tbodyId);
 //   if (!tableEl || !tbody) return;
@@ -1438,7 +1696,8 @@ async function refreshData() {
 
     // ✅ ACT VIEW
     if (view === "ACT") {
-      window.normalizeActTableRows?.();
+      // window.normalizeActTableRows?.();
+      normalizeActTableRows();
       await renderSchedulesAndHighlights(tableEl);
 
       renderProductionStatusUnified(tableEl, dashboardCache.ACT);
@@ -1485,14 +1744,20 @@ async function refreshData() {
     isRefreshing = false;
   }
 }
+document.addEventListener("dblclick", (event) => {
+    const td = event.target.closest("td.editable");
 
+    if (!td) return;
+    if (td.querySelector("input")) return;
+    editCell(td);
+});
 // ===================== BOOT =====================
 const UI_REFRESH_MS = 180 * 1000;
 const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
 
-  
-  
+  await checkAuthentication();
+  loadData();
   renderViewTiles();
   setView(getCurrentView());
   await loadDashboardCache();
@@ -1531,4 +1796,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   setInterval(checkForUpdates, 300_000);
   setInterval(updatePhaseTimers, 60_000);
+  setInterval(deleteComments, 180_000);
 });
+// window.addEventListener("DOMContentLoaded", async () => {
+//     await checkAuthentication();
+// });

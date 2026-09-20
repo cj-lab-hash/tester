@@ -21,6 +21,7 @@
     
         <div class="header-right">
             <div id="lastSync" class="last-sync">Last Sync: --</div>
+            <div id="currentUser" class="current-user">Not Logged In</div>
             <button id="loginButton" class="login-button" type="button">LOGIN</button>
             <fieldset class="filter-modes" aria-label="Status filter">
                 <legend>FILTER</legend>
@@ -90,7 +91,7 @@
                         <td data-index="0">TERCAT005</td>
                         <td data-index="1">T4105A</td>
                         <td data-index="2"></td>
-                        <td data-index="6" ondblclick="editCell(this)"></td>
+                        <td data-index="6" class="editable"></td>
                         <td data-index="7" class="cal-status"></td>
                         <td data-index="8" class="pm-status"></td>
                 </tr>
@@ -98,7 +99,7 @@
                         <td data-index="9">TERCAT010</td>
                         <td data-index="10">T4111A</td>
                         <td data-index="11"></td>
-                        <td data-index="15" ondblclick="editCell(this)"></td>
+                        <td data-index="15" class="editable"></td>
                         <td data-index="16" class="cal-status"></td>
                         <td data-index="17" class="pm-status"></td>
                 </tr>
@@ -106,7 +107,7 @@
                         <td data-index="18">TERCAT004</td>
                         <td data-index="19">T4104A</td>
                         <td data-index="20"></td>
-                        <td data-index="24" ondblclick="editCell(this)"></td>
+                        <td data-index="24" class="editable"></td>
                         <td data-index="25" class="cal-status"></td>
                         <td data-index="26" class="pm-status"></td>
                 </tr>
@@ -114,7 +115,7 @@
                         <td data-index="27">TERCAT014</td>
                         <td data-index="28">T4106A</td>
                         <td data-index="29"></td>
-                        <td data-index="33" ondblclick="editCell(this)"></td>
+                        <td data-index="33" class="editable"></td>
                         <td data-index="34" class="cal-status"></td>
                         <td data-index="35" class="pm-status"></td>
                     </tr>
@@ -122,7 +123,7 @@
                         <td data-index="36">TERCAT011</td>
                         <td data-index="37">T4112A</td>
                         <td data-index="38"></td>
-                        <td data-index="42" ondblclick="editCell(this)"></td>
+                        <td data-index="42" class="editable"></td>
                         <td data-index="43" class="cal-status"></td>
                         <td data-index="44" class="pm-status"></td>
                 </tr>
@@ -130,7 +131,7 @@
                         <td data-index="45">TERCAT006</td>
                         <td data-index="46">T4107A</td>
                         <td data-index="47"></td>
-                        <td data-index="51" ondblclick="editCell(this)"></td>
+                        <td data-index="51" class="editable"></td>
                         <td data-index="52" class="cal-status"></td>
                         <td data-index="53" class="pm-status"></td>
                 </tr>
@@ -138,7 +139,7 @@
                         <td data-index="54">TERCAT002</td>
                         <td data-index="55">T4102A</td>
                         <td data-index="56"></td>
-                        <td data-index="60" ondblclick="editCell(this)"></td>
+                        <td data-index="60" class="editable"></td>
                         <td data-index="61" class="cal-status"></td>
                         <td data-index="62" class="pm-status"></td>
                 </tr>
@@ -146,7 +147,7 @@
                         <td data-index="63">TERCAT017</td>
                         <td data-index="64">T4117A</td>
                         <td data-index="65"></td>
-                        <td data-index="69" ondblclick="editCell(this)"></td>
+                        <td data-index="69" class="editable"></td>
                         <td data-index="70" class="cal-status"></td>
                         <td data-index="71" class="pm-status"></td>
                 </tr>
@@ -154,7 +155,7 @@
                         <td data-index="72">SZ001</td>
                         <td data-index="73">SZ1</td>
                         <td data-index="74"></td>
-                        <td data-index="78" ondblclick="editCell(this)"></td>
+                        <td data-index="78" class="editable"></td>
                         <td data-index="79" class="cal-status"></td>
                         <td data-index="80" class="pm-status"></td>
                 </tr>
@@ -162,7 +163,7 @@
                         <td data-index="81">SZ005</td>
                         <td data-index="82">SZ5</td>
                         <td data-index="83"></td>
-                        <td data-index="87" ondblclick="editCell(this)"></td>
+                        <td data-index="87" class="editable"></td>
                         <td data-index="88" class="cal-status"></td>
                         <td data-index="89" class="pm-status"></td>
                 </tr>
@@ -170,7 +171,7 @@
                         <td data-index="90">SZ007</td>
                         <td data-index="91">SZ7</td>
                         <td data-index="92"></td>
-                        <td data-index="96" ondblclick="editCell(this)"></td>
+                        <td data-index="96" class="editable"></td>
                         <td data-index="97" class="cal-status"></td>
                         <td data-index="98" class="pm-status"></td>
                 </tr>
@@ -178,7 +179,7 @@
                         <td data-index="99">SZ010</td>
                         <td data-index="100">SZ10</td>
                         <td data-index="101"></td>
-                        <td data-index="105" ondblclick="editCell(this)"></td>
+                        <td data-index="105" class="editable"></td>
                         <td data-index="106" class="cal-status"></td>
                         <td data-index="107" class="pm-status"></td>
                 </tr>
@@ -186,7 +187,7 @@
                         <td data-index="108">SZ011</td>
                         <td data-index="109">SZ11</td>
                         <td data-index="110"></td>
-                        <td data-index="114" ondblclick="editCell(this)"></td>
+                        <td data-index="114" class="editable"></td>
                         <td data-index="115" class="cal-status"></td>
                         <td data-index="116" class="pm-status"></td>
                 </tr>
@@ -194,7 +195,7 @@
                         <td data-index="117">SZ012</td>
                         <td data-index="118">SZ12</td>
                         <td data-index="119"></td>
-                        <td data-index="123" ondblclick="editCell(this)"></td>
+                        <td data-index="123" class="editable"></td>
                         <td data-index="124" class="cal-status"></td>
                         <td data-index="125" class="pm-status"></td>
                 </tr>
@@ -202,7 +203,7 @@
                         <td data-index="126">SZ015</td>
                         <td data-index="127">SZ17</td>
                         <td data-index="128"></td>
-                        <td data-index="132" ondblclick="editCell(this)"></td>
+                        <td data-index="132" class="editable"></td>
                         <td data-index="133" class="cal-status"></td>
                         <td data-index="134" class="pm-status"></td>
                 </tr>
@@ -210,7 +211,7 @@
                         <td data-index="135">SZ017</td>
                         <td data-index="136">SZ3650E</td>
                         <td data-index="137"></td>
-                        <td data-index="141" ondblclick="editCell(this)"></td>
+                        <td data-index="141" class="editable"></td>
                         <td data-index="142" class="cal-status"></td>
                         <td data-index="143" class="pm-status"></td>
                 </tr>
@@ -218,7 +219,7 @@
                         <td data-index="144">SZ023</td>
                         <td data-index="145">SZ15</td>
                         <td data-index="146"></td>
-                        <td data-index="150" ondblclick="editCell(this)"></td>
+                        <td data-index="150" class="editable"></td>
                         <td data-index="151" class="cal-status"></td>
                         <td data-index="152" class="pm-status"></td>
                 </tr>
@@ -226,7 +227,7 @@
                         <td data-index="153">SZ025</td>
                         <td data-index="154">SZ19</td>
                         <td data-index="155"></td>
-                        <td data-index="159" ondblclick="editCell(this)"></td>
+                        <td data-index="159" class="editable"></td>
                         <td data-index="160" class="cal-status"></td>
                         <td data-index="161" class="pm-status"></td>
                     </tr>
@@ -234,41 +235,41 @@
                         <td data-index="162">SZ026</td>
                         <td data-index="163">SZ25</td>
                         <td data-index="164"></td>
-                        <td data-index="168" ondblclick="editCell(this)"></td>
+                        <td data-index="168" class="editable"></td>
                         <td data-index="169" class="cal-status"></td>
                         <td data-index="170" class="pm-status"></td>
                     </tr>
                     <tr>
-                        <td data-index="170">QUARTET001</td>
-                        <td data-index="171">aapduo5</td>
-                        <td data-index="172"></td>
-                        <td data-index="176" ondblclick="editCell(this)"></td>
-                        <td data-index="177" class="cal-status"></td>
-                        <td data-index="178" class="pm-status"></td>
+                        <td data-index="171">QUARTET001</td>
+                        <td data-index="172">aapduo5</td>
+                        <td data-index="173"></td>
+                        <td data-index="177" class="editable"></td>
+                        <td data-index="178" class="cal-status"></td>
+                        <td data-index="179" class="pm-status"></td>
                     </tr>
                     <tr>
-                        <td data-index="179">QUARTET002</td>
-                        <td data-index="180">quartet2</td>
-                        <td data-index="181"></td>
-                        <td data-index="185" ondblclick="editCell(this)"></td>
-                        <td data-index="186" class="cal-status"></td>
-                        <td data-index="187" class="pm-status"></td>
+                        <td data-index="180">QUARTET002</td>
+                        <td data-index="181">quartet2</td>
+                        <td data-index="182"></td>
+                        <td data-index="186" class="editable"></td>
+                        <td data-index="188" class="cal-status"></td>
+                        <td data-index="189" class="pm-status"></td>
                     </tr>
                     <tr>
-                        <td data-index="189">QUARTET003</td>
-                        <td data-index="190">quartet3</td>
-                        <td data-index="191"></td>
-                        <td data-index="195" ondblclick="editCell(this)"></td>
-                        <td data-index="196" class="cal-status"></td>
-                        <td data-index="197" class="pm-status"></td>
+                        <td data-index="190">QUARTET003</td>
+                        <td data-index="191">quartet3</td>
+                        <td data-index="192"></td>
+                        <td data-index="196" class="editable"></td>
+                        <td data-index="197" class="cal-status"></td>
+                        <td data-index="198" class="pm-status"></td>
                     </tr>
                     <tr>
-                        <td data-index="198">DUO008</td>
-                        <td data-index="199">duo11</td>
-                        <td data-index="200"></td>
-                        <td data-index="204" ondblclick="editCell(this)"></td>
-                        <td data-index="205" class="cal-status"></td>
-                        <td data-index="206" class="pm-status"></td>
+                        <td data-index="199">DUO008</td>
+                        <td data-index="200">duo11</td>
+                        <td data-index="201"></td>
+                        <td data-index="205" class="editable"></td>
+                        <td data-index="206" class="cal-status"></td>
+                        <td data-index="207" class="pm-status"></td>
                     </tr>
             </tbody>
         </table>
@@ -460,200 +461,6 @@
     <div id="output"></div>
     <div id="updateToastContainer" class="toast-container"></div>
     <div id="toastContainer" class="toast-container"></div>
-    <script>
-        const loginButton = document.getElementById("loginButton");
-        const loginDialog = document.getElementById("loginDialog");
-        const loginForm = document.getElementById("loginForm");
-        const loginError = document.getElementById("loginError");
-
-        function setAuthenticated(authenticated) {
-            document.body.classList.toggle("authenticated", authenticated);
-            document.body.classList.toggle("auth-locked", !authenticated);
-            loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
-            loginButton.setAttribute("aria-label", authenticated ? "Log out" : "Log in");
-        }
-
-        async function checkAuthentication() {
-            const response = await fetch("/api/auth-status");
-            const result = await response.json();
-            setAuthenticated(result.authenticated === true);
-        }
-
-        loginButton.addEventListener("click", async () => {
-            if (document.body.classList.contains("authenticated")) {
-                await fetch("/api/logout", { method: "POST" });
-                setAuthenticated(false);
-                return;
-            }
-
-            loginError.hidden = true;
-            loginForm.reset();
-            loginDialog.showModal();
-        });
-
-        document.getElementById("cancelLoginButton").addEventListener("click", () => loginDialog.close());
-
-        loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            loginError.hidden = true;
-
-            const response = await fetch("/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: document.getElementById("loginUsername").value,
-                    password: document.getElementById("loginPassword").value
-                })
-            });
-            const result = await response.json();
-
-            if (!response.ok) {
-                loginError.textContent = result.message || "Login failed.";
-                loginError.hidden = false;
-                return;
-            }
-
-            loginDialog.close();
-            setAuthenticated(true);
-        });
-
-        checkAuthentication().catch(() => setAuthenticated(false));
-
-        // Function to load saved data from the server when the page loads
-        function normalizeActTableRows() {
-            const table = document.getElementById("editableTable");
-            if (!table) return;
-
-            table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
-                if (row.cells.length >= 9) {
-                    row.cells[6].dataset.field = "docking";
-                    return;
-                }
-
-                const firstOperationalCell = row.cells[3];
-                firstOperationalCell.dataset.field = "docking";
-                firstOperationalCell.dataset.legacyIndex = String(3 + rowIndex * 9);
-                ["STATUS", "DIE TYPE", "HANDLER"].forEach(() => {
-                    row.insertBefore(document.createElement("td"), firstOperationalCell);
-                });
-            });
-        }
-
-        function loadData() {
-            normalizeActTableRows();
-            fetch('/api/data') // Fetch saved data
-                .then(response => response.json())
-                .then(data => {
-                    const table = document.getElementById("editableTable");
-                    table.querySelectorAll("tbody tr").forEach((row) => {
-                        const dockingCell = row.querySelector('[data-field="docking"]');
-                        const index = dockingCell?.getAttribute('data-index');
-                        if (!index) return;
-
-                        const legacyIndex = dockingCell.getAttribute('data-legacy-index');
-                        const currentKey = `cell${index}`;
-                        const legacyKey = `cell${legacyIndex}`;
-                        const savedValue = Object.prototype.hasOwnProperty.call(data, currentKey)
-                            ? data[currentKey]
-                            : (legacyIndex && Object.prototype.hasOwnProperty.call(data, legacyKey)
-                                ? data[legacyKey]
-                                : undefined);
-
-                        if (savedValue !== undefined) {
-                            dockingCell.innerHTML = savedValue;
-                        }
-                    });
-                })
-                .catch(error => console.error('Error loading data:', error));
-                
-                // console.log("Manual table-data load running...");
-
-        }
-
-        // Function to edit a table cell
-        function editCell(td) {
-            var currentText = td.innerHTML;
-            var input = document.createElement("input");
-            input.type = "text";
-            input.value = currentText;
-
-            td.innerHTML = "";
-            td.appendChild(input);
-            input.focus();
-
-            input.addEventListener("blur", function() {
-                setTimeout(() => {
-                    if (document.body.contains(td)) { // Ensure the cell is still in the DOM
-                        saveEdit(td, input.value);
-                    }
-                }, 0);
-            });
-
-            input.addEventListener("keydown", function(event) {
-                if (event.key === "Enter") {
-                    input.blur(); // Trigger blur event to save edit
-                }
-            });
-        }
-
-        // Function to save edited data to the server
-        let loginToastShown = false;
-        function saveEdit(td, newValue) {
-            var index = td.getAttribute('data-index'); // Get the index for the cell
-
-            const oldValue = td.textContent;
-            td.innerHTML = newValue;
-
-            
-            fetch('/api/save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ index: index, value: newValue })
-            })
-            .then (response => {
-                if (response.status === 401) {
-                    td.innerHTML = oldValue;
-                    if (!loginToastShown) {
-                        loginToastShown = true;
-                        console.log(typeof showToast);
-                        showToast({
-                            type:"yellow",
-                            title:"Login Required",
-                            message: "Please log in to save changes.",
-                        });
-                        setTimeout(() => { loginToastShown = false; }, 5000);
-                    }
-                    throw new Error("Unauthorized");
-                }
-                if (!response.ok) {
-                    td.innerHTML = oldValue;
-                    throw new Error("Save failed");
-                }
-                return response.json();
-            })
-            .then(result => {
-                console.log(result.message);
-            })
-            .catch(error => {
-                td.innerHTML = oldValue;
-                console.error('Error saving data:', error);
-            });
-        }
-
-       
-        // // Call the functions when the page loads
-        window.onload = function() {
-             loadData(); // Load data from the server
-        //     refreshPage(); // Set up page refresh
-        };
-
-
-       
-
-
-    </script>
     <!-- <script type="module" src="./calibration.js"></script> -->
      <script type="module" src="calibration.min.js"></script>
     <script type="module" src="./bible.js"></script>

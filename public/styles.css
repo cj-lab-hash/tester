@@ -1302,7 +1302,7 @@ body.dark-mode .filter-modes label:has(input:checked) span {
     padding: 18px;
   }
 }
-@media (max-width:768 px) {
+@media (max-width:768px) {
   #toastContainer, #updateToastContainer {
     left:8px;
     right:8px;
@@ -1310,14 +1310,14 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   }
   .toast {
     width:100%;
-    max-width:100%px;
+    max-width:100%;
     min-width:0;
     box-sizing: border-box;
   }
   .page-header h1{
     grid-column:1;
   }
-  .header-left, header-right {
+  .header-left, .header-right {
     grid-column:1;
   }
 }

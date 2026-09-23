@@ -1304,15 +1304,15 @@ body.dark-mode .filter-modes label:has(input:checked) span {
 }
 @media (max-width:768px) {
   #toastContainer, #updateToastContainer {
-    left:8px;
+    left:auto;
     right:8px;
-    width: auto;
-  }
+    width: 320px;
+    max-width: cal(100 vw - 16px);
+      }
   .toast {
     width:100%;
-    max-width:100%;
     min-width:0;
-    box-sizing: border-box;
+    max-width: none;
   }
   .page-header h1{
     grid-column:1;

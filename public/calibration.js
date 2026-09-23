@@ -1273,7 +1273,13 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
 
     const r = map.get(id);
     if (!r) { tr.hidden = true; continue; }
-
+    console.log({
+  equipment: r.equipment_id,
+  state: r.state_short,
+  dieType: extractDieType(r.raw_title),
+  handler: extractHandler(r.raw_title),
+  rawTitle: r.raw_title
+});
     // const state = (r.state_short || "").toUpperCase();
     // if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
     // tr.hidden = false;
@@ -1298,10 +1304,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
       span.textContent = out.label;
       cell.appendChild(span);
     }
-    console.log(
-  r.equipment_id,
-  r.raw_title
-);
+
     appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     if (out.css) cell.classList.add(out.css);

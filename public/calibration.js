@@ -396,24 +396,14 @@ async function updateLastSyncIndicator() {
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   
-  if (ageMs > 3 * 60 * 10000) {
-    if (dashboardInterval) {
-      clearInterval(dashboardInterval);
-      dashboardInterval = null;
-    }
-  
-
+  if (ageMs > 3 * 60 * 1000) {
+    pauseDashboard();
   // el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
   el.textContent = `🔴 OFFLINE`;
   el.style.color = "red";
 } else {
-  if (!dashboardInterval) {
-    dashboardInterval = setInterval(async() => {
-        await loadDashboardCache();
-        await refreshData();      
-    }, UI_REFRESH_MS);
-  }
-  el.textContent = `🟢 ONLIE`;
+  resumeDashboard();
+  el.textContent = `🟢 ONLINE`;
   el.style.color = "lime";
  }
 }
@@ -1786,6 +1776,7 @@ function pauseDashboard() {
   clearInterval(alertInterval);
   clearInterval(updatecheckerInterval);
   clearInterval(commentsInterval);
+  clearInterval(phasetimerInterval);
 
   dashboardPause = true;
   console.log("Dashboard refresh paused, possible PC is logged out/shutdown");
@@ -1801,6 +1792,7 @@ function resumeDashboard() {
   alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);
   commentsInterval = setInterval(deleteComments, 180_000);
+  phasetimerInterval = setInterval(updatePhaseTimers, 60_000);
   dashboardPause = false;
   console.log("Dashboard refresh resumed");
 }
@@ -1849,7 +1841,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 //   await refreshData();
 
 // }, UI_REFRESH_MS);
-dashboardInterval = setInterval(() => {
+dashboardInterval = setInterval(async () => {
   await loadDashboardCache();
   await refreshData();
 }, UI_REFRESH_MS);

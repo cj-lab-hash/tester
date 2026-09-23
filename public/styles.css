@@ -794,14 +794,14 @@ td.cal-due, td.pm-due {
   border-color: rgba(59,130,246,0.35);
   transition: color 0.4s ease;
 }
-  .view-tiles{
+  /* .view-tiles{
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
   .view-tile{
     padding: 9px 8px;
     font-size: 12px;
-  }
+  } */
 /* optional: per-view colors */
 .view-tile[data-view="ACT"]    { background:#1f2937; }
 .view-tile[data-view="UFLEX"]  { background:#1e3a8a; }
@@ -816,7 +816,7 @@ td.cal-due, td.pm-due {
 .view-tile[data-view="ARK"]    { background:#46933F; }
 
 /* mobile: tighter tiles */
-/* @media (max-width: 600px){
+@media (max-width: 600px){
   .view-tiles{
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
@@ -825,7 +825,7 @@ td.cal-due, td.pm-due {
     padding: 9px 8px;
     font-size: 12px;
   }
-} */
+}
 /* Mutually exclusive status filters */
 .filter-modes {
   display: flex;

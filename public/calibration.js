@@ -31,6 +31,12 @@ let dashboardCache = {};
 let plansMap = new Map();
 let currentVersion = localStorage.getItem('appVersion');
 let userPermissions = {comments: false};
+let dashboardInterval;
+let alertInterval;
+let updatecheckerInterval;
+let phasetimerInterval;
+let commentsInterval;
+let dashboardPause = false;
 const loginButton = document.getElementById("loginButton");
 const loginDialog = document.getElementById("loginDialog");
 const loginForm = document.getElementById("loginForm");
@@ -381,15 +387,36 @@ async function updateLastSyncIndicator() {
 
   if (!lastSyncShownAt) {
     el.textContent = "Last Sync: --";
+    el.style.color = "red";
     return;
   }
 
   const dt = new Date(lastSyncShownAt);
-  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
-  el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
-}
+  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  
+  if (ageMs > 3 * 60 * 10000) {
+    if (dashboardInterval) {
+      clearInterval(dashboardInterval);
+      dashboardInterval = null;
+    }
+  
 
+  // el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
+  el.textContent = `🔴 OFFLINE`;
+  el.style.color = "red";
+} else {
+  if (!dashboardInterval) {
+    dashboardInterval = setInterval(async() => {
+        await loadDashboardCache();
+        await refreshData();      
+    }, UI_REFRESH_MS);
+  }
+  el.textContent = `🟢 ONLIE`;
+  el.style.color = "lime";
+ }
+}
 // ===================== ACT: SMART SCRAPE CHECK =====================
 async function statusphereHasNewScrape(ids) {
   if (!ids?.length) return false;
@@ -1751,6 +1778,36 @@ document.addEventListener("dblclick", (event) => {
     if (td.querySelector("input")) return;
     editCell(td);
 });
+
+
+function pauseDashboard() {
+  if (dashboardPause) return;
+  clearInterval(dashboardInterval);
+  clearInterval(alertInterval);
+  clearInterval(updatecheckerInterval);
+  clearInterval(commentsInterval);
+
+  dashboardPause = true;
+  console.log("Dashboard refresh paused, possible PC is logged out/shutdown");
+}
+
+function resumeDashboard() {
+  if (!dashboardPause) return;
+  dashboardInterval = setInterval(async () => {
+    await loadDashboardCache();
+    await refreshData();
+  }, UI_REFRESH_MS);
+
+  alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
+  updatecheckerInterval = setInterval(checkForUpdates, 300_000);
+  commentsInterval = setInterval(deleteComments, 180_000);
+  dashboardPause = false;
+  console.log("Dashboard refresh resumed");
+}
+
+
+
+
 // ===================== BOOT =====================
 const UI_REFRESH_MS = 180 * 1000;
 const LAST_SYNC_MS = 60 * 1000;
@@ -1785,18 +1842,26 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   // setInterval(refreshData, UI_REFRESH_MS);
-  setInterval(async () => {
+//   setInterval(async () => {
 
+//   await loadDashboardCache();
+
+//   await refreshData();
+
+// }, UI_REFRESH_MS);
+dashboardInterval = setInterval(() => {
   await loadDashboardCache();
-
   await refreshData();
-
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
-  setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
-  setInterval(checkForUpdates, 300_000);
-  setInterval(updatePhaseTimers, 60_000);
-  setInterval(deleteComments, 180_000);
+  // setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
+  // setInterval(checkForUpdates, 300_000);
+  // setInterval(updatePhaseTimers, 60_000);
+  // setInterval(deleteComments, 180_000);
+  alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
+  updatecheckerInterval = setInterval(checkForUpdates, 300_000);
+  phasetimerInterval = setInterval(updatePhaseTimers, 60_000);
+  commentsInterval = setInterval(deleteComments, 180_000);
 });
 // window.addEventListener("DOMContentLoaded", async () => {
 //     await checkAuthentication();

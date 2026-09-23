@@ -343,7 +343,8 @@ td.cal-due, td.pm-due {
 #systemTable td,
 #arkTable th,
 #arkTable td,
-#wsTable {
+#wsTable th,
+#wsTable td {
   text-align: center;
   padding: 8px;
 }
@@ -1063,7 +1064,7 @@ body.dark-mode .filter-modes label:has(input:checked) span {
 
   #uflexTable, #eagleTable, #mavTable, #ltxTable,
   #tmtTable, #legacyTable, #speaTable, #ltxmxTable,
-  #systemTable, #arkTable,#wsTable {
+  #systemTable, #arkTable, #wsTable {
     width: 650px;
     max-width: none;
     font-size: 11px;
@@ -1152,7 +1153,7 @@ body.dark-mode .filter-modes label:has(input:checked) span {
 .auth-locked #editableTable th:nth-child(9),
 .auth-locked #editableTable td:nth-child(9),
 .auth-locked #wsTable td:nth-child(4),
-.auth-locked #wsTalbe th:nth-child(4),
+.auth-locked #wsTable th:nth-child(4),
 .auth-locked #wsTable td:nth-child(5),
 .auth-locked #wsTable th:nth-child(5) {
   display: none;

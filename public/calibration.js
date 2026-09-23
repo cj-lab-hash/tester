@@ -1814,7 +1814,7 @@ function resumeDashboard() {
 const UI_REFRESH_MS = 180 * 1000;
 const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
-
+ try {
   await checkAuthentication();
   loadData();
   renderViewTiles();
@@ -1825,6 +1825,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
+ } catch (err) {
+  console.error("BOOT ERROR:", err);
+  alert("BOOT ERROR: " + err.message);
+ }
+  
   
 
   // refreshData();  

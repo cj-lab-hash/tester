@@ -75,6 +75,7 @@ app.get('/api/dashboard-data', async (req, res) => {
             latestResult,
             plansResult,
             // systemResult
+            wsResult
         ] = await Promise.all([
 
             supabase
@@ -96,27 +97,27 @@ app.get('/api/dashboard-data', async (req, res) => {
                     pm_schedule
                 `),
 
-            // supabase
-            //     .from('statusphere_equipment_latest')
-            //     .select(`
-            //         equipment_id,
-            //         state_short,
-            //         state_long,
-            //         raw_title,
-            //         checked_at,
-            //         href
-            //     `)
-            //     .or(
-            //         'state_long.ilike.%SYSTEM PROBLEM%,raw_title.ilike.%SYSTEM PROBLEM%'
-            //     )
+            supabase
+                .from('ws_equipment_latest')
+                .select(`
+                    equipment_id,
+                    state_short,
+                    state_long,
+                    raw_title,
+                    checked_at,
+                    href
+                `)
+                
 
         ]);
 
         if (latestResult.error) throw latestResult.error;
         if (plansResult.error) throw plansResult.error;
         // if (systemResult.error) throw systemResult.error;
+        if (wsResult.error) throw wsResult.error;
 
         const rows = latestResult.data || [];
+        const wsRows = wsResult.data || [];
         const filteredRows = rows.filter(r => {
         const state = (r.state_short || "").toUpperCase();
 
@@ -202,6 +203,7 @@ app.get('/api/dashboard-data', async (req, res) => {
                 /^RFX/i.test(r.equipment_id)
             )
         ),
+            WS:sortDashboardRows(wsRows),
 
             SYSTEM: filteredRows.filter(r => {
                 const text =
@@ -229,6 +231,9 @@ app.get('/api/dashboard-data', async (req, res) => {
 
     }
 });
+
+
+
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body || {};

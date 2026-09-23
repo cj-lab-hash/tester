@@ -306,6 +306,7 @@ const VIEWS = [
   { key: "LTX",    desc: "LTX" },
   { key: "ARK",    desc: "ASL3K / RFX / KVDM2"},
   { key: "SYSTEM", desc: "System Problems only" },
+  { key: "WS", desc:"All Platform in the WS"},
 ];
 
 // ===================== STATE =====================
@@ -1272,7 +1273,13 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
 
     const r = map.get(id);
     if (!r) { tr.hidden = true; continue; }
-
+    console.log({
+  equipment: r.equipment_id,
+  state: r.state_short,
+  dieType: extractDieType(r.raw_title),
+  handler: extractHandler(r.raw_title),
+  rawTitle: r.raw_title
+});
     // const state = (r.state_short || "").toUpperCase();
     // if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
     // tr.hidden = false;
@@ -1624,6 +1631,7 @@ const viewLoaders = {
   ARK:    (tableEl) => loadFromCache({ tableEl, tbodyId:"arkTbody",    data:dashboardCache.ARK }),
   // SYSTEM: (tableEl) => loadSYSTEMLatest({ tableEl, tbodyId:"systemTbody", patterns:["SYSTEM%"] }),
   SYSTEM: (tableEl) => loadFromCache({ tableEl, tbodyId:"systemTbody",    data:dashboardCache.SYSTEM }),
+  WS: (tableEl) => loadFromCache({ tableEl, tbodyId:"wsTbody", data:dashboardCache.WS }),
 };
 
 // ===================== TILES UI =====================
@@ -1677,6 +1685,7 @@ function setView(view) {
     ["LTXMX", "sectionLTXMX"],
     ["ARK", "sectionARK"],
     ["SYSTEM", "sectionSYSTEM"],
+    ["WS", "sectionWS"],
   ];
 
   for (const [key, elId] of ids) {
@@ -1706,7 +1715,8 @@ async function refreshData() {
       SPEA: document.getElementById("speaTable"),
       LTXMX: document.getElementById("ltxmxTable"),
       ARK: document.getElementById("arkTable"),
-      SYSTEM: document.getElementById("systemTable")
+      SYSTEM: document.getElementById("systemTable"),
+      WS: document.getElementById("wsTable")
     };
 
     const tableEl = tableMap[view];

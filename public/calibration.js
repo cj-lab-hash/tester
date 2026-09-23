@@ -1298,7 +1298,10 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
       span.textContent = out.label;
       cell.appendChild(span);
     }
-
+    console.log(
+  r.equipment_id,
+  r.raw_title
+);
     appendStatusDetails(phaseCell, dieTypeCell, handlerCell, out);
 
     if (out.css) cell.classList.add(out.css);

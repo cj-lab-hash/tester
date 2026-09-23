@@ -422,9 +422,52 @@ td.cal-due, td.pm-due {
 }
 /* ✅ Mobile: full width + smaller text */
 @media (max-width: 600px){
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow: hidden;
+  }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable,#arkTable, #systemTable {
     width: 100%;
     margin: 0;               /* let it fill container */
+  }
+    #editableTable {
+    width: 100% !important;
+    min-width: 980px;
+    max-width: none;
+    table-layout: fixed;
+    font-size: 11px;
+  }
+
+  #uflexTable, #eagleTable, #mavTable, #ltxTable,
+  #tmtTable, #legacyTable, #speaTable, #ltxmxTable,
+  #systemTable, #arkTable {
+    width: 100%;
+    min-width: 650px;
+    max-width: none;
+    font-size: 11px;
+  }
+
+  /* When LOCKED (Logged out): Fit tables to 100% viewport width without scrollbars */
+  .auth-locked #editableTable,
+  .auth-locked #uflexTable,
+  .auth-locked #eagleTable,
+  .auth-locked #mavTable,
+  .auth-locked #ltxTable,
+  .auth-locked #tmtTable,
+  .auth-locked #legacyTable,
+  .auth-locked #speaTable,
+  .auth-locked #ltxmxTable,
+  .auth-locked #systemTable,
+  .auth-locked #arkTable {
+    min-width: 0;
+    width: 100% !important;
   }
   
   #uflexTable th, #uflexTable td,
@@ -751,7 +794,14 @@ td.cal-due, td.pm-due {
   border-color: rgba(59,130,246,0.35);
   transition: color 0.4s ease;
 }
-
+  /* .view-tiles{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .view-tile{
+    padding: 9px 8px;
+    font-size: 12px;
+  } */
 /* optional: per-view colors */
 .view-tile[data-view="ACT"]    { background:#1f2937; }
 .view-tile[data-view="UFLEX"]  { background:#1e3a8a; }

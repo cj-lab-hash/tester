@@ -6,6 +6,8 @@ const pool = require('./db');
 const crypto = require('crypto');
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+const { log } = require('console');
+const { arrayBuffer } = require('stream/consumers');
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -59,6 +61,8 @@ app.get('/api/auth-status', (req, res) => {
     console.log("Token:", token);
     console.log("Session found:", token ? loginSessions.has(token) : false);
     console.log("SESSION COUNT:", loginSessions.size);
+    console.log("Known Sessions:", Array.from(loginSessions.keys()));
+
 
     if (!loginSessions.has(token)) {
         return res.json({
@@ -254,6 +258,8 @@ app.post('/api/login', (req, res) => {
 
     const token = crypto.randomBytes(32).toString('hex');
     let session = null;
+    
+
     if (
         username === process.env.LOGIN_USERNAME &&
         password === process.env.LOGIN_PASSWORD
@@ -281,8 +287,9 @@ app.post('/api/login', (req, res) => {
             message: 'Invalid username or password'
         });
     }
-
+    console.log("New token:", token);
     loginSessions.set(token, session);
+    console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
     res.setHeader(
         `Set-Cookie`,
         // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`

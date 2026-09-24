@@ -52,7 +52,13 @@ app.get('/api/version', (req, res) => {
 //     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
 // });
 app.get('/api/auth-status', (req, res) => {
+    console.log("===AUTH STATUS===");
+    console.log("Cookies:", req.headers.cookie);
+
     const token = getSessionToken(req);
+    console.log("Token:", token);
+    console.log("Session found:", token ? loginSessions.has(token) : false);
+    console.log("SESSION COUNT:", loginSessions.size);
 
     if (!loginSessions.has(token)) {
         return res.json({
@@ -237,6 +243,9 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body || {};
+    console.log("===LOG IN ATTEMPT===");
+    console.log("Username: ", username);
+    console.log("User-Agent: ", req.headers['user-agent']);
     const loginTime = new Date().toISOString();
     const loginDateObj = new Date(loginTime);
     const localTime = loginDateObj.toLocaleTimeString()
@@ -276,7 +285,8 @@ app.post('/api/login', (req, res) => {
     loginSessions.set(token, session);
     res.setHeader(
         `Set-Cookie`,
-        `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+        // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+        `tester_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/`
     );
 
     console.log("Username:", username);

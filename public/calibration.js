@@ -397,7 +397,7 @@ async function updateLastSyncIndicator() {
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   
-  if (ageMs > 3 * 60 * 1000) {
+  if (ageMs > 3.5 * 60 * 1000) {
     pauseDashboard();
   // el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
   el.textContent = `🔴 OFFLINE`;
@@ -1814,7 +1814,7 @@ function resumeDashboard() {
 const UI_REFRESH_MS = 180 * 1000;
 const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
-
+ try {
   await checkAuthentication();
   loadData();
   renderViewTiles();
@@ -1825,6 +1825,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
+ } catch (err) {
+  console.error("BOOT ERROR:", err);
+  alert("BOOT ERROR: " + err.message);
+ }
+  
   
 
   // refreshData();  

@@ -432,7 +432,8 @@ td.cal-due, td.pm-due {
   html, body {
     width: 100%;
     max-width: 100vw;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .table-wrap {
@@ -1065,8 +1066,8 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   #uflexTable, #eagleTable, #mavTable, #ltxTable,
   #tmtTable, #legacyTable, #speaTable, #ltxmxTable,
   #systemTable, #arkTable, #wsTable {
-    width: 650px;
-    max-width: none;
+    min-width: 650px;
+    width: max-content;
     font-size: 11px;
   }
 
@@ -1299,5 +1300,24 @@ body.dark-mode .filter-modes label:has(input:checked) span {
     min-width: 0;
     max-width: 360px;
     padding: 18px;
+  }
+}
+@media (max-width:768px) {
+  #toastContainer, #updateToastContainer {
+    left:auto;
+    right:8px;
+    width: 320px;
+    max-width: cal(100 vw - 16px);
+      }
+  .toast {
+    width:100%;
+    min-width:0;
+    max-width: none;
+  }
+  .page-header h1{
+    grid-column:1;
+  }
+  .header-left, .header-right {
+    grid-column:1;
   }
 }

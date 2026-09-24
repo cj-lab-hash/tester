@@ -64,7 +64,16 @@ app.get('/api/auth-status', (req, res) => {
     console.log("Known Sessions:", Array.from(loginSessions.keys()));
 
 
-    if (!loginSessions.has(token)) {
+    // if (!loginSessions.has(token)) {
+    //     return res.json({
+    //         authenticated:false
+    //     });
+    // }
+    if (!token || !loginSessions.has(token)) {
+        res.setHeader(
+            'Set-Cookie',
+            'tester_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+        );
         return res.json({
             authenticated:false
         });

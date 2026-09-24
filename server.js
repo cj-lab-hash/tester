@@ -6,6 +6,8 @@ const pool = require('./db');
 const crypto = require('crypto');
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+const { log } = require('console');
+const { arrayBuffer } = require('stream/consumers');
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -13,7 +15,7 @@ const supabase = createClient(
 );
 const SHARED_KEY = process.env.SHARED_KEY;
 
-
+const expiresAt = Date.now() + (12 * 60 * 60 * 1000);
 const app = express();
 // const loginSessions = new Set();
 const loginSessions = new Map();
@@ -52,15 +54,41 @@ app.get('/api/version', (req, res) => {
 //     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
 // });
 app.get('/api/auth-status', (req, res) => {
-    const token = getSessionToken(req);
+    console.log("===AUTH STATUS===");
+    console.log("Cookies:", req.headers.cookie);
 
-    if (!loginSessions.has(token)) {
+    const token = getSessionToken(req);
+    console.log("Token:", token);
+    console.log("Session found:", token ? loginSessions.has(token) : false);
+    console.log("SESSION COUNT:", loginSessions.size);
+    console.log("Known Sessions:", Array.from(loginSessions.keys()));
+
+
+    // if (!loginSessions.has(token)) {
+    //     return res.json({
+    //         authenticated:false
+    //     });
+    // }
+    if (!token || !loginSessions.has(token)) {
+        res.setHeader(
+            'Set-Cookie',
+            'tester_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+        );
         return res.json({
             authenticated:false
         });
     }
     const session = loginSessions.get(token);
-
+    if (session.expiresAt < Date.now()) {
+        loginSessions.delete(token);
+        res.setHeader(
+            'Set-Cookie',
+            'tester_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'
+        );
+        return res.json({
+            authenticated:false
+        });
+    }
     res.json({
         authenticated: true,
         comments: session.comments,
@@ -237,6 +265,9 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body || {};
+    console.log("===LOG IN ATTEMPT===");
+    console.log("Username: ", username);
+    console.log("User-Agent: ", req.headers['user-agent']);
     const loginTime = new Date().toISOString();
     const loginDateObj = new Date(loginTime);
     const localTime = loginDateObj.toLocaleTimeString()
@@ -245,6 +276,8 @@ app.post('/api/login', (req, res) => {
 
     const token = crypto.randomBytes(32).toString('hex');
     let session = null;
+    
+
     if (
         username === process.env.LOGIN_USERNAME &&
         password === process.env.LOGIN_PASSWORD
@@ -253,7 +286,8 @@ app.post('/api/login', (req, res) => {
             username,
             comments: false,
             ip: clientIp,
-            localTime
+            localTime,
+            expiresAt
         };
 
     } else if (
@@ -264,7 +298,8 @@ app.post('/api/login', (req, res) => {
             username,
             comments: true,
             ip: clientIp,
-            localTime
+            localTime,
+            expiresAt
         };
     }
     if (!session) {
@@ -272,11 +307,13 @@ app.post('/api/login', (req, res) => {
             message: 'Invalid username or password'
         });
     }
-
+    console.log("New token:", token);
     loginSessions.set(token, session);
+    console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
     res.setHeader(
         `Set-Cookie`,
-        `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+        // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+        `tester_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=43200`
     );
 
     console.log("Username:", username);

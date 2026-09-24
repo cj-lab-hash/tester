@@ -105,7 +105,9 @@ function setAuthenticated(
         
         
 async function checkAuthentication() {
-const response = await fetch("/api/auth-status");
+const response = await fetch('/api/auth-status', {
+  credentials: 'include'
+});
 const result = await response.json();
 // console.log("result=", result);
 setAuthenticated(result.authenticated === true, result);
@@ -132,8 +134,9 @@ loginForm.addEventListener("submit", async (event) => {
             loginError.hidden = true;
 
             const response = await fetch("/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     username: document.getElementById("loginUsername").value,
                     password: document.getElementById("loginPassword").value

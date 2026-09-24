@@ -15,7 +15,7 @@ const supabase = createClient(
 );
 const SHARED_KEY = process.env.SHARED_KEY;
 
-
+const expiresAt = Date.now() + (12 * 60 * 60 * 1000);
 const app = express();
 // const loginSessions = new Set();
 const loginSessions = new Map();
@@ -79,7 +79,16 @@ app.get('/api/auth-status', (req, res) => {
         });
     }
     const session = loginSessions.get(token);
-
+    if (session.expiresAt < Date.now()) {
+        loginSessions.delete(token);
+        res.setHeader(
+            'Set-Cookie',
+            'tester_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'
+        );
+        return res.json({
+            authenticated:false
+        });
+    }
     res.json({
         authenticated: true,
         comments: session.comments,
@@ -277,7 +286,8 @@ app.post('/api/login', (req, res) => {
             username,
             comments: false,
             ip: clientIp,
-            localTime
+            localTime,
+            expiresAt
         };
 
     } else if (
@@ -288,7 +298,8 @@ app.post('/api/login', (req, res) => {
             username,
             comments: true,
             ip: clientIp,
-            localTime
+            localTime,
+            expiresAt
         };
     }
     if (!session) {
@@ -302,7 +313,7 @@ app.post('/api/login', (req, res) => {
     res.setHeader(
         `Set-Cookie`,
         // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
-        `tester_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/`
+        `tester_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=43200`
     );
 
     console.log("Username:", username);

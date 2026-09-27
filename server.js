@@ -15,7 +15,7 @@ const supabase = createClient(
 );
 const SHARED_KEY = process.env.SHARED_KEY;
 
-const sessionTIMEOUT = Date.now() + (12 * 60 * 60 * 1000);
+const sessionTIMEOUT = 12 * 60 * 60 * 1000;
 
 const app = express();
 // const loginSessions = new Set();
@@ -24,6 +24,15 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
+setInterval(() => {
+    const now = Date.now();
+    for (const [token, session] of loginSessions.entries()) {
+        if (session.expires < now) {
+            loginSessions.delete(token);
+
+        }
+    }
+}, 60 * 1000);
 
 function getSessionToken(req) {
     const cookies = req.headers.cookie || '';
@@ -35,12 +44,19 @@ function requireAuth(req, res, next) {
 
     const token = getSessionToken(req);
 
-    if (!loginSessions.has(token)) {
+    if (!token || !loginSessions.has(token)) {
         return res.status(401).json({
             message: 'Unauthorized'
         });
     }
 
+    const session = loginSessions.get(token);
+    if (session.expiresAt < Date.now()) {
+        loginSessions.delete(token);
+        return res.status(401).json({
+            message: 'Session expired'
+        });
+    }
     next();
 }
 

@@ -116,28 +116,37 @@ app.use((req, res, next) => {
 });
 
 app.post('/api/heartbeat', async (req, res) => {
-const token = getSessionToken(req);
 
-const { data: seesion } = token
-? await supabase
-.from('login_sessions')
-.select('*')
-.eq('token', token)
-.single()
-: { data: null};
+    console.log('=== HEARTBEAT ===');
+    console.log('guestId:', req.guestId);
+    console.log('body:', req.body);
 
-await supabase
-.from('active_visitors')
-.upsert({
-    guest_id: req.guestID,
-    last_seen: Date.now(),
-    page: req.body.page || '/',
-    authenticated: !!seesion
-    });
-    res.json({
-        success: true
-    });
+    const token = getSessionToken(req);
+
+    const { data: session } = token
+        ? await supabase
+            .from('login_sessions')
+            .select('*')
+            .eq('token', token)
+            .single()
+        : { data: null };
+
+    const { data, error } = await supabase
+        .from('active_visitors')
+        .upsert({
+            guest_id: req.guestId,
+            last_seen: Date.now(),
+            page: req.body.page || '/',
+            authenticated: !!session
+        })
+        .select();
+
+    console.log('UPSERT DATA:', data);
+    console.log('UPSERT ERROR:', error);
+
+    res.json({ success: true });
 });
+
 app.get('/api/active-visitors', async (req, res) => {
 
     const { data, error } = await supabase
@@ -463,14 +472,7 @@ app.post('/api/login', async (req, res) => {
     
     
 });
-app.post('/api/heartbeat', (req, res) => {
 
-    console.log("HEARTBEAT RECEIVED");
-
-    res.json({
-        success: true
-    });
-});
 app.post('/api/logout', async (req, res) => {
     const token = getSessionToken(req);
     // if (token) loginSessions.delete(token);

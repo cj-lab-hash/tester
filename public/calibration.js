@@ -1824,7 +1824,7 @@ async function sendHeartBeat() {
       })
     });
   } catch (err) {
-    console.err('Heartbeat failed:', err);
+    console.error('Heartbeat failed:', err);
   }
 }
 sendHeartBeat();

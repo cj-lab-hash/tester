@@ -463,7 +463,14 @@ app.post('/api/login', async (req, res) => {
     
     
 });
+app.post('/api/heartbeat', (req, res) => {
 
+    console.log("HEARTBEAT RECEIVED");
+
+    res.json({
+        success: true
+    });
+});
 app.post('/api/logout', async (req, res) => {
     const token = getSessionToken(req);
     // if (token) loginSessions.delete(token);

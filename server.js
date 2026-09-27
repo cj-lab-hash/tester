@@ -29,7 +29,7 @@ setInterval(async () => {
     await supabase
     .from('login_sessions')
     .delete()
-    .lt('expires_at', Date.now());
+    .lt('expires_at', new Date().toISOString());
 }, 60000);
 
 function getSessionToken(req) {
@@ -135,7 +135,7 @@ app.get('/api/auth-status', async (req, res) => {
     await supabase
     .from('login_sessions')
     .update({
-        expires_at: Date.now() + sessionTIMEOUT
+        expires_at: new Date(Date.now() + sessionTIMEOUT).toISOString()
     })
     .eq('token', token);
 
@@ -404,15 +404,23 @@ app.post('/api/logout', async (req, res) => {
     res.json({ authenticated: false });
 });
 app.get('/api/active-user', async (req, res) => {
-    // const activeUsers = loginSessions.size;
+
     const { data } = await supabase
     .from('login_sessions')
     .select('*')
     .gt('expires_at', Date.now());
-    // console.log("Active Users:", activeUsers);
+
+    const sessions = data.map(s => ({
+        ...s,
+        expires_local:new Date(s.expires_at)
+        .toLocaleString('en-PH', {
+            timeZone: 'Asia/Manila'
+        })
+    }));
     res.json({
-        activeUsers: data.length,
-        session: data
+        activeUsers: sessions.length,
+        session: sessions,
+        
     });
 });
 

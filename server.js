@@ -15,7 +15,8 @@ const supabase = createClient(
 );
 const SHARED_KEY = process.env.SHARED_KEY;
 
-const expiresAt = Date.now() + (12 * 60 * 60 * 1000);
+const sessionTIMEOUT = Date.now() + (12 * 60 * 60 * 1000);
+
 const app = express();
 // const loginSessions = new Set();
 const loginSessions = new Map();
@@ -287,7 +288,7 @@ app.post('/api/login', (req, res) => {
             comments: false,
             ip: clientIp,
             localTime,
-            expiresAt
+            expiresAt: Date.now() + sessionTIMEOUT
         };
 
     } else if (
@@ -299,7 +300,7 @@ app.post('/api/login', (req, res) => {
             comments: true,
             ip: clientIp,
             localTime,
-            expiresAt
+            expiresAt: Date.now() + sessionTIMEOUT
         };
     }
     if (!session) {

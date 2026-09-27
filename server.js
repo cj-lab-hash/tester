@@ -8,6 +8,7 @@ require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const { log } = require('console');
 const { arrayBuffer } = require('stream/consumers');
+const { match } = require('assert');
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -30,6 +31,19 @@ setInterval(async () => {
     .from('login_sessions')
     .delete()
     .lt('expires_at', new Date().toISOString());
+}, 60000);
+
+setInterval(async () => {
+    const cutoff = Date.now() - (2 * 60 * 1000);
+
+    const { error } = await supabase
+    .from('active_visitors')
+    .delete()
+    .lt('last_seen', cutoff);
+
+    if (error) {
+        console.error('Visitor cleanup failed:', error);
+    }
 }, 60000);
 
 function getSessionToken(req) {
@@ -79,10 +93,68 @@ app.get('/api/version', (req, res) => {
     res.json({ version: APP_VERSION });
 });
 
+app.use((req, res, next) => {
+    const cookies = req.headers.cookie || '';
+    const match = cookies.match(
+        /(?:^|;\s*)guest_id=([^;]+)/
+    );
+    let guestId = match
+    ? decodeURIComponent(match[1])
+    : null;
 
-// app.get('/api/auth-status', (req, res) => {
-//     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
-// });
+    if (!guestId) {
+        guestId = crypto.randomUUID();
+
+        res.setHeader(
+            'Set-Cookie',
+            `guest_id=${guestId}; ${COOKIE_OPTIONS}; Max-Age=31536000`
+        );
+    }
+
+    req.guestId = guestId;
+    next();
+});
+
+app.post('/api/heartbeat', async (req, res) => {
+const token = getSessionToken(req);
+
+const { data: seesion } = token
+? await supabase
+.from('login_sessions')
+.select('*')
+.eq('token', token)
+.single()
+: { data: null};
+
+await supabase
+.from('active_visitors')
+.upsert({
+    guest_id: req.guestID,
+    last_seen: Date.now(),
+    page: req.body.page || '/',
+    authenticated: !!seesion
+    });
+    res.json({
+        success: true
+    });
+});
+app.get('/api/active-visitors', async (req, res) => {
+
+    const { data, error } = await supabase
+        .from('active_visitors')
+        .select('*');
+    if (error) {
+        return res.status(500).json(error);
+    }
+    const visitors = data.map(v => ({
+        ...v,
+        last_seen_local: new Date(v.last_seen)
+            .toLocaleString('en-PH', {
+                timeZone: 'Asia/Manila'
+            })
+    }));
+    res.json(visitors);
+})
 app.get('/api/auth-status', async (req, res) => {
     console.log("===AUTH STATUS===");
     console.log("Cookies:", req.headers.cookie);

@@ -1810,7 +1810,24 @@ function resumeDashboard() {
   console.log("Dashboard refresh resumed");
 }
 
+async function sendHeartBeat() {
 
+  try {
+    await fetch('/api/heartbeat', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        page: window.location.pathname
+      })
+    });
+  } catch (err) {
+    console.err('Heartbeat failed:', err);
+  }
+}
+sendHeartBeat();
 
 
 // ===================== BOOT =====================
@@ -1851,23 +1868,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // setInterval(refreshData, UI_REFRESH_MS);
-//   setInterval(async () => {
 
-//   await loadDashboardCache();
-
-//   await refreshData();
-
-// }, UI_REFRESH_MS);
 dashboardInterval = setInterval(async () => {
   await loadDashboardCache();
   await refreshData();
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
-  // setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
-  // setInterval(checkForUpdates, 300_000);
-  // setInterval(updatePhaseTimers, 60_000);
-  // setInterval(deleteComments, 180_000);
+  setInterval(sendHeartBeat, 60000);
   alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);
   phasetimerInterval = setInterval(updatePhaseTimers, 60_000);

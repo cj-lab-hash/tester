@@ -21,7 +21,8 @@ const app = express();
 // const loginSessions = new Set();
 const loginSessions = new Map();
 app.use(express.json());
-app.use(cors());
+// app.use(cors());
+app.use(cors({credentials: true, origin: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 setInterval(() => {
@@ -81,6 +82,12 @@ app.get('/api/auth-status', (req, res) => {
     console.log("Known Sessions:", Array.from(loginSessions.keys()));
 
 
+    if (token && !loginSessions.has(token)) {
+        console.log("UNKNOWN TOKEN:", token);
+        console.log("KNOWN TOKENS:", array.from(loginSessions.keys())
+        );
+    }
+
     // if (!loginSessions.has(token)) {
     //     return res.json({
     //         authenticated:false
@@ -89,7 +96,7 @@ app.get('/api/auth-status', (req, res) => {
     if (!token || !loginSessions.has(token)) {
         res.setHeader(
             'Set-Cookie',
-            `tester_session=; ${COOKIE_OPTIONS}; Path=/; Max-Age=0`
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
         return res.json({
             authenticated:false
@@ -100,7 +107,7 @@ app.get('/api/auth-status', (req, res) => {
         loginSessions.delete(token);
         res.setHeader(
             'Set-Cookie',
-            `tester_session=; ${COOKIE_OPTIONS}; Path=/; Max-Age=0`
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
         return res.json({
             authenticated:false

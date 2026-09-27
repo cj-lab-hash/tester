@@ -16,7 +16,7 @@ const supabase = createClient(
 const SHARED_KEY = process.env.SHARED_KEY;
 
 const sessionTIMEOUT = 12 * 60 * 60 * 1000;
-
+const COOKIE_OPTIONS = 'HttpOnly; Secure; SameSite=Lax; Path=/';
 const app = express();
 // const loginSessions = new Set();
 const loginSessions = new Map();
@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 setInterval(() => {
     const now = Date.now();
     for (const [token, session] of loginSessions.entries()) {
-        if (session.expires < now) {
+        if (session.expiresAt < now) {
             loginSessions.delete(token);
 
         }
@@ -89,7 +89,7 @@ app.get('/api/auth-status', (req, res) => {
     if (!token || !loginSessions.has(token)) {
         res.setHeader(
             'Set-Cookie',
-            'tester_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+            `tester_session=; ${COOKIE_OPTIONS}; Path=/; Max-Age=0`
         );
         return res.json({
             authenticated:false
@@ -100,12 +100,13 @@ app.get('/api/auth-status', (req, res) => {
         loginSessions.delete(token);
         res.setHeader(
             'Set-Cookie',
-            'tester_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'
+            `tester_session=; ${COOKIE_OPTIONS}; Path=/; Max-Age=0`
         );
         return res.json({
             authenticated:false
         });
     }
+    session.expiresAt = Date.now() + sessionTIMEOUT;
     res.json({
         authenticated: true,
         comments: session.comments,
@@ -288,8 +289,11 @@ app.post('/api/login', (req, res) => {
     const loginTime = new Date().toISOString();
     const loginDateObj = new Date(loginTime);
     const localTime = loginDateObj.toLocaleTimeString()
-    const clientIp = req.headers['x-forwarded-for'] ||
-                     req.socket.remoteAddress;
+    const clientIp =
+    req.headers['x-forwarded-for']
+        ?.split(',')[0]
+        .trim() ||
+    req.socket.remoteAddress;
 
     const token = crypto.randomBytes(32).toString('hex');
     let session = null;
@@ -330,7 +334,7 @@ app.post('/api/login', (req, res) => {
     res.setHeader(
         `Set-Cookie`,
         // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
-        `tester_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=43200`
+        `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
     );
 
     console.log("Username:", username);
@@ -349,7 +353,7 @@ app.post('/api/login', (req, res) => {
 app.post('/api/logout', (req, res) => {
     const token = getSessionToken(req);
     if (token) loginSessions.delete(token);
-    res.setHeader('Set-Cookie', 'tester_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
+    res.setHeader('Set-Cookie', `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`);
     res.json({ authenticated: false });
 });
 app.get('/api/active-user', (req, res) => {
@@ -495,7 +499,7 @@ app.delete ('/api/request-cleanup', async (req, res) => {
     
 
 const STATUSPHERE_BASE =
-  "http://statusphere.maxim-ic.com/dp/";
+  'http://statusphere.maxim-ic.com/dp/';
 
 app.get("/api/redirect/:equipmentId", (req, res) => {
   const id = req.params.equipmentId;

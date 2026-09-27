@@ -19,21 +19,18 @@ const sessionTIMEOUT = 12 * 60 * 60 * 1000;
 const COOKIE_OPTIONS = 'HttpOnly; Secure; SameSite=Lax; Path=/';
 const app = express();
 // const loginSessions = new Set();
-const loginSessions = new Map();
+// const loginSessions = new Map();
 app.use(express.json());
 // app.use(cors());
 app.use(cors({credentials: true, origin: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 
-setInterval(() => {
-    const now = Date.now();
-    for (const [token, session] of loginSessions.entries()) {
-        if (session.expiresAt < now) {
-            loginSessions.delete(token);
-
-        }
-    }
-}, 60 * 1000);
+setInterval(async () => {
+    await supabase
+    .from('login_sessions')
+    .delete()
+    .lt('expires_at', Date.now());
+}, 60000);
 
 function getSessionToken(req) {
     const cookies = req.headers.cookie || '';
@@ -41,19 +38,34 @@ function getSessionToken(req) {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
 
     const token = getSessionToken(req);
 
-    if (!token || !loginSessions.has(token)) {
+    if (!token) {
         return res.status(401).json({
             message: 'Unauthorized'
         });
     }
 
-    const session = loginSessions.get(token);
-    if (session.expiresAt < Date.now()) {
-        loginSessions.delete(token);
+    // const session = loginSessions.get(token);
+    const { data:session } = await supabase
+    .from('login_sessions')
+    .select('*')
+    .eq('token', token)
+    .single();
+    if (!session) {
+        return res.status(401).json({
+            message: 'Unauthorized'
+        });
+    }
+    if (session.expires_at < Date.now()) {
+        // loginSessions.delete(token);
+        await supabase
+        .from('login_sessions')
+        .delete()
+        .eq('token', token);
+
         return res.status(401).json({
             message: 'Session expired'
         });
@@ -71,29 +83,14 @@ app.get('/api/version', (req, res) => {
 // app.get('/api/auth-status', (req, res) => {
 //     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
 // });
-app.get('/api/auth-status', (req, res) => {
+app.get('/api/auth-status', async (req, res) => {
     console.log("===AUTH STATUS===");
     console.log("Cookies:", req.headers.cookie);
 
     const token = getSessionToken(req);
     console.log("Token:", token);
-    console.log("Session found:", token ? loginSessions.has(token) : false);
-    console.log("SESSION COUNT:", loginSessions.size);
-    console.log("Known Sessions:", Array.from(loginSessions.keys()));
 
-
-    if (token && !loginSessions.has(token)) {
-        console.log("UNKNOWN TOKEN:", token);
-        console.log("KNOWN TOKENS:", array.from(loginSessions.keys())
-        );
-    }
-
-    // if (!loginSessions.has(token)) {
-    //     return res.json({
-    //         authenticated:false
-    //     });
-    // }
-    if (!token || !loginSessions.has(token)) {
+    if (!token) {
         res.setHeader(
             'Set-Cookie',
             `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
@@ -102,9 +99,30 @@ app.get('/api/auth-status', (req, res) => {
             authenticated:false
         });
     }
-    const session = loginSessions.get(token);
-    if (session.expiresAt < Date.now()) {
-        loginSessions.delete(token);
+
+    const { data:session, error } = await supabase
+    .from('login_sessions')
+    .select('*')
+    .eq('token', token)
+    .single();
+
+    if(error || !session) {
+        res.setHeader(
+            'Set-Cookie',
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
+        );
+        return res.json({
+            authenticated: false
+        });
+    }
+
+    if (session.expires_at < Date.now()) {
+        // loginSessions.delete(token);
+        await supabase
+        .from('login_sessions')
+        .delete()
+        .eq('token', token);
+
         res.setHeader(
             'Set-Cookie',
             `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
@@ -113,7 +131,14 @@ app.get('/api/auth-status', (req, res) => {
             authenticated:false
         });
     }
-    session.expiresAt = Date.now() + sessionTIMEOUT;
+    // session.expiresAt = Date.now() + sessionTIMEOUT;
+    await supabase
+    .from('login_sessions')
+    .update({
+        expires_at: Date.now() + sessionTIMEOUT
+    })
+    .eq('token', token);
+
     res.json({
         authenticated: true,
         comments: session.comments,
@@ -288,7 +313,7 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { username, password } = req.body || {};
     console.log("===LOG IN ATTEMPT===");
     console.log("Username: ", username);
@@ -336,8 +361,18 @@ app.post('/api/login', (req, res) => {
         });
     }
     console.log("New token:", token);
-    loginSessions.set(token, session);
-    console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
+    // loginSessions.set(token, session);
+    await supabase
+    .from('login_sessions')
+    .insert({
+        token,
+        username: session.username,
+        comments:session.comments,
+        ip: session.ip,
+        local_time: session.localTime,
+        expires_at:session.expiresAt
+    });
+    // console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
     res.setHeader(
         `Set-Cookie`,
         // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
@@ -357,18 +392,30 @@ app.post('/api/login', (req, res) => {
     
 });
 
-app.post('/api/logout', (req, res) => {
+app.post('/api/logout', async (req, res) => {
     const token = getSessionToken(req);
-    if (token) loginSessions.delete(token);
+    // if (token) loginSessions.delete(token);
+    if (token) await supabase
+    .from('login_sessions')
+    .delete()
+    .eq('token', token);
+
     res.setHeader('Set-Cookie', `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`);
     res.json({ authenticated: false });
 });
-app.get('/api/active-user', (req, res) => {
-    const activeUsers = loginSessions.size;
-    console.log("Active Users:", activeUsers);
-    res.json({activeUsers, session: Array.from(loginSessions.values())
+app.get('/api/active-user', async (req, res) => {
+    // const activeUsers = loginSessions.size;
+    const { data } = await supabase
+    .from('login_sessions')
+    .select('*')
+    .gt('expires_at', Date.now());
+    // console.log("Active Users:", activeUsers);
+    res.json({
+        activeUsers: data.length,
+        session: data
     });
 });
+
 function sortDashboardRows(rows) {
   return [...rows].sort((a, b) => {
 
@@ -508,13 +555,19 @@ app.delete ('/api/request-cleanup', async (req, res) => {
 const STATUSPHERE_BASE =
   'http://statusphere.maxim-ic.com/dp/';
 
-app.get("/api/redirect/:equipmentId", (req, res) => {
+app.get("/api/redirect/:equipmentId", async (req, res) => {
   const id = req.params.equipmentId;
   const token = getSessionToken(req);
-  const session = loginSessions.get(token);
+  const { data: session } = await supabase
+  .from('login_sessions')
+  .select('*')
+  .eq('token', token)
+  .single();
+
+//   const session = loginSessions.get(token);
 
 //   console.log("Token:", token);
-  console.log("Authentication status:", loginSessions.has(token));
+//   console.log("Authentication status:", loginSessions.has(token));
   const timestamp = Math.trunc(Date.now() / 1000);
   const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 

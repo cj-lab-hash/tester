@@ -1820,7 +1820,8 @@ async function sendHeartBeat() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        page: window.location.pathname
+        page: window.location.pathname,
+        view: currentView
       })
     });
   } catch (err) {

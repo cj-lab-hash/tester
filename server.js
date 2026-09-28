@@ -14,10 +14,7 @@ const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-console.log(
-"SUPABASE:",
-process.env.SUPABASE_URL
-);
+
 const SHARED_KEY = process.env.SHARED_KEY;
 
 const sessionTIMEOUT = 12 * 60 * 60 * 1000;
@@ -141,6 +138,7 @@ app.post('/api/heartbeat', async (req, res) => {
             guest_id: req.guestId,
             last_seen: Date.now(),
             page: req.body.page || '/',
+            view: req.body.view || null,
             authenticated: !!session
         })
         .select();

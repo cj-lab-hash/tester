@@ -397,7 +397,17 @@ app.post('/api/login', async (req, res) => {
     
     
 });
+app.get('/api/schema-test', async (req, res) => {
 
+    const result = await supabaseTester
+        .from('employee_master')
+        .select('*')
+        .limit(1);
+
+    console.log(result);
+
+    res.json(result);
+});
 app.post('/api/register', async (req, res) => {
     try {
         const {

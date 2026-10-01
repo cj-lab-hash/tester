@@ -31,6 +31,12 @@ let dashboardCache = {};
 let plansMap = new Map();
 let currentVersion = localStorage.getItem('appVersion');
 let userPermissions = {comments: false};
+let dashboardInterval;
+let alertInterval;
+let updatecheckerInterval;
+let phasetimerInterval;
+let commentsInterval;
+let dashboardPause = false;
 const loginButton = document.getElementById("loginButton");
 const loginDialog = document.getElementById("loginDialog");
 const loginForm = document.getElementById("loginForm");
@@ -99,7 +105,9 @@ function setAuthenticated(
         
         
 async function checkAuthentication() {
-const response = await fetch("/api/auth-status");
+const response = await fetch('/api/auth-status', {
+  credentials: 'include'
+});
 const result = await response.json();
 // console.log("result=", result);
 setAuthenticated(result.authenticated === true, result);
@@ -126,8 +134,9 @@ loginForm.addEventListener("submit", async (event) => {
             loginError.hidden = true;
 
             const response = await fetch("/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     username: document.getElementById("loginUsername").value,
                     password: document.getElementById("loginPassword").value
@@ -300,6 +309,7 @@ const VIEWS = [
   { key: "LTX",    desc: "LTX" },
   { key: "ARK",    desc: "ASL3K / RFX / KVDM2"},
   { key: "SYSTEM", desc: "System Problems only" },
+  { key: "WS", desc:"All Platform in the WS"},
 ];
 
 // ===================== STATE =====================
@@ -381,15 +391,26 @@ async function updateLastSyncIndicator() {
 
   if (!lastSyncShownAt) {
     el.textContent = "Last Sync: --";
+    el.style.color = "red";
     return;
   }
 
   const dt = new Date(lastSyncShownAt);
-  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
-  el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
+  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  
+  if (ageMs > 3.5 * 60 * 1000) {
+    pauseDashboard();
+  // el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
+  el.textContent = `🔴 OFFLINE`;
+  el.style.color = "red";
+} else {
+  resumeDashboard();
+  el.textContent = `🟢 ONLINE`;
+  el.style.color = "lime";
+ }
 }
-
 // ===================== ACT: SMART SCRAPE CHECK =====================
 async function statusphereHasNewScrape(ids) {
   if (!ids?.length) return false;
@@ -1255,7 +1276,13 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
 
     const r = map.get(id);
     if (!r) { tr.hidden = true; continue; }
-
+    console.log({
+  equipment: r.equipment_id,
+  state: r.state_short,
+  dieType: extractDieType(r.raw_title),
+  handler: extractHandler(r.raw_title),
+  rawTitle: r.raw_title
+});
     // const state = (r.state_short || "").toUpperCase();
     // if (HIDE_STATES.has(state)) { tr.hidden = true; continue; }
     // tr.hidden = false;
@@ -1607,6 +1634,7 @@ const viewLoaders = {
   ARK:    (tableEl) => loadFromCache({ tableEl, tbodyId:"arkTbody",    data:dashboardCache.ARK }),
   // SYSTEM: (tableEl) => loadSYSTEMLatest({ tableEl, tbodyId:"systemTbody", patterns:["SYSTEM%"] }),
   SYSTEM: (tableEl) => loadFromCache({ tableEl, tbodyId:"systemTbody",    data:dashboardCache.SYSTEM }),
+  WS: (tableEl) => loadFromCache({ tableEl, tbodyId:"wsTbody", data:dashboardCache.WS }),
 };
 
 // ===================== TILES UI =====================
@@ -1660,6 +1688,7 @@ function setView(view) {
     ["LTXMX", "sectionLTXMX"],
     ["ARK", "sectionARK"],
     ["SYSTEM", "sectionSYSTEM"],
+    ["WS", "sectionWS"],
   ];
 
   for (const [key, elId] of ids) {
@@ -1689,7 +1718,8 @@ async function refreshData() {
       SPEA: document.getElementById("speaTable"),
       LTXMX: document.getElementById("ltxmxTable"),
       ARK: document.getElementById("arkTable"),
-      SYSTEM: document.getElementById("systemTable")
+      SYSTEM: document.getElementById("systemTable"),
+      WS: document.getElementById("wsTable")
     };
 
     const tableEl = tableMap[view];
@@ -1751,21 +1781,78 @@ document.addEventListener("dblclick", (event) => {
     if (td.querySelector("input")) return;
     editCell(td);
 });
+
+
+function pauseDashboard() {
+  if (dashboardPause) return;
+  clearInterval(dashboardInterval);
+  clearInterval(alertInterval);
+  clearInterval(updatecheckerInterval);
+  clearInterval(commentsInterval);
+  clearInterval(phasetimerInterval);
+
+  dashboardPause = true;
+  console.log("Dashboard refresh paused, possible PC is logged out/shutdown");
+}
+
+function resumeDashboard() {
+  if (!dashboardPause) return;
+  dashboardInterval = setInterval(async () => {
+    await loadDashboardCache();
+    await refreshData();
+  }, UI_REFRESH_MS);
+
+  alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
+  updatecheckerInterval = setInterval(checkForUpdates, 300_000);
+  commentsInterval = setInterval(deleteComments, 180_000);
+  phasetimerInterval = setInterval(updatePhaseTimers, 60_000);
+  dashboardPause = false;
+  console.log("Dashboard refresh resumed");
+}
+
+async function sendHeartBeat() {
+  // console.log("Heartbeat sent. View:", currentView);
+  try {
+    await fetch('/api/heartbeat', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        page: window.location.pathname,
+        view: currentView
+      })
+    });
+  } catch (err) {
+    console.error('Heartbeat failed:', err);
+  }
+}
+
+// sendHeartBeat();
+
+
 // ===================== BOOT =====================
 const UI_REFRESH_MS = 180 * 1000;
 const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
-
+ try {
   await checkAuthentication();
   loadData();
   renderViewTiles();
   setView(getCurrentView());
+  sendHeartBeat();
   await loadDashboardCache();
   await refreshData();
   updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
+ } catch (err) {
+  console.error("BOOT ERROR:", err);
+  alert("BOOT ERROR: " + err.message);
+ }
+  
   
 
   // refreshData();  
@@ -1784,19 +1871,18 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // setInterval(refreshData, UI_REFRESH_MS);
-  setInterval(async () => {
 
+dashboardInterval = setInterval(async () => {
   await loadDashboardCache();
-
   await refreshData();
-
+  
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
-  setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
-  setInterval(checkForUpdates, 300_000);
-  setInterval(updatePhaseTimers, 60_000);
-  setInterval(deleteComments, 180_000);
+  setInterval(sendHeartBeat, 60000);
+  alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
+  updatecheckerInterval = setInterval(checkForUpdates, 300_000);
+  phasetimerInterval = setInterval(updatePhaseTimers, 60_000);
+  commentsInterval = setInterval(deleteComments, 180_000);
 });
 // window.addEventListener("DOMContentLoaded", async () => {
 //     await checkAuthentication();

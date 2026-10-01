@@ -300,7 +300,8 @@ td.cal-due, td.pm-due {
 #sectionSPEA h3,
 #sectionLTXMX h3,
 #sectionSYSTEM h3,
-#sectionARK h3 {
+#sectionARK h3,
+#sectionWS h3 {
   text-align: center;
 }
 
@@ -341,7 +342,9 @@ td.cal-due, td.pm-due {
 #systemTable th,
 #systemTable td,
 #arkTable th,
-#arkTable td{
+#arkTable td,
+#wsTable th,
+#wsTable td {
   text-align: center;
   padding: 8px;
 }
@@ -351,7 +354,8 @@ td.cal-due, td.pm-due {
 #mavTable, #ltxTable, 
 #tmtTable, #legacyTable, 
 #speaTable, #ltxmxTable,
-#systemTable, #arkTable{
+#systemTable, #arkTable,
+#wsTable {
   width: 80%;              /* match the ACT table width */
   margin: 0 auto;
   border-collapse: collapse;
@@ -378,7 +382,8 @@ td.cal-due, td.pm-due {
 #arkTable th:nth-child(1),
 #arkTable td:nth-child(1),
 #systemTable th:nth-child(1),
-#systemTable td:nth-child(1){
+#systemTable td:nth-child(1),
+#wsTable td:nth-child(1) {
   width: 35%;
 }
 
@@ -401,7 +406,8 @@ td.cal-due, td.pm-due {
 #arkTable th:nth-child(2),
 #arkTable td:nth-child(2),
 #systemTable th:nth-child(2),
-#systemTable td:nth-child(2){
+#systemTable td:nth-child(2),
+#wsTable td:nth-child(2) {
   width: 65%;
 }
 
@@ -415,16 +421,62 @@ td.cal-due, td.pm-due {
 #speaTable td:nth-child(2),
 #ltxmxTable td:nth-child(2),
 #arkTable td:nth-child(2),
-#systemTable td:nth-child(2){
+#systemTable td:nth-child(2),
+#wsTable td:nth-child(2) {
   white-space: nowrap;     /* keep status and pills in one line */
   overflow: hidden;        /* hide overflow */
   text-overflow: ellipsis; /* show ... */
 }
 /* ✅ Mobile: full width + smaller text */
 @media (max-width: 600px){
-  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable,#arkTable, #systemTable {
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #uflexTable, #eagleTable, #mavTable, #ltxTable, #tmtTable, #legacyTable, #speaTable, #ltxmxTable,#arkTable, #systemTable, #wsTable {
     width: 100%;
     margin: 0;               /* let it fill container */
+  }
+    #editableTable {
+    width: 100% !important;
+    min-width: 980px;
+    max-width: none;
+    table-layout: fixed;
+    font-size: 11px;
+  }
+
+  #uflexTable, #eagleTable, #mavTable, #ltxTable,
+  #tmtTable, #legacyTable, #speaTable, #ltxmxTable,
+  #systemTable, #arkTable, #wsTable {
+    width: 100%;
+    min-width: 650px;
+    max-width: none;
+    font-size: 11px;
+  }
+
+  /* When LOCKED (Logged out): Fit tables to 100% viewport width without scrollbars */
+  .auth-locked #editableTable,
+  .auth-locked #uflexTable,
+  .auth-locked #eagleTable,
+  .auth-locked #mavTable,
+  .auth-locked #ltxTable,
+  .auth-locked #tmtTable,
+  .auth-locked #legacyTable,
+  .auth-locked #speaTable,
+  .auth-locked #ltxmxTable,
+  .auth-locked #systemTable,
+  .auth-locked #arkTable,
+  .auth-locked #wsTable {
+    min-width: 0;
+    width: 100% !important;
   }
   
   #uflexTable th, #uflexTable td,
@@ -436,7 +488,8 @@ td.cal-due, td.pm-due {
   #speaTable th, #speaTable td,
   #ltxmxTable th, #ltxmxTable td,
   #systemTable th, #systemTable td,
-  #arkTable th, #arkTable td{
+  #arkTable th, #arkTable td,
+  #wsTable th, #wsTable td {
     font-size: 12px;
     padding: 6px;
   }
@@ -451,7 +504,8 @@ td.cal-due, td.pm-due {
   #speaTable td:nth-child(2),
   #ltxmxTable td:nth-child(2),
   #arkTable td:nth-child(2),
-  #systemTable td:nth-child(2) {
+  #systemTable td:nth-child(2),
+  #wsTable td:nth-child(2) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -468,7 +522,8 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(1), #speaTable td:nth-child(1),
 #ltxmxTable th:nth-child(1), #ltxmxTable td:nth-child(1),
 #systemTable th:nth-child(1), #systemTable td:nth-child(1),
-#arkTable th:nth-child(1), #arkTable td:nth-child(1) {
+#arkTable th:nth-child(1), #arkTable td:nth-child(1),
+#wsTable th:nth-child(1), #wsTable td:nth-child(1) {
   width: 22%;
 }
 
@@ -481,7 +536,8 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(2), #speaTable td:nth-child(2),
 #ltxmxTable th:nth-child(2), #ltxmxTable td:nth-child(2),
 #systemTable th:nth-child(2), #systemTable td:nth-child(2),
-#arkTable th:nth-child(2), #arkTable td:nth-child(2) {
+#arkTable th:nth-child(2), #arkTable td:nth-child(2),
+#wsTable th:nth-child(2), #wsTable td:nth-child(2) {
   width: 28%;
   white-space: normal;
 }
@@ -496,6 +552,7 @@ td.cal-due, td.pm-due {
 #ltxmxTable th:nth-child(3), #ltxmxTable td:nth-child(3),
 #systemTable th:nth-child(3), #systemTable td:nth-child(3),
 #arkTable th:nth-child(3), #arkTable td:nth-child(3),
+#wsTable th:nth-child(3), #wsTable td:nth-child(3),
 #uflexTable th:nth-child(4), #uflexTable td:nth-child(4),
 #eagleTable th:nth-child(4), #eagleTable td:nth-child(4),
 #mavTable th:nth-child(4), #mavTable td:nth-child(4),
@@ -506,6 +563,7 @@ td.cal-due, td.pm-due {
 #ltxmxTable th:nth-child(4), #ltxmxTable td:nth-child(4),
 #systemTable th:nth-child(4), #systemTable td:nth-child(4),
 #arkTable th:nth-child(4), #arkTable td:nth-child(4),
+#wsTable th:nth-child(4), #wsTable td:nth-child(4),
 #uflexTable th:nth-child(5), #uflexTable td:nth-child(5),
 #eagleTable th:nth-child(5), #eagleTable td:nth-child(5),
 #mavTable th:nth-child(5), #mavTable td:nth-child(5),
@@ -515,7 +573,8 @@ td.cal-due, td.pm-due {
 #speaTable th:nth-child(5), #speaTable td:nth-child(5),
 #ltxmxTable th:nth-child(5), #ltxmxTable td:nth-child(5),
 #systemTable th:nth-child(5), #systemTable td:nth-child(5),
-#arkTable th:nth-child(5), #arkTable td:nth-child(5) {
+#arkTable th:nth-child(5), #arkTable td:nth-child(5),
+#wsTable th:nth-child(5), #wsTable td:nth-child(5) {
   width: 16.66%;
 }
 
@@ -528,7 +587,8 @@ td.cal-due, td.pm-due {
 #speaTable td:nth-child(n+3) .phase-pill,
 #ltxmxTable td:nth-child(n+3) .phase-pill,
 #systemTable td:nth-child(n+3) .phase-pill,
-#arkTable td:nth-child(n+3) .phase-pill {
+#arkTable td:nth-child(n+3) .phase-pill,
+#wsTable td:nth-child(n+3) .phase-pill {
   margin-left: 0;
 }
 /* SETUP phase pill */
@@ -751,7 +811,14 @@ td.cal-due, td.pm-due {
   border-color: rgba(59,130,246,0.35);
   transition: color 0.4s ease;
 }
-
+  /* .view-tiles{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .view-tile{
+    padding: 9px 8px;
+    font-size: 12px;
+  } */
 /* optional: per-view colors */
 .view-tile[data-view="ACT"]    { background:#1f2937; }
 .view-tile[data-view="UFLEX"]  { background:#1e3a8a; }
@@ -764,6 +831,7 @@ td.cal-due, td.pm-due {
 .view-tile[data-view="LTX"]    { background:#7f1d1d; }
 .view-tile[data-view="SYSTEM"] { background:#e5d546; }
 .view-tile[data-view="ARK"]    { background:#46933F; }
+.view-tile[data-view="WS"] {background: #0f766e;}
 
 /* mobile: tighter tiles */
 @media (max-width: 600px){
@@ -997,9 +1065,9 @@ body.dark-mode .filter-modes label:has(input:checked) span {
 
   #uflexTable, #eagleTable, #mavTable, #ltxTable,
   #tmtTable, #legacyTable, #speaTable, #ltxmxTable,
-  #systemTable, #arkTable {
-    width: 650px;
-    max-width: none;
+  #systemTable, #arkTable, #wsTable {
+    min-width: 650px;
+    width: max-content;
     font-size: 11px;
   }
 
@@ -1012,7 +1080,7 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   #speaTable th, #speaTable td,
   #ltxmxTable th, #ltxmxTable td,
   #systemTable th, #systemTable td,
-  #arkTable th, #arkTable td {
+  #arkTable th, #arkTable td, #wsTable td, #wsTable th {
     padding: 7px 6px;
     overflow-wrap: break-word;
   }
@@ -1021,7 +1089,7 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   #mavTable td:nth-child(2), #ltxTable td:nth-child(2),
   #tmtTable td:nth-child(2), #legacyTable td:nth-child(2),
   #speaTable td:nth-child(2), #ltxmxTable td:nth-child(2),
-  #systemTable td:nth-child(2), #arkTable td:nth-child(2) {
+  #systemTable td:nth-child(2), #arkTable td:nth-child(2), #wsTable td:nth-child(2) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1084,7 +1152,11 @@ body.dark-mode .filter-modes label:has(input:checked) span {
 .auth-locked #editableTable th:nth-child(8),
 .auth-locked #editableTable td:nth-child(8),
 .auth-locked #editableTable th:nth-child(9),
-.auth-locked #editableTable td:nth-child(9){
+.auth-locked #editableTable td:nth-child(9),
+.auth-locked #wsTable td:nth-child(4),
+.auth-locked #wsTable th:nth-child(4),
+.auth-locked #wsTable td:nth-child(5),
+.auth-locked #wsTable th:nth-child(5) {
   display: none;
 }
 
@@ -1190,7 +1262,8 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   .auth-locked #speaTable,
   .auth-locked #ltxmxTable,
   .auth-locked #systemTable,
-  .auth-locked #arkTable {
+  .auth-locked #arkTable,
+  .auth-locked #wsTable {
     width: 100%;
     max-width: 100%;
     table-layout: auto;
@@ -1216,7 +1289,9 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   .auth-locked #systemTable th,
   .auth-locked #systemTable td,
   .auth-locked #arkTable th,
-  .auth-locked #arkTable td {
+  .auth-locked #arkTable td,
+  .auth-locked #wsTable th,
+  .auth-locked #wsTable td {
     padding: 7px 4px;
   }
 
@@ -1225,5 +1300,24 @@ body.dark-mode .filter-modes label:has(input:checked) span {
     min-width: 0;
     max-width: 360px;
     padding: 18px;
+  }
+}
+@media (max-width:768px) {
+  #toastContainer, #updateToastContainer {
+    left:auto;
+    right:8px;
+    width: 320px;
+    max-width: cal(100 vw - 16px);
+      }
+  .toast {
+    width:100%;
+    min-width:0;
+    max-width: none;
+  }
+  .page-header h1{
+    grid-column:1;
+  }
+  .header-left, .header-right {
+    grid-column:1;
   }
 }

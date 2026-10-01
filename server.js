@@ -1012,8 +1012,8 @@ res.json(filteredData);
 
  });
 app.post('/api/heartbeat', async (req, res) => {
-console.log("guestId:", getGuestId(req));
-console.log("body:", req.body);
+// console.log("guestId:", getGuestId(req));
+// console.log("body:", req.body);
     try {
 
         const guestId = getGuestId(req);

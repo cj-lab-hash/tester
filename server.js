@@ -545,11 +545,20 @@ app.post('/api/logout', (req, res) => {
     res.setHeader('Set-Cookie', `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`);
     res.json({ authenticated: false });
 });
-app.get('/api/active-user', (req, res) => {
-    const activeUsers = loginSessions.size;
-    console.log("Active Users:", activeUsers);
-    res.json({activeUsers, session: Array.from(loginSessions.values())
-    });
+app.get('/api/active-user', async (req, res) => {
+
+    const cutoff = Date.now() - (3 * 60 * 1000);
+
+    const { data, error } = await supabase
+        .from('active_visitors')
+        .select('*')
+        .gt('last_seen', cutoff);
+
+    if (error) {
+        return res.status(500).json(error);
+    }
+
+    res.json(data);
 });
 function sortDashboardRows(rows) {
   return [...rows].sort((a, b) => {
@@ -1009,12 +1018,17 @@ console.log("body:", req.body);
             .from('active_visitors')
             .upsert({
                 guest_id: guestId,
+                username: session?.username || null,
                 last_seen: Date.now(),
                 page: req.body.page || '/',
                 view: req.body.view || null,
                 authenticated: !!session,
-                role: session?.role || "guest"
-            })
+                role: session?.role || 'guest'
+            },
+        {
+            onConflict: 'guest_id'
+        }
+    )
             .select();
 
         if (error) {

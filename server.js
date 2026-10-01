@@ -14,9 +14,9 @@ const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-console.log(
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0,20)
-);
+// console.log(
+//     process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0,20)
+// );
 const supabaseTester = supabase.schema('tester');
 const SHARED_KEY = process.env.SHARED_KEY;
 
@@ -985,7 +985,8 @@ res.json(filteredData);
 
  });
 app.post('/api/heartbeat', async (req, res) => {
-
+console.log("guestId:", getGuestId(req));
+console.log("body:", req.body);
     try {
 
         const guestId = getGuestId(req);
@@ -1010,6 +1011,7 @@ app.post('/api/heartbeat', async (req, res) => {
                 guest_id: guestId,
                 last_seen: Date.now(),
                 page: req.body.page || '/',
+                view: req.body.view || null,
                 authenticated: !!session,
                 role: session?.role || "guest"
             })

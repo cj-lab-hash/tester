@@ -978,7 +978,7 @@ app.post('/api/heartbeat', async (req, res) => {
     // console.log('=== HEARTBEAT ===');
     // console.log('guestId:', req.guestId);
     // console.log('body:', req.body);
-
+    const guestId = getGuestId(req); 
     const token = getSessionToken(req);
 
     const { data: session } = token
@@ -992,15 +992,15 @@ app.post('/api/heartbeat', async (req, res) => {
     const { data, error } = await supabase
         .from('active_visitors')
         .upsert({
-            guest_id: req.guestId,
+            guest_id: guestId,
             last_seen: Date.now(),
             page: req.body.page || '/',
             authenticated: !!session
         })
         .select();
 
-    console.log('UPSERT DATA:', data);
-    console.log('UPSERT ERROR:', error);
+    // console.log('UPSERT DATA:', data);
+    // console.log('UPSERT ERROR:', error);
 
     res.json({ success: true });
 });

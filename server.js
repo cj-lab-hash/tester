@@ -44,7 +44,17 @@ function getSessionToken(req) {
     const match = cookies.match(/(?:^|;\s*)tester_session=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : null;
 }
+function getGuestId(req) {
+    const cookies = req.headers.cookie || '';
 
+    const match = cookies.match(
+        /(?:^|;\s*)guest_id=([^;]+)/
+    );
+
+    return match
+        ? decodeURIComponent(match[1])
+        : null;
+}
 function requireAuth(req, res, next) {
 
     const token = getSessionToken(req);
@@ -76,14 +86,14 @@ app.get('/api/version', (req, res) => {
 //     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
 // });
 app.get('/api/auth-status', (req, res) => {
-    console.log("===AUTH STATUS===");
-    console.log("Cookies:", req.headers.cookie);
+    // console.log("===AUTH STATUS===");
+    // console.log("Cookies:", req.headers.cookie);
 
     const token = getSessionToken(req);
-    console.log("Token:", token);
-    console.log("Session found:", token ? loginSessions.has(token) : false);
-    console.log("SESSION COUNT:", loginSessions.size);
-    console.log("Known Sessions:", Array.from(loginSessions.keys()));
+    // console.log("Token:", token);
+    // console.log("Session found:", token ? loginSessions.has(token) : false);
+    // console.log("SESSION COUNT:", loginSessions.size);
+    // console.log("Known Sessions:", Array.from(loginSessions.keys()));
 
 
     // if (!loginSessions.has(token)) {
@@ -115,6 +125,7 @@ app.get('/api/auth-status', (req, res) => {
     res.json({
         authenticated: true,
         comments: session.comments,
+        role: session.role,
         username: session.username
     });
 });
@@ -975,34 +986,57 @@ res.json(filteredData);
  });
 app.post('/api/heartbeat', async (req, res) => {
 
-    // console.log('=== HEARTBEAT ===');
-    // console.log('guestId:', req.guestId);
-    // console.log('body:', req.body);
-    const guestId = getGuestId(req); 
-    const token = getSessionToken(req);
+    try {
 
-    const { data: session } = token
-        ? await supabase
-            .from('login_sessions')
-            .select('*')
-            .eq('token', token)
-            .single()
-        : { data: null };
+        const guestId = getGuestId(req);
 
-    const { data, error } = await supabase
-        .from('active_visitors')
-        .upsert({
-            guest_id: guestId,
-            last_seen: Date.now(),
-            page: req.body.page || '/',
-            authenticated: !!session
-        })
-        .select();
+        if (!guestId) {
+            return res.json({
+                success: true,
+                message: "No guest_id found"
+            });
+        }
 
-    // console.log('UPSERT DATA:', data);
-    // console.log('UPSERT ERROR:', error);
+        const token = getSessionToken(req);
 
-    res.json({ success: true });
+        const session =
+            token && loginSessions.has(token)
+                ? loginSessions.get(token)
+                : null;
+
+        const { data, error } = await supabase
+            .from('active_visitors')
+            .upsert({
+                guest_id: guestId,
+                last_seen: Date.now(),
+                page: req.body.page || '/',
+                authenticated: !!session,
+                role: session?.role || "guest"
+            })
+            .select();
+
+        if (error) {
+            console.error('HEARTBEAT ERROR:', error);
+
+            return res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+
+        res.json({
+            success: true
+        });
+
+    } catch (err) {
+
+        console.error('HEARTBEAT EXCEPTION:', err);
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
 });
 app.post("/api/save",requireAuth, async (req, res) => {
     const { index, value } = req.body;

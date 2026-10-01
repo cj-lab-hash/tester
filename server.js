@@ -1,4 +1,5 @@
 require('dotenv').config();
+import bcrypt from "bcrypt";
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -13,6 +14,7 @@ const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+const supabaseTester = supabase.schema('tester');
 const SHARED_KEY = process.env.SHARED_KEY;
 
 const sessionTIMEOUT = 12 * 60 * 60 * 1000;
@@ -281,11 +283,13 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { username, password } = req.body || {};
+
     console.log("===LOG IN ATTEMPT===");
     console.log("Username: ", username);
-    console.log("User-Agent: ", req.headers['user-agent']);
+    // console.log("User-Agent: ", req.headers['user-agent']);
+
     const loginTime = new Date().toISOString();
     const loginDateObj = new Date(loginTime);
     const localTime = loginDateObj.toLocaleTimeString()
@@ -296,58 +300,176 @@ app.post('/api/login', (req, res) => {
     req.socket.remoteAddress;
 
     const token = crypto.randomBytes(32).toString('hex');
-    let session = null;
+    // let session = null;
     
 
-    if (
-        username === process.env.LOGIN_USERNAME &&
-        password === process.env.LOGIN_PASSWORD
-    ) {
-        session = {
-            username,
-            comments: false,
-            ip: clientIp,
-            localTime,
-            expiresAt: Date.now() + sessionTIMEOUT
-        };
+    // if (
+    //     username === process.env.LOGIN_USERNAME &&
+    //     password === process.env.LOGIN_PASSWORD
+    // ) {
+    //     session = {
+    //         username,
+    //         comments: false,
+    //         ip: clientIp,
+    //         localTime,
+    //         expiresAt: Date.now() + sessionTIMEOUT
+    //     };
 
-    } else if (
-        username === process.env.COMMENTS_USERNAME &&
-        password === process.env.COMMENTS_PASSWORD
-    ) {
-        session = {
-            username,
-            comments: true,
-            ip: clientIp,
-            localTime,
-            expiresAt: Date.now() + sessionTIMEOUT
-        };
-    }
-    if (!session) {
+    // } else if (
+    //     username === process.env.COMMENTS_USERNAME &&
+    //     password === process.env.COMMENTS_PASSWORD
+    // ) {
+    //     session = {
+    //         username,
+    //         comments: true,
+    //         ip: clientIp,
+    //         localTime,
+    //         expiresAt: Date.now() + sessionTIMEOUT
+    //     };
+    // }
+    // if (!session) {
+    //     return res.status(401).json({
+    //         message: 'Invalid username or password'
+    //     });
+    // }
+    const { data: user } = await supabaseTester
+    .from("user_accounts")
+    .select("*")
+    .eq("id_number", username)
+    .maybeSingle();
+
+    if (!user) {
         return res.status(401).json({
-            message: 'Invalid username or password'
+            message: "Invalid ID Number or Password"
         });
     }
-    console.log("New token:", token);
+    const valid = await bcrypt.compare(password, user.password_hash);
+
+    if (!valid) {
+        return res.status(401).json({
+            message: "Invalid ID Number or Password"
+        });
+    }
+    const session = {
+        username,
+        comments: user.comments === true,
+        ip:clientIp,
+        localTime,
+        expiresAt: Date.now() + sessionTIMEOUT
+    }
+    console.log("New token", token);
     loginSessions.set(token, session);
-    console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
     res.setHeader(
-        `Set-Cookie`,
-        // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+        "Set-Cookie",
         `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
     );
-
-    console.log("Username:", username);
-    console.log("Comments user:", process.env.COMMENTS_USERNAME);
-
     res.json({
         authenticated: true,
         comments: session.comments
     });
+    // session = {
+    //     username,
+    //     comments: user.comments,
+    //     ip: clientIp,
+    //     localTime,
+    //     expiresAt: Date.now() + sessionTIMEOUT
+    // };
+
+
+    // console.log("New token:", token);
+    // loginSessions.set(token, session);
+    // console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
+    // res.setHeader(
+    //     `Set-Cookie`,
+    //     // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+    //     `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
+    // );
+
+    // console.log("Username:", username);
+    // console.log("Comments user:", process.env.COMMENTS_USERNAME);
+
+    // res.json({
+    //     authenticated: true,
+    //     comments: session.comments
+    // });
     
     
     
     
+});
+
+app.post('/api/register', async (req, res) => {
+    try {
+        const {
+            idNumber,
+            password,
+            confirmPassword
+        } = req.body;
+        if (
+            !idNumber ||
+            !password ||
+            !confirmPassword
+        ) {
+            return res.status(404).json({
+                message: "All fields are required."
+            });
+        }
+        if (password !== confirmPassword) {
+            return res.status(404).json({
+                message: "Password not match."
+            });
+        }
+        if (password.length < 8) {
+            return res.status(404).json({
+                message: "Password must containt at least 8 characters."
+            });
+        }
+
+        const {
+            data:employee,
+            error: employeeError
+        } = await supabaseTester
+        .from("employee_master")
+        .select("*")
+        .eq("idNumber", idNumber)
+        .eq("active", true)
+        .single();
+        
+        if (employeeError || !employee) {
+            return res.status(403).json({
+                message: "Id number is not authorized."
+            });
+        }
+        
+        const {
+            data: existingUser
+        } = await supabase
+        .from("tester.users_accounts")
+        .insert({
+            id_number: idNumber,
+            password_hash: passwordHash,
+            role: "viewer",
+            approve: true
+        });
+
+        if (insertError) {
+            console.error(insertError);
+
+            return res.status(500).json({
+                message: "Failed to create account."
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: "Registration successful."
+        });
+    } catch (err) {
+        console.err(err);
+        return res.status(500).json({
+            message: "Internal server error."
+        });
+    }
 });
 
 app.post('/api/logout', (req, res) => {

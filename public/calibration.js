@@ -400,7 +400,7 @@ document.getElementById("registerForm").addEventListener("submit", async e => {
     const err = document.getElementById("registerError");
     err.hidden = false;
     err.textContent = result.message;
-    consoler.log(result);
+    console.log(result);
     // document.getElementById("registerError").textContent=result.message;
     return;
   }

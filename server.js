@@ -14,6 +14,9 @@ const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+console.log(
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0,20)
+);
 const supabaseTester = supabase.schema('tester');
 const SHARED_KEY = process.env.SHARED_KEY;
 
@@ -398,6 +401,17 @@ app.post('/api/login', async (req, res) => {
     
 });
 app.get('   ', async (req, res) => {
+
+    const result = await supabaseTester
+        .from('employee_master')
+        .select('*')
+        .limit(1);
+
+    console.log(result);
+
+    res.json(result);
+});
+app.get('/api/test-role', async (req,res) => {
 
     const result = await supabaseTester
         .from('employee_master')

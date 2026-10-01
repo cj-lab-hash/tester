@@ -1811,7 +1811,7 @@ function resumeDashboard() {
 }
 
 async function sendHeartBeat() {
-  console.log("Heartbeat sent. View:", currentView);
+  // console.log("Heartbeat sent. View:", currentView);
   try {
     await fetch('/api/heartbeat', {
       method: 'POST',

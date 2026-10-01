@@ -92,12 +92,14 @@ function setAuthenticated(
                 document.body.classList.toggle("can-view-comments", userPermissions.comments);
                 document.body.classList.toggle("comments-locked", !userPermissions.comments);
                 if (authenticated) {
-                    const accessLevel = 
-                    permissions.comments
-                    ? "Complete Access"
-                    : "Complete View";
-                    // currentUser.textContent = `Logged in as: ${permissions.username}`;
-                    currentUser.textContent = accessLevel;
+                    // const accessLevel = 
+                    // permissions.comments
+                    // ? "Complete Access"
+                    // : "Complete View";
+                    // // currentUser.textContent = `Logged in as: ${permissions.username}`;
+                    // currentUser.textContent = accessLevel;
+                    currentUser.textContent =
+                    `${permissions.name} (${permissions.role})`;
                 } else {
                     currentUser.textContent = "View only";
                 }
@@ -368,6 +370,46 @@ function buildStatusphereUrlFromRow(rowHref, equipmentId) {
   return null;
 }
 
+
+const registerDialog = document.getElementById("registerDialog");
+document.getElementById("showRegisterButton").addEventListener("click", () => {
+  loginDialog.close();
+  registerDialog.showModal();
+});
+document.getElementById("cancelRegisterButton").addEventListener("click", () => {
+  registerDialog.close();
+});
+document.getElementById("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const idNumber = document.getElementById("registerId").value.trim();
+
+  const password = document.getElementById("registerPassword").value;
+  const confirmPassword = document.getElementById("registerConfirmPassword").value;
+  const response = await fetch("/api/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      idNumber,
+      password,
+      confirmPassword
+    })
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    const err = document.getElementById("registerError");
+    err.hidden = false;
+    err.textContent = result.message;
+    console.log(result);
+    // document.getElementById("registerError").textContent=result.message;
+    return;
+  }
+  alert("Account created successfully.");
+  registerDialog.close();
+
+})
 // ===================== LAST SYNC =====================
 async function updateLastSyncIndicator() {
   const el = document.getElementById("lastSync");

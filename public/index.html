@@ -62,6 +62,36 @@
             </div>
         </form>
     </dialog>
+    <dialog id="registerDialog" class="login-dialog">
+        <form id="registerForm" method="dialog">
+            <h2>CREATE ACCOUNT</h2>
+            <label>ID Number</label>
+            <input
+                id="registerId"
+                type="text"
+                required
+                >
+            <label>Password</label>
+            <input
+            id="registerPassword"
+            type="password"
+            required
+            >
+            <label>Confirm Password</label>
+            <input
+            id="registerConfirmPassword"
+            type="password"
+            required
+            >
+            <p id="registerError" hidden></p>
+            <div class="login-actions">
+                <button
+                type="button"
+                id="cancelRegisterButton">CANCEL</button>
+             <button type="submit">CREATE ACCOUNT</button>   
+            </div>
+        </form>
+    </dialog>
     
     <div class="view-tiles-wrap">
         <div id="viewTiles" class="view-tiles" aria-label="View selector"></div>

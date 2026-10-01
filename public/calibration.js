@@ -368,6 +368,42 @@ function buildStatusphereUrlFromRow(rowHref, equipmentId) {
   return null;
 }
 
+const loginDialog = document.getElementById("loginDialog");
+const registerDialog = document.getElementById("registerDialog");
+document.getElementById("showRegisterButton").addEventListener("click", () => {
+  loginDialog.close();
+  registerDialog.showModal();
+});
+document.getElementById("cancelRegisterButton").addEventListener("click", () => {
+  registerDialog.close();
+});
+document.getElementById("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const idNumber = document.getElementById("registerId").value.trim();
+
+  const password = document.getAnimations("registerPassword").value;
+  const confirmPassword = document.getElementById("registerConfirmPassword").value;
+  const response = await fetch("/api/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      idNumber,
+      password,
+      confirmPassword
+    })
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    document.getElementById("registerError").textContent=result.message;
+    return;
+  }
+  alert("Account created successfully.");
+  registerDialog.close();
+
+})
 // ===================== LAST SYNC =====================
 async function updateLastSyncIndicator() {
   const el = document.getElementById("lastSync");

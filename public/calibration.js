@@ -92,12 +92,14 @@ function setAuthenticated(
                 document.body.classList.toggle("can-view-comments", userPermissions.comments);
                 document.body.classList.toggle("comments-locked", !userPermissions.comments);
                 if (authenticated) {
-                    const accessLevel = 
-                    permissions.comments
-                    ? "Complete Access"
-                    : "Complete View";
-                    // currentUser.textContent = `Logged in as: ${permissions.username}`;
-                    currentUser.textContent = accessLevel;
+                    // const accessLevel = 
+                    // permissions.comments
+                    // ? "Complete Access"
+                    // : "Complete View";
+                    // // currentUser.textContent = `Logged in as: ${permissions.username}`;
+                    // currentUser.textContent = accessLevel;
+                    currentUser.textContent =
+                    `${permissions.name} (${permissions.role})`;
                 } else {
                     currentUser.textContent = "View only";
                 }

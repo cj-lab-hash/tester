@@ -125,8 +125,10 @@ app.get('/api/auth-status', (req, res) => {
     res.json({
         authenticated: true,
         comments: session.comments,
-        role: session.role,
-        username: session.username
+        username: session.username,
+        name: session.name,
+        role: session.role
+        
     });
 });
 
@@ -357,6 +359,7 @@ app.post('/api/login', async (req, res) => {
             message: "Invalid ID Number or Password"
         });
     }
+
     if (!user.approved) {
         return res.status(403).json({
             message: "Account is pending approval."
@@ -369,8 +372,16 @@ app.post('/api/login', async (req, res) => {
             message: "Invalid ID Number or Password"
         });
     }
+
+    const { data: employee } =await supabaseTester
+    .from("employee_master")
+    .select("*")
+    .eq("id_number", username)
+    .maybeSingle();
+
     const session = {
         username,
+        name: employee?.full_name || username,
         role: user.role,
         comments: user.role === "admin",
         ip:clientIp,
@@ -379,7 +390,7 @@ app.post('/api/login', async (req, res) => {
     }
     
 
-    console.log("New token", token);
+    // console.log("New token", token);
     loginSessions.set(token, session);
     res.setHeader(
         "Set-Cookie",
@@ -514,7 +525,7 @@ app.post('/api/register', async (req, res) => {
             id_number: idNumber,
             password_hash: passwordHash,
             approved: true,
-            role: "user"
+            role: employee.role || "user"
         });
 
         console.log("insertError =", insertError);
@@ -545,10 +556,17 @@ app.post('/api/logout', (req, res) => {
     res.setHeader('Set-Cookie', `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`);
     res.json({ authenticated: false });
 });
-app.get('/api/active-user', async (req, res) => {
+app.get('/api/active-user', requireAuth, async (req, res) => {
 
     const cutoff = Date.now() - (3 * 60 * 1000);
+    const token = getSessionToken(req);
+    const session = loginSessions.get(token);
 
+    if (session?.role !== 'admin') {
+        return res.status(403).json({
+            message: "Admin access required"
+        });
+    }
     const { data, error } = await supabase
         .from('active_visitors')
         .select('*')

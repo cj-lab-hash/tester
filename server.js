@@ -504,14 +504,17 @@ app.post('/api/register', async (req, res) => {
         .insert({
             id_number: idNumber,
             password_hash: passwordHash,
-            comments: false,
-            approve: true
+            approve: true,
+            role: "user"
         });
 
         console.log("insertError =", insertError);
         if (insertError) {
+            console.log("INSERT ERROR:");
+            console.log(insertError);
+
             return res.status(500).json({
-                message: "Failed to create account."
+                message: "insertError.message."
             });
         }
 

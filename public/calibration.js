@@ -397,7 +397,11 @@ document.getElementById("registerForm").addEventListener("submit", async e => {
 
   const result = await response.json();
   if (!response.ok) {
-    document.getElementById("registerError").textContent=result.message;
+    const err = document.getElementById("registerError");
+    err.hidden = false;
+    err.textContent = result.message;
+    consoler.log(result);
+    // document.getElementById("registerError").textContent=result.message;
     return;
   }
   alert("Account created successfully.");

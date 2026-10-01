@@ -434,23 +434,39 @@ app.post('/api/register', async (req, res) => {
         .eq("id_number", idNumber)
         .eq("active", true)
         .maybeSingle();
-        
-        if (employeeError || !employee) {
-            return res.status(403).json({
-                message: "Id number is not authorized."
+
+        console.log("=== REGISTER ===");
+        console.log("idNumber =", idNumber);
+        console.log("employee =", employee);
+        console.log("employeeError =", employeeError);
+
+        if (employeeError) {
+            return res.status(500).json({
+                message: employeeError.message
             });
         }
+
+        if (!employee) {
+            return res.status(403).json({
+                message: "ID number is not authorized."
+            });
+        }   
+ 
         const passwordHash = await bcrypt.hash(
             password,
             10
         );
         const {
-            data: existingUser
-        } = await supabaseTester
-        .from("user_accounts")
-        .select("id_number")
-        .eq("id_number", idNumber)
-        .maybeSingle();
+                data: existingUser,
+                error: existingUserError
+            } = await supabaseTester
+            .from("user_accounts")
+            .select("id_number")
+            .eq("id_number", idNumber)
+            .maybeSingle();
+
+            console.log("existingUser =", existingUser);
+            console.log("existingUserError =", existingUserError);
         
         if(existingUser) {
             return res.status(409).json({
@@ -468,10 +484,8 @@ app.post('/api/register', async (req, res) => {
             approve: true
         });
 
-
+        console.log("insertError =", insertError);
         if (insertError) {
-            console.error(insertError);
-
             return res.status(500).json({
                 message: "Failed to create account."
             });

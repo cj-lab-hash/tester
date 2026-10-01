@@ -368,7 +368,7 @@ function buildStatusphereUrlFromRow(rowHref, equipmentId) {
   return null;
 }
 
-const loginDialog = document.getElementById("loginDialog");
+
 const registerDialog = document.getElementById("registerDialog");
 document.getElementById("showRegisterButton").addEventListener("click", () => {
   loginDialog.close();
@@ -381,7 +381,7 @@ document.getElementById("registerForm").addEventListener("submit", async e => {
   e.preventDefault();
   const idNumber = document.getElementById("registerId").value.trim();
 
-  const password = document.getAnimations("registerPassword").value;
+  const password = document.getElementById("registerPassword").value;
   const confirmPassword = document.getElementById("registerConfirmPassword").value;
   const response = await fetch("/api/register", {
     method: "POST",

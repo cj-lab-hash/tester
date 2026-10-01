@@ -397,7 +397,7 @@ app.post('/api/login', async (req, res) => {
     
     
 });
-app.get('/api/schema-test', async (req, res) => {
+app.get('   ', async (req, res) => {
 
     const result = await supabaseTester
         .from('employee_master')
@@ -959,9 +959,9 @@ res.json(filteredData);
  });
 app.post('/api/heartbeat', async (req, res) => {
 
-    console.log('=== HEARTBEAT ===');
-    console.log('guestId:', req.guestId);
-    console.log('body:', req.body);
+    // console.log('=== HEARTBEAT ===');
+    // console.log('guestId:', req.guestId);
+    // console.log('body:', req.body);
 
     const token = getSessionToken(req);
 

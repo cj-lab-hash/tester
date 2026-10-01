@@ -514,7 +514,7 @@ app.post('/api/register', async (req, res) => {
             console.log(insertError);
 
             return res.status(500).json({
-                message: "insertError.message."
+                message: insertError.message
             });
         }
 

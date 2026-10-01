@@ -9,6 +9,7 @@ require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const { log } = require('console');
 const { arrayBuffer } = require('stream/consumers');
+const { match } = require('assert');
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -21,20 +22,31 @@ const sessionTIMEOUT = 12 * 60 * 60 * 1000;
 const COOKIE_OPTIONS = 'HttpOnly; Secure; SameSite=Lax; Path=/';
 const app = express();
 // const loginSessions = new Set();
-const loginSessions = new Map();
+// const loginSessions = new Map();
 app.use(express.json());
-app.use(cors());
+// app.use(cors());
+app.use(cors({credentials: true, origin: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 
-setInterval(() => {
-    const now = Date.now();
-    for (const [token, session] of loginSessions.entries()) {
-        if (session.expiresAt < now) {
-            loginSessions.delete(token);
+setInterval(async () => {
+    await supabase
+    .from('login_sessions')
+    .delete()
+    .lt('expires_at', new Date().toISOString());
+}, 60000);
 
-        }
+setInterval(async () => {
+    const cutoff = Date.now() - (2 * 60 * 1000);
+
+    const { error } = await supabase
+    .from('active_visitors')
+    .delete()
+    .lt('last_seen', cutoff);
+
+    if (error) {
+        console.error('Visitor cleanup failed:', error);
     }
-}, 60 * 1000);
+}, 60000);
 
 function getSessionToken(req) {
     const cookies = req.headers.cookie || '';
@@ -42,19 +54,34 @@ function getSessionToken(req) {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
 
     const token = getSessionToken(req);
 
-    if (!token || !loginSessions.has(token)) {
+    if (!token) {
         return res.status(401).json({
             message: 'Unauthorized'
         });
     }
 
-    const session = loginSessions.get(token);
-    if (session.expiresAt < Date.now()) {
-        loginSessions.delete(token);
+    // const session = loginSessions.get(token);
+    const { data:session } = await supabase
+    .from('login_sessions')
+    .select('*')
+    .eq('token', token)
+    .single();
+    if (!session) {
+        return res.status(401).json({
+            message: 'Unauthorized'
+        });
+    }
+    if (session.expires_at < Date.now()) {
+        // loginSessions.delete(token);
+        await supabase
+        .from('login_sessions')
+        .delete()
+        .eq('token', token);
+
         return res.status(401).json({
             message: 'Session expired'
         });
@@ -68,47 +95,133 @@ app.get('/api/version', (req, res) => {
     res.json({ version: APP_VERSION });
 });
 
+app.use((req, res, next) => {
+    const cookies = req.headers.cookie || '';
+    const match = cookies.match(
+        /(?:^|;\s*)guest_id=([^;]+)/
+    );
+    let guestId = match
+    ? decodeURIComponent(match[1])
+    : null;
 
-// app.get('/api/auth-status', (req, res) => {
-//     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
-// });
-app.get('/api/auth-status', (req, res) => {
+    if (!guestId) {
+        guestId = crypto.randomUUID();
+
+        res.setHeader(
+            'Set-Cookie',
+            `guest_id=${guestId}; ${COOKIE_OPTIONS}; Max-Age=31536000`
+        );
+    }
+
+    req.guestId = guestId;
+    next();
+});
+
+app.post('/api/heartbeat', async (req, res) => {
+
+    // console.log('=== HEARTBEAT ===');
+    // console.log('guestId:', req.guestId);
+    // console.log('body:', req.body);
+
+    const token = getSessionToken(req);
+
+    const { data: session } = token
+        ? await supabase
+            .from('login_sessions')
+            .select('*')
+            .eq('token', token)
+            .single()
+        : { data: null };
+
+    const { error } = await supabase
+        .from('active_visitors')
+        .upsert({
+            guest_id: req.guestId,
+            last_seen: Date.now(),
+            page: req.body.page || '/',
+            view: req.body.view || null,
+            authenticated: !!session
+        })
+        .select();
+        if (error) {
+            console.error('Heartbeat error:', error);
+        }
+    res.json({ success: true });
+});
+
+app.get('/api/active-visitors', async (req, res) => {
+
+    const { data, error } = await supabase
+        .from('active_visitors')
+        .select('*');
+    if (error) {
+        return res.status(500).json(error);
+    }
+    const visitors = data.map(v => ({
+        ...v,
+        last_seen_local: new Date(v.last_seen)
+            .toLocaleString('en-PH', {
+                timeZone: 'Asia/Manila'
+            })
+    }));
+    res.json(visitors);
+})
+app.get('/api/auth-status', async (req, res) => {
     console.log("===AUTH STATUS===");
     console.log("Cookies:", req.headers.cookie);
 
     const token = getSessionToken(req);
     console.log("Token:", token);
-    console.log("Session found:", token ? loginSessions.has(token) : false);
-    console.log("SESSION COUNT:", loginSessions.size);
-    console.log("Known Sessions:", Array.from(loginSessions.keys()));
 
-
-    // if (!loginSessions.has(token)) {
-    //     return res.json({
-    //         authenticated:false
-    //     });
-    // }
-    if (!token || !loginSessions.has(token)) {
+    if (!token) {
         res.setHeader(
             'Set-Cookie',
-            `tester_session=; ${COOKIE_OPTIONS}; Path=/; Max-Age=0`
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
         return res.json({
             authenticated:false
         });
     }
-    const session = loginSessions.get(token);
-    if (session.expiresAt < Date.now()) {
-        loginSessions.delete(token);
+
+    const { data:session, error } = await supabase
+    .from('login_sessions')
+    .select('*')
+    .eq('token', token)
+    .single();
+
+    if(error || !session) {
         res.setHeader(
             'Set-Cookie',
-            `tester_session=; ${COOKIE_OPTIONS}; Path=/; Max-Age=0`
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
+        );
+        return res.json({
+            authenticated: false
+        });
+    }
+
+    if (session.expires_at < Date.now()) {
+        // loginSessions.delete(token);
+        await supabase
+        .from('login_sessions')
+        .delete()
+        .eq('token', token);
+
+        res.setHeader(
+            'Set-Cookie',
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
         return res.json({
             authenticated:false
         });
     }
-    session.expiresAt = Date.now() + sessionTIMEOUT;
+    // session.expiresAt = Date.now() + sessionTIMEOUT;
+    await supabase
+    .from('login_sessions')
+    .update({
+        expires_at: new Date(Date.now() + sessionTIMEOUT).toISOString()
+    })
+    .eq('token', token);
+
     res.json({
         authenticated: true,
         comments: session.comments,
@@ -343,22 +456,25 @@ app.post('/api/login', async (req, res) => {
             message: "Invalid ID Number or Password"
         });
     }
-    const valid = await bcrypt.compare(password, user.password_hash);
-
-    if (!valid) {
-        return res.status(401).json({
-            message: "Invalid ID Number or Password"
-        });
-    }
     const session = {
         username,
         comments: user.comments === true,
-        ip:clientIp,
+        ip: clientIp,
         localTime,
         expiresAt: Date.now() + sessionTIMEOUT
     }
     console.log("New token", token);
     loginSessions.set(token, session);
+    await supabase
+        .from('login_sessions')
+        .insert({
+            token,
+            username: session.username,
+            comments: session.comments,
+            ip: session.ip,
+            local_time: session.localTime,
+            expires_at: session.expiresAt
+        });
     res.setHeader(
         "Set-Cookie",
         `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
@@ -398,92 +514,38 @@ app.post('/api/login', async (req, res) => {
     
 });
 
-app.post('/api/register', async (req, res) => {
-    try {
-        const {
-            idNumber,
-            password,
-            confirmPassword
-        } = req.body;
-        if (
-            !idNumber ||
-            !password ||
-            !confirmPassword
-        ) {
-            return res.status(404).json({
-                message: "All fields are required."
-            });
-        }
-        if (password !== confirmPassword) {
-            return res.status(404).json({
-                message: "Password not match."
-            });
-        }
-        if (password.length < 8) {
-            return res.status(404).json({
-                message: "Password must containt at least 8 characters."
-            });
-        }
-
-        const {
-            data:employee,
-            error: employeeError
-        } = await supabaseTester
-        .from("employee_master")
-        .select("*")
-        .eq("idNumber", idNumber)
-        .eq("active", true)
-        .single();
-        
-        if (employeeError || !employee) {
-            return res.status(403).json({
-                message: "Id number is not authorized."
-            });
-        }
-        
-        const {
-            data: existingUser
-        } = await supabase
-        .from("tester.users_accounts")
-        .insert({
-            id_number: idNumber,
-            password_hash: passwordHash,
-            role: "viewer",
-            approve: true
-        });
-
-        if (insertError) {
-            console.error(insertError);
-
-            return res.status(500).json({
-                message: "Failed to create account."
-            });
-        }
-
-        return res.json({
-            success: true,
-            message: "Registration successful."
-        });
-    } catch (err) {
-        console.err(err);
-        return res.status(500).json({
-            message: "Internal server error."
-        });
-    }
-});
-
-app.post('/api/logout', (req, res) => {
+app.post('/api/logout', async (req, res) => {
     const token = getSessionToken(req);
-    if (token) loginSessions.delete(token);
+    // if (token) loginSessions.delete(token);
+    if (token) await supabase
+    .from('login_sessions')
+    .delete()
+    .eq('token', token);
+
     res.setHeader('Set-Cookie', `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`);
     res.json({ authenticated: false });
 });
-app.get('/api/active-user', (req, res) => {
-    const activeUsers = loginSessions.size;
-    console.log("Active Users:", activeUsers);
-    res.json({activeUsers, session: Array.from(loginSessions.values())
+app.get('/api/active-user', async (req, res) => {
+
+    const { data } = await supabase
+    .from('login_sessions')
+    .select('*')
+    .gt('expires_at', Date.now());
+
+    const sessions = data.map(s => ({
+        ...s,
+        expires_local:new Date(s.expires_at)
+        .toLocaleString('en-PH', {
+            timeZone: 'Asia/Manila'
+        })
+    }));
+    res.json({
+        activeUsers: sessions.length,
+        session: sessions,
+        
     });
 });
+
 function sortDashboardRows(rows) {
   return [...rows].sort((a, b) => {
 
@@ -623,13 +685,19 @@ app.delete ('/api/request-cleanup', async (req, res) => {
 const STATUSPHERE_BASE =
   'http://statusphere.maxim-ic.com/dp/';
 
-app.get("/api/redirect/:equipmentId", (req, res) => {
+app.get("/api/redirect/:equipmentId", async (req, res) => {
   const id = req.params.equipmentId;
   const token = getSessionToken(req);
-  const session = loginSessions.get(token);
+  const { data: session } = await supabase
+  .from('login_sessions')
+  .select('*')
+  .eq('token', token)
+  .single();
+
+//   const session = loginSessions.get(token);
 
 //   console.log("Token:", token);
-  console.log("Authentication status:", loginSessions.has(token));
+//   console.log("Authentication status:", loginSessions.has(token));
   const timestamp = Math.trunc(Date.now() / 1000);
   const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 

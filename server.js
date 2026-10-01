@@ -504,7 +504,7 @@ app.post('/api/register', async (req, res) => {
         .insert({
             id_number: idNumber,
             password_hash: passwordHash,
-            approve: true,
+            approved: true,
             role: "user"
         });
 

@@ -289,8 +289,8 @@ app.get('/api/dashboard-data', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body || {};
 
-    console.log("===LOG IN ATTEMPT===");
-    console.log("Username: ", username);
+    // console.log("===LOG IN ATTEMPT===");
+    // console.log("Username: ", username);
     // console.log("User-Agent: ", req.headers['user-agent']);
 
     const loginTime = new Date().toISOString();
@@ -346,6 +346,11 @@ app.post('/api/login', async (req, res) => {
             message: "Invalid ID Number or Password"
         });
     }
+    if (!user.approved) {
+        return res.status(403).json({
+            message: "Account is pending approval."
+        });
+    }
     const valid = await bcrypt.compare(password, user.password_hash);
 
     if (!valid) {
@@ -355,11 +360,14 @@ app.post('/api/login', async (req, res) => {
     }
     const session = {
         username,
-        comments: user.comments === true,
+        role: user.role,
+        comments: user.role === "admin",
         ip:clientIp,
         localTime,
         expiresAt: Date.now() + sessionTIMEOUT
     }
+    
+
     console.log("New token", token);
     loginSessions.set(token, session);
     res.setHeader(
@@ -400,17 +408,7 @@ app.post('/api/login', async (req, res) => {
     
     
 });
-app.get('   ', async (req, res) => {
 
-    const result = await supabaseTester
-        .from('employee_master')
-        .select('*')
-        .limit(1);
-
-    console.log(result);
-
-    res.json(result);
-});
 app.get('/api/test-role', async (req,res) => {
 
     const result = await supabaseTester
@@ -695,7 +693,8 @@ app.get("/api/redirect/:equipmentId", (req, res) => {
 
 
 
-    if (session?.comments) {
+    // if (session?.comments) {
+    if (session?.role === "admin") {
     return res.redirect(
       `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
     );

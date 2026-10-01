@@ -1811,7 +1811,7 @@ function resumeDashboard() {
 }
 
 async function sendHeartBeat() {
-
+  console.log("Heartbeat sent. View:", currentView);
   try {
     await fetch('/api/heartbeat', {
       method: 'POST',
@@ -1828,7 +1828,8 @@ async function sendHeartBeat() {
     console.error('Heartbeat failed:', err);
   }
 }
-sendHeartBeat();
+
+// sendHeartBeat();
 
 
 // ===================== BOOT =====================
@@ -1840,6 +1841,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   loadData();
   renderViewTiles();
   setView(getCurrentView());
+  sendHeartBeat();
   await loadDashboardCache();
   await refreshData();
   updateLastSyncIndicator();
@@ -1873,6 +1875,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 dashboardInterval = setInterval(async () => {
   await loadDashboardCache();
   await refreshData();
+  
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
   setInterval(sendHeartBeat, 60000);

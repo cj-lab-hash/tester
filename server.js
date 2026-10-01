@@ -447,7 +447,7 @@ app.post('/api/register', async (req, res) => {
         const {
             data: existingUser
         } = await supabaseTester
-        .from("users_accounts")
+        .from("user_accounts")
         .select("id_number")
         .eq("id_number", idNumber)
         .maybeSingle();

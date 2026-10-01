@@ -431,26 +431,43 @@ app.post('/api/register', async (req, res) => {
         } = await supabaseTester
         .from("employee_master")
         .select("*")
-        .eq("idNumber", idNumber)
+        .eq("id_number", idNumber)
         .eq("active", true)
-        .single();
+        .maybeSingle();
         
         if (employeeError || !employee) {
             return res.status(403).json({
                 message: "Id number is not authorized."
             });
         }
-        
+        const passwordHash = await bcrypt.hash(
+            password,
+            10
+        );
         const {
             data: existingUser
-        } = await supabase
-        .from("tester.users_accounts")
+        } = await supabaseTester
+        .from("users_accounts")
+        .select("id_number")
+        .eq("id_number", idNumber)
+        .maybeSingle();
+        
+        if(existingUser) {
+            return res.status(409).json({
+                message: "Account already existed."
+            });
+        }
+
+        const { error: insertError } =
+            await supabaseTester
+        .from("user_accounts")
         .insert({
             id_number: idNumber,
             password_hash: passwordHash,
-            role: "viewer",
+            comments: false,
             approve: true
         });
+
 
         if (insertError) {
             console.error(insertError);
@@ -465,7 +482,7 @@ app.post('/api/register', async (req, res) => {
             message: "Registration successful."
         });
     } catch (err) {
-        console.err(err);
+        console.error(err);
         return res.status(500).json({
             message: "Internal server error."
         });

@@ -1,5 +1,5 @@
 require('dotenv').config();
-import bcrypt from "bcrypt";
+const bcrypt = require('bcrypt');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');

@@ -44,10 +44,18 @@ setInterval(async () => {
             .from('login_sessions')
             .delete()
             .lt('expires_at', Date.now());
+
+        await supabase
+            .from('active_visitors')
+            .delete()
+            .lt('last_seen', Date.now() - (3 * 60 * 1000));
+
     } catch (err) {
-        console.error('Session cleanup error:', err);
+        console.error('Cleanup error:', err);
     }
 }, 60 * 1000);
+
+
 
 function getSessionToken(req) {
     const cookies = req.headers.cookie || '';

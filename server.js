@@ -780,20 +780,28 @@ app.get("/api/redirect/:equipmentId", async (req, res) => {
   const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
   const mode = req.query.mode || "statusphere";
+  const ajaxUrl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
 
 
+    console.log("========== REDIRECT ==========");
+    console.log("Equipment:", req.params.equipmentId);
+    console.log("Mode:", req.query.mode);
+    console.log("Token:", token);
 
-  
+    console.log("Session:", session);
+
+    console.log("Role:", session?.role);
+    console.log("==============================");
     if (
         mode === "ajax" &&
         ["admin", "superuser"].includes(session?.role)
      ) {
-    return res.redirect(
-      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
-    );
+        console.log("AJAX REDIRECT ALLOWED");
+    console.log("AJAX URL:", ajaxUrl);
+    return res.redirect(ajaxUrl);
   }
 
-  
+  console.log("STATUSPHERE REDIRECT");
   return res.redirect(
     `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(id)}`
   );

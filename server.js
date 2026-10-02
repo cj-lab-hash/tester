@@ -1310,7 +1310,7 @@ res.json(data);
 });
 
 app.get('/api/admin/users', requireAdmin,async (req, res) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseTester
         .from('user_accounts')
         .select('*');
 
@@ -1350,21 +1350,18 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 });
 
 app.get(
-'/api/admin/health',
-async(req,res)=>{
+'/api/admin/health',requireAdmin, async(req,res)=> {
 
-const { data } =
-await supabaseTester
-.from('sync_status')
-.select('*');
+        const { data } =
+        await supabaseTester
+        .from('sync_status')
+        .select('*');
 
-res.json(data);
+        res.json(data);
 
 });
 
-app.get(
-'/api/admin/view-stats',
-async(req,res)=>{
+app.get('/api/admin/view-stats',requireAdmin, async(req,res)=>{
 
 const cutoff =
 Date.now() - 300000;
@@ -1388,8 +1385,7 @@ res.json(counts);
 
 });
 
-app.delete('/api/admin/session/:token',
-        async(req,res)=>{
+app.delete('/api/admin/session/:token', requireAdmin, async(req,res)=>{
 
         const token =
         req.params.token;
@@ -1406,60 +1402,31 @@ app.delete('/api/admin/session/:token',
 });
 
 
-await supabaseTester
-.from('sync_status')
-.upsert({
 
-service:'FT',
 
-last_run:
-new Date(),
 
-status:'ONLINE',
+app.delete('/api/admin/cleanup-visitors',requireAdmin, async(req,res)=>{
 
-visitor_count:count
+        const cutoff =
+        Date.now()
+        -
+        (5*60*1000);
 
-});
+        await supabase
+        .from('active_visitors')
+        .delete()
+        .lt(
+        'last_seen',
+        cutoff
+        );
 
-await supabaseTester
-.from('sync_status')
-.upsert({
-
-service:'WS',
-
-last_run:
-new Date(),
-
-status:'ONLINE',
-
-visitor_count:count
+        res.json({
+        success:true
+    });
 
 });
 
-app.delete(
-'/api/admin/cleanup-visitors',
-async(req,res)=>{
-
-const cutoff =
-Date.now()
--
-(5*60*1000);
-
-await supabase
-.from('active_visitors')
-.delete()
-.lt(
-'last_seen',
-cutoff
-);
-
-res.json({
-success:true
-});
-
-});
-
-app.get('/api/admin/view-distribution', async (req, res) => {
+app.get('/api/admin/view-distribution', requireAdmin, async (req, res) => {
 
     const cutoff =
         Date.now() - (5 * 60 * 1000);

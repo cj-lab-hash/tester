@@ -1248,7 +1248,11 @@ app.post("/api/save",requireAuth, async (req, res) => {
 });
 //admin page
 app.get('/admin', async (req, res) => {
+
     const token = getSessionToken(req);
+
+    console.log('TOKEN:', token);
+
     let session = null;
 
     if (token) {
@@ -1257,19 +1261,27 @@ app.get('/admin', async (req, res) => {
             .select('*')
             .eq('token', token)
             .maybeSingle();
+
+        session = data;
     }
 
-    if (!session || session.role !== 'admin') {
-        return res.status(403)
-        .send('Admin only');
+    console.log('SESSION:', session);
+    console.log('ROLE:', session?.role);
+
+    if (
+        !session ||
+        session.role !== 'admin'
+    ) {
+        return res.status(403).send('Admin only');
     }
+
     res.sendFile(
         path.join(
             __dirname,
             'public',
             'admin.html'
         )
-    )
+    );
 });
 app.get('/api/admin/visitors', requireAdmin, async (req, res) => {
     const { data, error } =

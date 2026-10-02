@@ -1353,7 +1353,12 @@ app.get(
   '/api/admin/health',
   requireAdmin,
   async (req, res) => {
-
+    console.log('Using tester schema...');
+    const result = await supabaseTester
+        .from('sync_status')
+        .select('*');
+    console.log(result);
+    res.json(result);
     const { data, error } =
       await supabaseTester
         .from('sync_status')
@@ -1363,27 +1368,21 @@ app.get(
       return res.status(500).json(error);
     }
 
-    const ft =
-      data.find(x => x.service === 'FT');
+    const ft = data.find(x => x.service === 'FT');
 
-    const ws =
-      data.find(x => x.service === 'WS');
+    const ws = data.find(x => x.service === 'WS');
 
-    res.json({
-      ft: ft?.status || 'UNKNOWN',
-      ws: ws?.status || 'UNKNOWN',
+    res.json({ft: ft?.status || 'UNKNOWN',
+             ws: ws?.status || 'UNKNOWN',
 
-      ftLastRun:
-        ft?.last_run || null,
+             ftLastRun: ft?.last_run || null,
 
-      wsLastRun:
-        ws?.last_run || null,
+             wsLastRun:
+                ws?.last_run || null,
 
-      ftVisitors:
-        ft?.visitor_count || 0,
+             ftVisitors: ft?.visitor_count || 0,
 
-      wsVisitors:
-        ws?.visitor_count || 0
+             wsVisitors: ws?.visitor_count || 0
     });
 
 });

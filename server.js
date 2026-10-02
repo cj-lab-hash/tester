@@ -24,20 +24,38 @@ const sessionTIMEOUT = 12 * 60 * 60 * 1000;
 const COOKIE_OPTIONS = 'HttpOnly; Secure; SameSite=Lax; Path=/';
 const app = express();
 // const loginSessions = new Set();
-const loginSessions = new Map();
+// const loginSessions = new Map();
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-setInterval(() => {
-    const now = Date.now();
-    for (const [token, session] of loginSessions.entries()) {
-        if (session.expiresAt < now) {
-            loginSessions.delete(token);
+// setInterval(() => {
+//     const now = Date.now();
+//     for (const [token, session] of loginSessions.entries()) {
+//         if (session.expiresAt < now) {
+//             loginSessions.delete(token);
 
-        }
+//         }
+//     }
+// }, 60 * 1000);
+setInterval(async () => {
+    try {
+        await supabase
+            .from('login_sessions')
+            .delete()
+            .lt('expires_at', Date.now());
+
+        await supabase
+            .from('active_visitors')
+            .delete()
+            .lt('last_seen', Date.now() - (3 * 60 * 1000));
+
+    } catch (err) {
+        console.error('Cleanup error:', err);
     }
 }, 60 * 1000);
+
+
 
 function getSessionToken(req) {
     const cookies = req.headers.cookie || '';
@@ -55,25 +73,51 @@ function getGuestId(req) {
         ? decodeURIComponent(match[1])
         : null;
 }
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
 
     const token = getSessionToken(req);
 
-    if (!token || !loginSessions.has(token)) {
+    if (!token) {
         return res.status(401).json({
             message: 'Unauthorized'
         });
     }
 
-    const session = loginSessions.get(token);
-    if (session.expiresAt < Date.now()) {
-        loginSessions.delete(token);
+    const { data: session, error } = await supabase
+        .from('login_sessions')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+    if (error) {
+            console.error(error);
+             
+            return res.status(500).json({
+            message: 'Authentication failed'
+            });
+    }
+    if (!session) {
+        return res.status(401).json({
+            message: 'Unauthorized'
+        });
+    }
+
+    if (session.expires_at < Date.now()) {
+
+        await supabase
+            .from('login_sessions')
+            .delete()
+            .eq('token', token);
+
         return res.status(401).json({
             message: 'Session expired'
         });
     }
+
+    req.session = session;
+
     next();
 }
+
 
 const APP_VERSION = process.env.RENDER_GIT_COMMIT || 'dev';
 
@@ -85,51 +129,85 @@ app.get('/api/version', (req, res) => {
 // app.get('/api/auth-status', (req, res) => {
 //     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
 // });
-app.get('/api/auth-status', (req, res) => {
-    // console.log("===AUTH STATUS===");
-    // console.log("Cookies:", req.headers.cookie);
+app.get('/api/auth-status', async (req, res) => {
 
     const token = getSessionToken(req);
-    // console.log("Token:", token);
-    // console.log("Session found:", token ? loginSessions.has(token) : false);
-    // console.log("SESSION COUNT:", loginSessions.size);
-    // console.log("Known Sessions:", Array.from(loginSessions.keys()));
+    
+    if (!token) {
 
-
-    // if (!loginSessions.has(token)) {
-    //     return res.json({
-    //         authenticated:false
-    //     });
-    // }
-    if (!token || !loginSessions.has(token)) {
         res.setHeader(
             'Set-Cookie',
-            `tester_session=; ${COOKIE_OPTIONS}; Path=/; Max-Age=0`
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
+
         return res.json({
-            authenticated:false
+            authenticated: false
         });
     }
-    const session = loginSessions.get(token);
-    if (session.expiresAt < Date.now()) {
-        loginSessions.delete(token);
+  
+
+    const { data: session, error } = await supabase
+    .from('login_sessions')
+    .select('*')
+    .eq('token', token)
+    .maybeSingle();
+
+
+
+if (error) {
+    console.error(error);
+
+    return res.status(500).json({
+        authenticated: false
+        });
+    }
+    
+
+    if (!session) {
+
         res.setHeader(
             'Set-Cookie',
-            `tester_session=; ${COOKIE_OPTIONS}; Path=/; Max-Age=0`
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
+
         return res.json({
-            authenticated:false
+            authenticated: false
         });
     }
-    session.expiresAt = Date.now() + sessionTIMEOUT;
-    res.json({
+
+    if (session.expires_at < Date.now()) {
+
+        await supabase
+            .from('login_sessions')
+            .delete()
+            .eq('token', token);
+
+        res.setHeader(
+            'Set-Cookie',
+            `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
+        );
+
+        return res.json({
+            authenticated: false
+        });
+    }
+
+    await supabase
+        .from('login_sessions')
+        .update({
+            expires_at:
+                Date.now() + sessionTIMEOUT
+        })
+        .eq('token', token);
+
+        res.json({
         authenticated: true,
         comments: session.comments,
         username: session.username,
-        name: session.name,
+        name: session.full_name,
         role: session.role
-        
     });
+
 });
 
 app.get('/api/dashboard-data', async (req, res) => {
@@ -302,9 +380,7 @@ app.get('/api/dashboard-data', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body || {};
 
-    // console.log("===LOG IN ATTEMPT===");
-    // console.log("Username: ", username);
-    // console.log("User-Agent: ", req.headers['user-agent']);
+
 
     const loginTime = new Date().toISOString();
     const loginDateObj = new Date(loginTime);
@@ -316,38 +392,6 @@ app.post('/api/login', async (req, res) => {
     req.socket.remoteAddress;
 
     const token = crypto.randomBytes(32).toString('hex');
-    // let session = null;
-    
-
-    // if (
-    //     username === process.env.LOGIN_USERNAME &&
-    //     password === process.env.LOGIN_PASSWORD
-    // ) {
-    //     session = {
-    //         username,
-    //         comments: false,
-    //         ip: clientIp,
-    //         localTime,
-    //         expiresAt: Date.now() + sessionTIMEOUT
-    //     };
-
-    // } else if (
-    //     username === process.env.COMMENTS_USERNAME &&
-    //     password === process.env.COMMENTS_PASSWORD
-    // ) {
-    //     session = {
-    //         username,
-    //         comments: true,
-    //         ip: clientIp,
-    //         localTime,
-    //         expiresAt: Date.now() + sessionTIMEOUT
-    //     };
-    // }
-    // if (!session) {
-    //     return res.status(401).json({
-    //         message: 'Invalid username or password'
-    //     });
-    // }
     const { data: user } = await supabaseTester
     .from("user_accounts")
     .select("*")
@@ -383,15 +427,33 @@ app.post('/api/login', async (req, res) => {
         username,
         name: employee?.full_name || username,
         role: user.role,
-        comments: user.role === "admin",
+        // comments: user.role === "admin",
+        comments: ["admin", "superuser"].includes(user.role),
         ip:clientIp,
         localTime,
         expiresAt: Date.now() + sessionTIMEOUT
     }
     
+const { error: sessionError } = await supabase
+    .from("login_sessions")
+    .upsert({
+        token,
+        username,
+        full_name: employee?.full_name,
+        role: user.role,
+        comments: ["admin", "superuser"].includes(user.role),
+        ip: clientIp,
+        local_time: localTime,
+        expires_at: Date.now() + sessionTIMEOUT
+    });
 
-    // console.log("New token", token);
-    loginSessions.set(token, session);
+console.log("SESSION ERROR:", sessionError);
+
+if (sessionError) {
+    return res.status(500).json({
+        message: sessionError.message
+    });
+}
     res.setHeader(
         "Set-Cookie",
         `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
@@ -400,33 +462,7 @@ app.post('/api/login', async (req, res) => {
         authenticated: true,
         comments: session.comments
     });
-    // session = {
-    //     username,
-    //     comments: user.comments,
-    //     ip: clientIp,
-    //     localTime,
-    //     expiresAt: Date.now() + sessionTIMEOUT
-    // };
 
-
-    // console.log("New token:", token);
-    // loginSessions.set(token, session);
-    // console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
-    // res.setHeader(
-    //     `Set-Cookie`,
-    //     // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
-    //     `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
-    // );
-
-    // console.log("Username:", username);
-    // console.log("Comments user:", process.env.COMMENTS_USERNAME);
-
-    // res.json({
-    //     authenticated: true,
-    //     comments: session.comments
-    // });
-    
-    
     
     
 });
@@ -438,7 +474,7 @@ app.get('/api/test-role', async (req,res) => {
         .select('*')
         .limit(1);
 
-    console.log(result);
+    // console.log(result);
 
     res.json(result);
 });
@@ -479,10 +515,10 @@ app.post('/api/register', async (req, res) => {
         .eq("active", true)
         .maybeSingle();
 
-        console.log("=== REGISTER ===");
-        console.log("idNumber =", idNumber);
-        console.log("employee =", employee);
-        console.log("employeeError =", employeeError);
+        // console.log("=== REGISTER ===");
+        // console.log("idNumber =", idNumber);
+        // console.log("employee =", employee);
+        // console.log("employeeError =", employeeError);
 
         if (employeeError) {
             return res.status(500).json({
@@ -509,8 +545,8 @@ app.post('/api/register', async (req, res) => {
             .eq("id_number", idNumber)
             .maybeSingle();
 
-            console.log("existingUser =", existingUser);
-            console.log("existingUserError =", existingUserError);
+            // console.log("existingUser =", existingUser);
+            // console.log("existingUserError =", existingUserError);
         
         if(existingUser) {
             return res.status(409).json({
@@ -528,10 +564,10 @@ app.post('/api/register', async (req, res) => {
             role: employee.role || "user"
         });
 
-        console.log("insertError =", insertError);
+        // console.log("insertError =", insertError);
         if (insertError) {
-            console.log("INSERT ERROR:");
-            console.log(insertError);
+            // console.log("INSERT ERROR:");
+            // console.log(insertError);
 
             return res.status(500).json({
                 message: insertError.message
@@ -550,17 +586,24 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-app.post('/api/logout', (req, res) => {
+app.post('/api/logout', async (req, res) => {
     const token = getSessionToken(req);
-    if (token) loginSessions.delete(token);
+    
+    if (token) {
+        await supabase
+            .from('login_sessions')
+            .delete()
+            .eq('token', token);
+    }
     res.setHeader('Set-Cookie', `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`);
     res.json({ authenticated: false });
 });
 app.get('/api/active-user', requireAuth, async (req, res) => {
 
     const cutoff = Date.now() - (3 * 60 * 1000);
-    const token = getSessionToken(req);
-    const session = loginSessions.get(token);
+    // const token = getSessionToken(req);
+    // const session = loginSessions.get(token);
+    const session = req.session;
 
     if (session?.role !== 'admin') {
         return res.status(403).json({
@@ -717,28 +760,48 @@ app.delete ('/api/request-cleanup', async (req, res) => {
 const STATUSPHERE_BASE =
   'http://statusphere.maxim-ic.com/dp/';
 
-app.get("/api/redirect/:equipmentId", (req, res) => {
+app.get("/api/redirect/:equipmentId", async (req, res) => {
   const id = req.params.equipmentId;
   const token = getSessionToken(req);
-  const session = loginSessions.get(token);
 
-//   console.log("Token:", token);
-  console.log("Authentication status:", loginSessions.has(token));
+    let session = null;
+
+     if (token) {
+        const { data } = await supabase
+            .from('login_sessions')
+            .select('*')
+            .eq('token', token)
+            .maybeSingle();
+
+        session = data;
+    }
+
   const timestamp = Math.trunc(Date.now() / 1000);
   const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
+  const mode = req.query.mode || "statusphere";
+  const ajaxUrl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
 
 
+    // console.log("========== REDIRECT ==========");
+    // console.log("Equipment:", req.params.equipmentId);
+    // console.log("Mode:", req.query.mode);
+    // console.log("Token:", token);
 
+    // console.log("Session:", session);
 
-    // if (session?.comments) {
-    if (session?.role === "admin") {
-    return res.redirect(
-      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
-    );
+    // console.log("Role:", session?.role);
+    // console.log("==============================");
+    if (
+        mode === "ajax" &&
+        ["admin", "superuser"].includes(session?.role)
+     ) {
+    //     console.log("AJAX REDIRECT ALLOWED");
+    // console.log("AJAX URL:", ajaxUrl);
+    return res.redirect(ajaxUrl);
   }
 
-  
+//   console.log("STATUSPHERE REDIRECT");
   return res.redirect(
     `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(id)}`
   );
@@ -1027,16 +1090,27 @@ app.post('/api/heartbeat', async (req, res) => {
 
         const token = getSessionToken(req);
 
-        const session =
-            token && loginSessions.has(token)
-                ? loginSessions.get(token)
-                : null;
+        // const session =
+        //     token && loginSessions.has(token)
+        //         ? loginSessions.get(token)
+        //         : null;
+        let session = null;
+
+        if (token) {
+            const { data } = await supabase
+                .from('login_sessions')
+                .select('*')
+                .eq('token', token)
+                .maybeSingle();
+
+            session = data;
+        }
 
         const { data, error } = await supabase
             .from('active_visitors')
             .upsert({
                 guest_id: guestId,
-                username: session?.username || null,
+                username: session?.full_name || session?.username || null,
                 last_seen: Date.now(),
                 page: req.body.page || '/',
                 view: req.body.view || null,
@@ -1123,7 +1197,7 @@ app.post("/api/save",requireAuth, async (req, res) => {
 
     app.get('/api/data', async (req, res) => {
         try {
-            console.log('Fetching data from database...');
+            // console.log('Fetching data from database...');
             const result = await pool.query(
             "SELECT cell_index, value FROM data"
         );

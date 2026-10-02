@@ -1266,7 +1266,9 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       const mode = localStorage.getItem("ajaxMode") === "true"
       ? "ajax"
       : "statusphere";
-
+        console.log(
+        `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`
+        );
       const a = document.createElement("a");
       a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
       a.target = "_blank";

@@ -474,7 +474,7 @@ app.get('/api/test-role', async (req,res) => {
         .select('*')
         .limit(1);
 
-    console.log(result);
+    // console.log(result);
 
     res.json(result);
 });
@@ -515,10 +515,10 @@ app.post('/api/register', async (req, res) => {
         .eq("active", true)
         .maybeSingle();
 
-        console.log("=== REGISTER ===");
-        console.log("idNumber =", idNumber);
-        console.log("employee =", employee);
-        console.log("employeeError =", employeeError);
+        // console.log("=== REGISTER ===");
+        // console.log("idNumber =", idNumber);
+        // console.log("employee =", employee);
+        // console.log("employeeError =", employeeError);
 
         if (employeeError) {
             return res.status(500).json({
@@ -545,8 +545,8 @@ app.post('/api/register', async (req, res) => {
             .eq("id_number", idNumber)
             .maybeSingle();
 
-            console.log("existingUser =", existingUser);
-            console.log("existingUserError =", existingUserError);
+            // console.log("existingUser =", existingUser);
+            // console.log("existingUserError =", existingUserError);
         
         if(existingUser) {
             return res.status(409).json({
@@ -564,10 +564,10 @@ app.post('/api/register', async (req, res) => {
             role: employee.role || "user"
         });
 
-        console.log("insertError =", insertError);
+        // console.log("insertError =", insertError);
         if (insertError) {
-            console.log("INSERT ERROR:");
-            console.log(insertError);
+            // console.log("INSERT ERROR:");
+            // console.log(insertError);
 
             return res.status(500).json({
                 message: insertError.message
@@ -783,25 +783,25 @@ app.get("/api/redirect/:equipmentId", async (req, res) => {
   const ajaxUrl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
 
 
-    console.log("========== REDIRECT ==========");
-    console.log("Equipment:", req.params.equipmentId);
-    console.log("Mode:", req.query.mode);
-    console.log("Token:", token);
+    // console.log("========== REDIRECT ==========");
+    // console.log("Equipment:", req.params.equipmentId);
+    // console.log("Mode:", req.query.mode);
+    // console.log("Token:", token);
 
-    console.log("Session:", session);
+    // console.log("Session:", session);
 
-    console.log("Role:", session?.role);
-    console.log("==============================");
+    // console.log("Role:", session?.role);
+    // console.log("==============================");
     if (
         mode === "ajax" &&
         ["admin", "superuser"].includes(session?.role)
      ) {
-        console.log("AJAX REDIRECT ALLOWED");
-    console.log("AJAX URL:", ajaxUrl);
+    //     console.log("AJAX REDIRECT ALLOWED");
+    // console.log("AJAX URL:", ajaxUrl);
     return res.redirect(ajaxUrl);
   }
 
-  console.log("STATUSPHERE REDIRECT");
+//   console.log("STATUSPHERE REDIRECT");
   return res.redirect(
     `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(id)}`
   );
@@ -1197,7 +1197,7 @@ app.post("/api/save",requireAuth, async (req, res) => {
 
     app.get('/api/data', async (req, res) => {
         try {
-            console.log('Fetching data from database...');
+            // console.log('Fetching data from database...');
             const result = await pool.query(
             "SELECT cell_index, value FROM data"
         );

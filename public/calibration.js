@@ -429,7 +429,7 @@ document.getElementById("registerForm").addEventListener("submit", async e => {
     const err = document.getElementById("registerError");
     err.hidden = false;
     err.textContent = result.message;
-    console.log(result);
+    // console.log(result);
     // document.getElementById("registerError").textContent=result.message;
     return;
   }
@@ -1283,7 +1283,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
         const mode = localStorage.getItem("ajaxMode") === "true"
         ? "ajax"
         : "statusphere";
-        console.log("CURRENT MODE:", mode);
+        // console.log("CURRENT MODE:", mode);
         window.open(`/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,"_blank",
         "noopener,noreferrer");
         
@@ -1367,7 +1367,7 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
                       localStorage.getItem("ajaxMode") === "true"
                           ? "ajax"
                           : "statusphere";
-                  console.log("CURRENT MODE:", mode);
+                  // console.log("CURRENT MODE:", mode);
                   window.open(
                       `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,
                       "_blank",
@@ -1453,7 +1453,7 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
             localStorage.getItem("ajaxMode") === "true"
                 ? "ajax"
                 : "statusphere";
-        console.log("CURRENT MODE:", mode);
+        // console.log("CURRENT MODE:", mode);
         window.open(
             `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,
             "_blank",

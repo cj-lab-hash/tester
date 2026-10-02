@@ -80,7 +80,13 @@ async function requireAuth(req, res, next) {
         .select('*')
         .eq('token', token)
         .maybeSingle();
-
+    if (error) {
+            console.error(error);
+             
+            return res.status(500).json({
+            message: 'Authentication failed'
+            });
+    }
     if (!session) {
         return res.status(401).json({
             message: 'Unauthorized'
@@ -118,7 +124,7 @@ app.get('/api/version', (req, res) => {
 app.get('/api/auth-status', async (req, res) => {
 
     const token = getSessionToken(req);
-
+    
     if (!token) {
 
         res.setHeader(
@@ -130,20 +136,26 @@ app.get('/api/auth-status', async (req, res) => {
             authenticated: false
         });
     }
+    console.log("COOKIE:", req.headers.cookie);
+    console.log("TOKEN:", token);
 
     const { data: session, error } = await supabase
-        .from('login_sessions')
-        .select('*')
-        .eq('token', token)
-        .maybeSingle();
+    .from('login_sessions')
+    .select('*')
+    .eq('token', token)
+    .maybeSingle();
 
-    if (error) {
-        console.error(error);
+    console.log("SESSION:", session);
+    console.log("ERROR:", error);
 
-        return res.status(500).json({
-            authenticated: false
+if (error) {
+    console.error(error);
+
+    return res.status(500).json({
+        authenticated: false
         });
     }
+    
 
     if (!session) {
 
@@ -181,6 +193,13 @@ app.get('/api/auth-status', async (req, res) => {
         name: session.full_name,
         role: session.role
     });
+    await supabase
+        .from('login_sessions')
+        .update({
+            expires_at:
+                Date.now() + sessionTIMEOUT
+        })
+        .eq('token', token);
 
 });
 
@@ -354,9 +373,7 @@ app.get('/api/dashboard-data', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body || {};
 
-    // console.log("===LOG IN ATTEMPT===");
-    // console.log("Username: ", username);
-    // console.log("User-Agent: ", req.headers['user-agent']);
+
 
     const loginTime = new Date().toISOString();
     const loginDateObj = new Date(loginTime);
@@ -368,38 +385,6 @@ app.post('/api/login', async (req, res) => {
     req.socket.remoteAddress;
 
     const token = crypto.randomBytes(32).toString('hex');
-    // let session = null;
-    
-
-    // if (
-    //     username === process.env.LOGIN_USERNAME &&
-    //     password === process.env.LOGIN_PASSWORD
-    // ) {
-    //     session = {
-    //         username,
-    //         comments: false,
-    //         ip: clientIp,
-    //         localTime,
-    //         expiresAt: Date.now() + sessionTIMEOUT
-    //     };
-
-    // } else if (
-    //     username === process.env.COMMENTS_USERNAME &&
-    //     password === process.env.COMMENTS_PASSWORD
-    // ) {
-    //     session = {
-    //         username,
-    //         comments: true,
-    //         ip: clientIp,
-    //         localTime,
-    //         expiresAt: Date.now() + sessionTIMEOUT
-    //     };
-    // }
-    // if (!session) {
-    //     return res.status(401).json({
-    //         message: 'Invalid username or password'
-    //     });
-    // }
     const { data: user } = await supabaseTester
     .from("user_accounts")
     .select("*")
@@ -442,23 +427,26 @@ app.post('/api/login', async (req, res) => {
         expiresAt: Date.now() + sessionTIMEOUT
     }
     
-
-    // console.log("New token", token);
-    // loginSessions.set(token, session);
-    await supabase
+const { error: sessionError } = await supabase
     .from("login_sessions")
     .upsert({
         token,
         username,
         full_name: employee?.full_name,
         role: user.role,
-        comments: ["admin", "superuser"]
-            .includes(user.role),
+        comments: ["admin", "superuser"].includes(user.role),
         ip: clientIp,
         local_time: localTime,
         expires_at: Date.now() + sessionTIMEOUT
     });
 
+console.log("SESSION ERROR:", sessionError);
+
+if (sessionError) {
+    return res.status(500).json({
+        message: sessionError.message
+    });
+}
     res.setHeader(
         "Set-Cookie",
         `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
@@ -467,33 +455,7 @@ app.post('/api/login', async (req, res) => {
         authenticated: true,
         comments: session.comments
     });
-    // session = {
-    //     username,
-    //     comments: user.comments,
-    //     ip: clientIp,
-    //     localTime,
-    //     expiresAt: Date.now() + sessionTIMEOUT
-    // };
 
-
-    // console.log("New token:", token);
-    // loginSessions.set(token, session);
-    // console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
-    // res.setHeader(
-    //     `Set-Cookie`,
-    //     // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
-    //     `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
-    // );
-
-    // console.log("Username:", username);
-    // console.log("Comments user:", process.env.COMMENTS_USERNAME);
-
-    // res.json({
-    //     authenticated: true,
-    //     comments: session.comments
-    // });
-    
-    
     
     
 });
@@ -632,7 +594,7 @@ app.post('/api/logout', async (req, res) => {
 app.get('/api/active-user', requireAuth, async (req, res) => {
 
     const cutoff = Date.now() - (3 * 60 * 1000);
-    const token = getSessionToken(req);
+    // const token = getSessionToken(req);
     // const session = loginSessions.get(token);
     const session = req.session;
 

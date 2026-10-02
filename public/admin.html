@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin Dashboard</title>
+
+<style>
+
+:root{
+    --bg:#050812;
+    --panel:#111827;
+    --panel2:#182030;
+    --border:#263041;
+    --accent:#35b5aa;
+    --text:#ffffff;
+    --muted:#9ca3af;
+    --danger:#ef4444;
+    --success:#22c55e;
+    --warning:#f59e0b;
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    background:var(--bg);
+    color:white;
+    font-family:Segoe UI,sans-serif;
+    padding:20px;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+.section{
+    margin-top:25px;
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:16px;
+}
+
+.card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px;
+}
+
+.card h3{
+    color:var(--muted);
+    font-size:.9rem;
+}
+
+.card-value{
+    font-size:2rem;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.health-good{
+    color:var(--success);
+}
+
+.health-warning{
+    color:var(--warning);
+}
+
+.health-bad{
+    color:var(--danger);
+}
+
+.panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:15px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    background:#26736b;
+    padding:10px;
+}
+
+td{
+    padding:10px;
+    border-bottom:1px solid var(--border);
+}
+
+tr:hover{
+    background:rgba(255,255,255,.05);
+}
+
+.badge{
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:.8rem;
+}
+
+.online{
+    background:#16a34a;
+}
+
+.offline{
+    background:#dc2626;
+}
+
+.health-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:16px;
+}
+
+.health-card{
+    background:var(--panel2);
+    border-radius:10px;
+    padding:15px;
+}
+
+.refresh-label{
+    color:var(--muted);
+    margin-bottom:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>⚙ TESTER MONITORING ADMIN</h1>
+
+<div class="refresh-label">
+Auto refresh every 30 seconds
+</div>
+
+<!-- SUMMARY -->
+
+<div class="cards">
+
+<div class="card">
+    <h3>Active Visitors</h3>
+    <div id="visitorCount" class="card-value">0</div>
+</div>
+
+<div class="card">
+    <h3>Login Sessions</h3>
+    <div id="sessionCount" class="card-value">0</div>
+</div>
+
+<div class="card">
+    <h3>User Accounts</h3>
+    <div id="userCount" class="card-value">0</div>
+</div>
+
+<div class="card">
+    <h3>FT Sync</h3>
+    <div id="ftStatus" class="card-value health-good">ONLINE</div>
+</div>
+
+<div class="card">
+    <h3>WS Sync</h3>
+    <div id="wsStatus" class="card-value health-good">ONLINE</div>
+</div>
+
+</div>
+
+<!-- ACTIVE VISITORS -->
+
+<div class="section panel">
+
+<h2>Active Visitors</h2>
+
+<br>
+
+<table>
+
+<thead>
+<tr>
+<th>User</th>
+<th>Role</th>
+<th>View</th>
+<th>Page</th>
+<th>Last Seen</th>
+</tr>
+</thead>
+
+<tbody id="visitorTableBody"></tbody>
+
+</table>
+
+</div>
+
+<!-- LOGIN SESSIONS -->
+
+<div class="section panel">
+
+<h2>Login Sessions</h2>
+
+<br>
+
+<table>
+
+<thead>
+<tr>
+<th>Username</th>
+<th>Role</th>
+<th>Created</th>
+<th>Expires</th>
+</tr>
+</thead>
+
+<tbody id="sessionTableBody"></tbody>
+
+</table>
+
+</div>
+
+<!-- USERS -->
+
+<div class="section panel">
+
+<h2>User Accounts</h2>
+
+<br>
+
+<table>
+
+<thead>
+<tr>
+<th>ID Number</th>
+<th>Name</th>
+<th>Role</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="userTableBody"></tbody>
+
+</table>
+
+</div>
+
+<!-- HEALTH -->
+
+<div class="section panel">
+
+<h2>System Health</h2>
+
+<br>
+
+<div class="health-grid">
+
+<div class="health-card">
+<h3>FT Sync</h3>
+<br>
+<div id="ftHealth">Loading...</div>
+</div>
+
+<div class="health-card">
+<h3>WS Sync</h3>
+<br>
+<div id="wsHealth">Loading...</div>
+</div>
+
+<div class="health-card">
+<h3>Database</h3>
+<br>
+<div>🟢 Connected</div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+async function loadAdminDashboard(){
+
+    try{
+
+        const [
+            statsRes,
+            visitorsRes,
+            sessionsRes,
+            usersRes,
+            healthRes
+        ] = await Promise.all([
+            fetch('/api/admin/stats'),
+            fetch('/api/admin/visitors'),
+            fetch('/api/admin/sessions'),
+            fetch('/api/admin/users'),
+            fetch('/api/admin/health')
+        ]);
+
+        const stats =
+            statsRes.ok
+                ? await statsRes.json()
+                : {};
+
+        const visitors =
+            visitorsRes.ok
+                ? await visitorsRes.json()
+                : [];
+
+        const sessions =
+            sessionsRes.ok
+                ? await sessionsRes.json()
+                : [];
+
+        const users =
+            usersRes.ok
+                ? await usersRes.json()
+                : [];
+
+        const health =
+            healthRes.ok
+                ? await healthRes.json()
+                : {};
+
+        document.getElementById(
+            'visitorCount'
+        ).textContent =
+            stats.visitors || visitors.length;
+
+        document.getElementById(
+            'sessionCount'
+        ).textContent =
+            stats.sessions || sessions.length;
+
+        document.getElementById(
+            'userCount'
+        ).textContent =
+            stats.users || users.length;
+
+        document.getElementById(
+            'ftStatus'
+        ).textContent =
+            health.ft || 'UNKNOWN';
+
+        document.getElementById(
+            'wsStatus'
+        ).textContent =
+            health.ws || 'UNKNOWN';
+
+        renderVisitors(visitors);
+        renderSessions(sessions);
+        renderUsers(users);
+
+        document.getElementById(
+            'ftHealth'
+        ).innerHTML =
+            `
+            Last Run:
+            ${health.ftLastRun || 'N/A'}
+            <br><br>
+            Status:
+            ${health.ft || 'UNKNOWN'}
+            `;
+
+        document.getElementById(
+            'wsHealth'
+        ).innerHTML =
+            `
+            Last Run:
+            ${health.wsLastRun || 'N/A'}
+            <br><br>
+            Status:
+            ${health.ws || 'UNKNOWN'}
+            `;
+
+    }
+    catch(err){
+        console.error(err);
+    }
+}
+
+function renderVisitors(rows){
+
+    const tbody =
+        document.getElementById(
+            'visitorTableBody'
+        );
+
+    tbody.innerHTML='';
+
+    rows.forEach(r=>{
+
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr>
+                <td>${r.username || 'Guest'}</td>
+                <td>${r.role || 'guest'}</td>
+                <td>${r.view || ''}</td>
+                <td>${r.page || ''}</td>
+                <td>${new Date(Number(r.last_seen)).toLocaleString()}</td>
+            </tr>
+            `
+        );
+
+    });
+}
+
+function renderSessions(rows){
+
+    const tbody =
+        document.getElementById(
+            'sessionTableBody'
+        );
+
+    tbody.innerHTML='';
+
+    rows.forEach(r=>{
+
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr>
+                <td>${r.username}</td>
+                <td>${r.role}</td>
+                <td>${new Date(r.created_at).toLocaleString()}</td>
+                <td>${new Date(r.expires_at).toLocaleString()}</td>
+            </tr>
+            `
+        );
+
+    });
+}
+
+function renderUsers(rows){
+
+    const tbody =
+        document.getElementById(
+            'userTableBody'
+        );
+
+    tbody.innerHTML='';
+
+    rows.forEach(r=>{
+
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr>
+                <td>${r.id_number}</td>
+                <td>${r.name}</td>
+                <td>${r.role}</td>
+                <td>
+                    ${
+                        r.approved
+                        ? '<span class="badge online">Approved</span>'
+                        : '<span class="badge offline">Pending</span>'
+                    }
+                </td>
+            </tr>
+            `
+        );
+
+    });
+}
+
+loadAdminDashboard();
+
+setInterval(
+    loadAdminDashboard,
+    30000
+);
+
+</script>
+
+</body>
+</html>

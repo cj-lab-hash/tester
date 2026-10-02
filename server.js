@@ -696,6 +696,37 @@ function extractDurationSeconds(rawTitle = "") {
 
   return value;
 }
+async function requireAdmin(
+    req, res, next
+){
+    const token = getSessionToken(req);
+    if(!token){
+        return res
+            .status(401)
+            .json({
+                message:'Unathorized'
+            });
+    }
+    const { data:session } = await supabase
+            .from('login_sessions')
+            .select('*')
+            .eq('token', token)
+            .maybeSingle();
+    if(!session) {
+        return res.status(401).json({
+            message: 'Session not found'
+        });
+    }
+    if(session.role != 'admin') {
+        return res.status(403).json({
+            message: 'Admin access only'
+        });
+    }
+    req.session = session;
+    next();
+}
+
+
 app.post ('/api/comments/request', async (req,res) => {
     const {
         equipment_id,
@@ -1074,6 +1105,7 @@ filteredData.sort((a, b) => {
 res.json(filteredData);
 
  });
+
 app.post('/api/heartbeat', async (req, res) => {
 // console.log("guestId:", getGuestId(req));
 // console.log("body:", req.body);
@@ -1146,6 +1178,7 @@ app.post('/api/heartbeat', async (req, res) => {
         });
     }
 });
+
 app.post("/api/save",requireAuth, async (req, res) => {
     const { index, value } = req.body;
     
@@ -1167,6 +1200,7 @@ app.post("/api/save",requireAuth, async (req, res) => {
         res.status(500).json({ message: 'Error saving data' });
     }
 });
+
     app.get(
  '/api/system-problems',
  async(req,res)=>{
@@ -1212,8 +1246,97 @@ app.post("/api/save",requireAuth, async (req, res) => {
     res.status(500).json({ message: 'Database Error' });
 }
 });
+//admin page
+app.get('/admin', async (req, res) => {
+    const token = getSessionToken(req);
+    const session = await getSession(token);
 
+    if (!session || session.role !== 'admin') {
+        return res.status(403)
+        .send('Admin only');
+    }
+    res.sendFile(
+        path.join(
+            __dirname,
+            'public',
+            'admin.html'
+        )
+    )
+});
+app.get('/api/admin/visitors', requireAdmin, async (req, res) => {
+    const { data, error } =
+    await supabase
+        .from('active_visitors')
+        .select('*')
+        .order('last_seen', {
+            ascending:false
+        });
 
+    if (error) {
+        return res.status(500).json(error);
+    }
+    res.json(data);
+});
+
+app.get('/api/admin/sessions', requireAdmin, async (req, res) => {
+    const { data, error } = await supabase
+    .from('login_sessions')
+    .select('*');
+
+if (error) {
+    return res.status(500).json(error);
+}
+res.json(data);
+});
+
+app.get('/api/admin/users', requireAdmin,async (req, res) => {
+    const { data, error } = await supabase
+        .from('user_accounts')
+        .select('*');
+
+    if (error) {
+        return res.status(500).json(error);
+    }
+    res.json(data);
+});
+
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+    const visitors = await supabase
+        .from('active_visitors')
+        .select('*', {
+            count: 'exact',
+            head: true
+        });
+
+    const sessions = await supabase
+        .from('login_sessions')
+        .select('*', {
+            count: 'exact',
+            head: true
+        });
+
+    const users = await supabaseTester
+        .from('user_accounts')
+        .select('*', {
+            count: 'exact',
+            head: true
+        });
+        res.json({
+            visitors: visitors.count || 0,
+            sessions: sessions.count || 0,
+            users: users.count || 0
+
+        });
+});
+
+app.get('/api/admin/health', requireAdmin, async (req, res) => {
+    res.json({
+        ft:"ONLINE",
+        ws:"ONLINE",
+        ftLastRun: new Date().toLocaleString(),
+        wsLastRun:new Date().toLocaleString()
+    });
+});
 
 // Start the server on port 3000
 const PORT = process.env.PORT || 3000;

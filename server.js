@@ -1350,14 +1350,41 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 });
 
 app.get(
-'/api/admin/health',requireAdmin, async(req,res)=> {
+  '/api/admin/health',
+  requireAdmin,
+  async (req, res) => {
 
-        const { data } =
-        await supabaseTester
+    const { data, error } =
+      await supabaseTester
         .from('sync_status')
         .select('*');
 
-        res.json(data);
+    if (error) {
+      return res.status(500).json(error);
+    }
+
+    const ft =
+      data.find(x => x.service === 'FT');
+
+    const ws =
+      data.find(x => x.service === 'WS');
+
+    res.json({
+      ft: ft?.status || 'UNKNOWN',
+      ws: ws?.status || 'UNKNOWN',
+
+      ftLastRun:
+        ft?.last_run || null,
+
+      wsLastRun:
+        ws?.last_run || null,
+
+      ftVisitors:
+        ft?.visitor_count || 0,
+
+      wsVisitors:
+        ws?.visitor_count || 0
+    });
 
 });
 
@@ -1405,24 +1432,34 @@ app.delete('/api/admin/session/:token', requireAdmin, async(req,res)=>{
 
 
 
-app.delete('/api/admin/cleanup-visitors',requireAdmin, async(req,res)=>{
+app.delete(
+    '/api/admin/cleanup-visitors',
+    requireAdmin,
+    async(req,res)=>{
 
         const cutoff =
-        Date.now()
-        -
-        (5*60*1000);
+            Date.now() -
+            (5 * 60 * 1000);
 
-        await supabase
-        .from('active_visitors')
-        .delete()
-        .lt(
-        'last_seen',
-        cutoff
-        );
+        const { data, error } =
+            await supabase
+                .from('active_visitors')
+                .delete()
+                .lt(
+                    'last_seen',
+                    cutoff
+                )
+                .select();
+
+        if (error) {
+            return res.status(500).json(error);
+        }
 
         res.json({
-        success:true
-    });
+            success:true,
+            deleted:
+                data?.length || 0
+        });
 
 });
 

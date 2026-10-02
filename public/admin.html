@@ -135,18 +135,56 @@ tr:hover{
     color:var(--muted);
     margin-bottom:20px;
 }
+.admin-btn{
+    background:#111827;
+    color:white;
+    border:1px solid #35b5aa;
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    text-decoration:none;
+    font-weight:bold;
+}
 
+.admin-btn:hover{
+    background:#35b5aa;
+}
+
+.danger-btn{
+    border-color:#ef4444;
+}
+
+.danger-btn:hover{
+    background:#ef4444;
+}
 </style>
-   <div style="
-                position:absolute;
-                top:20px;
-                right:20px;
-                ">
-                    /
-                        ← Tester Monitoring
-                    </a>
-    </div>
-    <button onclick="cleanupVisitors()">Cleanup Expired</button>
+   <div
+style="
+position:absolute;
+top:20px;
+right:20px;
+">
+
+<a
+href="/"
+style="
+color:white;
+text-decoration:none;
+font-weight:bold;
+padding:10px 15px;
+border:1px solid #35b5aa;
+border-radius:8px;
+background:#111827;
+display:inline-block;
+">
+
+← Tester Monitoring
+
+</a>
+<button onclick="cleanupVisitors()">Cleanup Expired</button>
+</div>
+
+    
 </head>
 
 <body>
@@ -381,35 +419,35 @@ async function loadAdminDashboard(){
             viewStatsRes.ok
                 ? await viewStatsRes.json()
                 : {};
+        
         document.getElementById(
             'visitorCount'
         ).textContent =
             stats.visitors || visitors.length;
 
-        document.getElementById(
-            'sessionCount'
-        ).textContent =
-            stats.sessions || sessions.length;
+        document.getElementById('sessionCount').textContent = stats.sessions || sessions.length;
 
-        document.getElementById(
-            'userCount'
-        ).textContent =
-            stats.users || users.length;
+        document.getElementById('userCount').textContent = stats.users || users.length;
 
-        document.getElementById(
-            'ftStatus'
-        ).textContent =
-            health.ft || 'UNKNOWN';
+        document.getElementById('ftStatus').textContent = health.ft || 'UNKNOWN';
 
         document.getElementById(
             'wsStatus'
         ).textContent =
             health.ws || 'UNKNOWN';
+        document.getElementById(
+            'actCount'
+        ).textContent =
+            viewStats.ACT || 0;
 
+        document.getElementById(
+            'wsViewerCount'
+        ).textContent =
+            viewStats.WS || 0;
         renderVisitors(visitors);
         renderSessions(sessions);
         renderUsers(users);
-
+        renderViewDistribution(viewStats);
         document.getElementById(
             'ftHealth'
         ).innerHTML =
@@ -436,7 +474,7 @@ async function loadAdminDashboard(){
     catch(err){
         console.error(err);
     }
-    renderViewDistribution(viewStats);
+    
 }
 function formatAge(timestamp){
 
@@ -566,6 +604,54 @@ function renderUsers(rows){
         );
 
     });
+}
+async function cleanupVisitors(){
+
+    const confirmed = confirm(
+        'Remove expired visitors?'
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            '/api/admin/cleanup-visitors',
+            {
+                method: 'DELETE'
+            }
+        );
+
+        const result = await response.json();
+
+        if (result.success) {
+
+            alert(
+                'Expired visitors removed.'
+            );
+
+            loadAdminDashboard();
+
+        } else {
+
+            alert(
+                'Cleanup failed.'
+            );
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert(
+            'Cleanup failed.'
+        );
+
+    }
+
 }
 async function revokeSession(
 token

@@ -42,6 +42,9 @@ const loginDialog = document.getElementById("loginDialog");
 const loginForm = document.getElementById("loginForm");
 const loginError = document.getElementById("loginError");
 const currentUser = document.getElementById("currentUser");
+let ajaxMode = localStorage.getItem("ajaxMode") === "true";
+const ajaxToggle = document.getElementById("ajaxToggle");
+updateAjaxToggle();
 
 async function checkForUpdates() {
   try {
@@ -92,26 +95,28 @@ function setAuthenticated(
                 document.body.classList.toggle("can-view-comments", userPermissions.comments);
                 document.body.classList.toggle("comments-locked", !userPermissions.comments);
                 if (authenticated) {
-                    // const accessLevel = 
-                    // permissions.comments
-                    // ? "Complete Access"
-                    // : "Complete View";
-                    // // currentUser.textContent = `Logged in as: ${permissions.username}`;
-                    // currentUser.textContent = accessLevel;
                     currentUser.textContent =
                     `${permissions.name} (${permissions.role})`;
                 } else {
                     currentUser.textContent = "View only";
                 }
+                if ( authenticated && ["admin", "superuser"].includes(permissions.role)) {
+                      ajaxToggle.style.display = "block";
+                    } else {
+                      ajaxToggle.style.display = "none";
+                    }
             }
+  
         
         
 async function checkAuthentication() {
 const response = await fetch('/api/auth-status', {
   credentials: 'include'
 });
+
+
 const result = await response.json();
-// console.log("result=", result);
+
 setAuthenticated(result.authenticated === true, result);
 }
 
@@ -156,7 +161,29 @@ loginForm.addEventListener("submit", async (event) => {
             // setAuthenticated(true);
             await checkAuthentication();
 });
-// checkAuthentication().catch(() => setAuthenticated(false));
+
+
+ajaxToggle.addEventListener("click", () => {
+  ajaxMode = !ajaxMode;
+
+  // const enabled = localStorage.getItem("ajaxMode") === "true";
+
+  localStorage.setItem("ajaxMode", ajaxMode);
+
+  updateAjaxToggle()
+});
+
+function updateAjaxToggle() {
+
+    const enabled =
+        localStorage.getItem("ajaxMode")
+        === "true";
+
+    ajaxToggle.textContent =
+        enabled
+            ? "● AJAX"
+            : "○ AJAX";
+}
 
       // Function to load saved data from the server when the page loads
         function normalizeActTableRows() {
@@ -1234,40 +1261,14 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 
     const url = buildStatusphereUrlFromRow(r.href, id);
     const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
-    // if (commenturl) {
-    //   const a = document.createElement("a");
-    //   a.href = commenturl;
-    //   a.target = "_blank";
-    //   // a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
-    //   a.rel = "noopener noreferrer";
-    //   a.textContent = out.label;
-    //   a.classList.add("prod-link");
-    //   cell.appendChild(a);
-    //   a.addEventListener("click", async (e) => {
-    //     e.preventDefault();
-
-    //     await fetch("/api/comments/request", {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json"
-    //       },
-    //       body: JSON.stringify({
-    //         equipment_id: id,
-    //         statusphere_url: url
-    //       })
-    //     });
-
-        // window.open(
-        //   `/comments.html?equipment_id=${id}`,
-        //   "_blank"
-        // );
-    //   })
-    // } else {
-    //   cell.textContent = out.label;
-    // }
     if (url) {
+
+      const mode = localStorage.getItem("ajaxMode") === "true"
+      ? "ajax"
+      : "statusphere";
+
       const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}`;
+      a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
@@ -1337,8 +1338,11 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
     const url = buildStatusphereUrlFromRow(r.href, id);
     const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
+      const mode = localStorage.getItem("ajaxMode") === "true"
+      ? "ajax"
+      : "statusphere";
       const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}`;
+      a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;
@@ -1409,8 +1413,11 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     const url = buildStatusphereUrlFromRow(r.href, id);
     const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
+      const mode = localStorage.getItem("ajaxMode") === "true"
+      ? "ajax"
+      : "statusphere";
       const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}`;
+      a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.textContent = out.label;

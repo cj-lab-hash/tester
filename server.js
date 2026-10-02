@@ -83,7 +83,7 @@ async function requireAuth(req, res, next) {
         });
     }
 
-    const { data: session } = await supabase
+    const { data: session, error } = await supabase
         .from('login_sessions')
         .select('*')
         .eq('token', token)
@@ -144,8 +144,7 @@ app.get('/api/auth-status', async (req, res) => {
             authenticated: false
         });
     }
-    // console.log("COOKIE:", req.headers.cookie);
-    // console.log("TOKEN:", token);
+  
 
     const { data: session, error } = await supabase
     .from('login_sessions')
@@ -153,8 +152,7 @@ app.get('/api/auth-status', async (req, res) => {
     .eq('token', token)
     .maybeSingle();
 
-    // console.log("SESSION:", session);
-    // console.log("ERROR:", error);
+
 
 if (error) {
     console.error(error);
@@ -194,13 +192,6 @@ if (error) {
         });
     }
 
-    res.json({
-        authenticated: true,
-        comments: session.comments,
-        username: session.username,
-        name: session.full_name,
-        role: session.role
-    });
     await supabase
         .from('login_sessions')
         .update({
@@ -208,6 +199,14 @@ if (error) {
                 Date.now() + sessionTIMEOUT
         })
         .eq('token', token);
+
+        res.json({
+        authenticated: true,
+        comments: session.comments,
+        username: session.username,
+        name: session.full_name,
+        role: session.role
+    });
 
 });
 
@@ -764,7 +763,7 @@ const STATUSPHERE_BASE =
 app.get("/api/redirect/:equipmentId", async (req, res) => {
   const id = req.params.equipmentId;
   const token = getSessionToken(req);
-//   const session = loginSessions.get(token);
+
     let session = null;
 
      if (token) {
@@ -776,17 +775,17 @@ app.get("/api/redirect/:equipmentId", async (req, res) => {
 
         session = data;
     }
-//   console.log("Token:", token);
-//   console.log("Authentication status:", loginSessions.has(token));
+
   const timestamp = Math.trunc(Date.now() / 1000);
   const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
+  const mode = req.query.mode || "statusphere";
 
 
 
-
-    // if (session?.comments) {
+  
     if (
+        mode === "ajax" &&
         ["admin", "superuser"].includes(session?.role)
      ) {
     return res.redirect(

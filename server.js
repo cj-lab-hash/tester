@@ -1358,7 +1358,7 @@ app.get(
         .from('sync_status')
         .select('*');
     console.log(result);
-    res.json(result);
+    
     const { data, error } =
       await supabaseTester
         .from('sync_status')

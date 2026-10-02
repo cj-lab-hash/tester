@@ -135,8 +135,56 @@ tr:hover{
     color:var(--muted);
     margin-bottom:20px;
 }
+.admin-btn{
+    background:#111827;
+    color:white;
+    border:1px solid #35b5aa;
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    text-decoration:none;
+    font-weight:bold;
+}
 
+.admin-btn:hover{
+    background:#35b5aa;
+}
+
+.danger-btn{
+    border-color:#ef4444;
+}
+
+.danger-btn:hover{
+    background:#ef4444;
+}
 </style>
+   <div
+style="
+position:absolute;
+top:20px;
+right:20px;
+">
+
+<a
+href="/"
+style="
+color:white;
+text-decoration:none;
+font-weight:bold;
+padding:10px 15px;
+border:1px solid #35b5aa;
+border-radius:8px;
+background:#111827;
+display:inline-block;
+">
+
+← Tester Monitoring
+
+</a>
+<button onclick="cleanupVisitors()">Cleanup Expired</button>
+</div>
+
+    
 </head>
 
 <body>
@@ -176,6 +224,18 @@ Auto refresh every 30 seconds
     <div id="wsStatus" class="card-value health-good">ONLINE</div>
 </div>
 
+<div class="card">
+    <h3>ACT Viewers</h3>
+    <div id="actCount" class="card-value">
+        0
+    </div>
+</div>
+<div class="card">
+    <h3>WS Viewers</h3>
+    <div id="wsViewerCount" class="card-value">
+        0
+    </div>
+</div>
 </div>
 
 <!-- ACTIVE VISITORS -->
@@ -195,6 +255,7 @@ Auto refresh every 30 seconds
 <th>View</th>
 <th>Page</th>
 <th>Last Seen</th>
+<th>Age</th>
 </tr>
 </thead>
 
@@ -220,6 +281,7 @@ Auto refresh every 30 seconds
 <th>Role</th>
 <th>Created</th>
 <th>Expires</th>
+<th>Action</th>
 </tr>
 </thead>
 
@@ -255,7 +317,28 @@ Auto refresh every 30 seconds
 </div>
 
 <!-- HEALTH -->
+<div class="section panel">
 
+    <h2>View Distribution</h2>
+
+    <br>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>View</th>
+                <th>Active Users</th>
+            </tr>
+        </thead>
+
+        <tbody id="viewDistributionBody">
+
+        </tbody>
+
+    </table>
+
+</div>
 <div class="section panel">
 
 <h2>System Health</h2>
@@ -289,21 +372,24 @@ Auto refresh every 30 seconds
 <script>
 
 async function loadAdminDashboard(){
-
+    
     try{
 
         const [
-            statsRes,
-            visitorsRes,
-            sessionsRes,
-            usersRes,
-            healthRes
+                statsRes,
+                visitorsRes,
+                sessionsRes,
+                usersRes,
+                healthRes,
+                viewStatsRes
+
         ] = await Promise.all([
             fetch('/api/admin/stats'),
             fetch('/api/admin/visitors'),
             fetch('/api/admin/sessions'),
             fetch('/api/admin/users'),
-            fetch('/api/admin/health')
+            fetch('/api/admin/health'),
+            fetch('/api/admin/view-distribution')
         ]);
 
         const stats =
@@ -330,42 +416,57 @@ async function loadAdminDashboard(){
             healthRes.ok
                 ? await healthRes.json()
                 : {};
-
+        const viewStats =
+            viewStatsRes.ok
+                ? await viewStatsRes.json()
+                : {};
+        
         document.getElementById(
             'visitorCount'
         ).textContent =
             stats.visitors || visitors.length;
 
-        document.getElementById(
-            'sessionCount'
-        ).textContent =
-            stats.sessions || sessions.length;
+        document.getElementById('sessionCount').textContent = stats.sessions || sessions.length;
 
-        document.getElementById(
-            'userCount'
-        ).textContent =
-            stats.users || users.length;
+        document.getElementById('userCount').textContent = stats.users || users.length;
 
-        document.getElementById(
-            'ftStatus'
-        ).textContent =
-            health.ft || 'UNKNOWN';
+        document.getElementById('ftStatus').textContent = health.ft || 'UNKNOWN';
 
         document.getElementById(
             'wsStatus'
         ).textContent =
             health.ws || 'UNKNOWN';
+        document.getElementById(
+            'actCount'
+        ).textContent =
+            viewStats.ACT || 0;
 
+        document.getElementById(
+            'wsViewerCount'
+        ).textContent =
+            viewStats.WS || 0;
         renderVisitors(visitors);
         renderSessions(sessions);
         renderUsers(users);
-
+        renderViewDistribution(viewStats);
         document.getElementById(
             'ftHealth'
         ).innerHTML =
             `
             Last Run:
-            ${health.ftLastRun || 'N/A'}
+            ${
+            health.ftLastRun
+                ? new Date(
+                health.ftLastRun
+                ).toLocaleString(
+              'en-PH',
+              {
+                  timeZone:
+                      'Asia/Manila'
+              }
+          )
+        : 'N/A'
+}
             <br><br>
             Status:
             ${health.ft || 'UNKNOWN'}
@@ -376,7 +477,19 @@ async function loadAdminDashboard(){
         ).innerHTML =
             `
             Last Run:
-            ${health.wsLastRun || 'N/A'}
+            ${
+            health.wsLastRun
+            ? new Date(
+            health.wsLastRun
+          ).toLocaleString(
+              'en-PH',
+              {
+                  timeZone:
+                      'Asia/Manila'
+              }
+          )
+        : 'N/A'
+}
             <br><br>
             Status:
             ${health.ws || 'UNKNOWN'}
@@ -386,6 +499,23 @@ async function loadAdminDashboard(){
     catch(err){
         console.error(err);
     }
+    
+}
+function formatAge(timestamp){
+
+    const diff =
+        Math.floor(
+            (Date.now() - Number(timestamp))
+            / 1000
+        );
+
+    if(diff < 60)
+        return `${diff}s ago`;
+
+    if(diff < 3600)
+        return `${Math.floor(diff/60)}m ago`;
+
+    return `${Math.floor(diff/3600)}h ago`;
 }
 
 function renderVisitors(rows){
@@ -403,11 +533,12 @@ function renderVisitors(rows){
             'beforeend',
             `
             <tr>
-                <td>${r.username || 'Guest'}</td>
+                <td>${r.full_name || 'Guest'}</td>
                 <td>${r.role || 'guest'}</td>
                 <td>${r.view || ''}</td>
                 <td>${r.page || ''}</td>
                 <td>${new Date(Number(r.last_seen)).toLocaleString()}</td>
+                <td>${formatAge(r.last_seen)}</td>
             </tr>
             `
         );
@@ -430,17 +561,44 @@ function renderSessions(rows){
             'beforeend',
             `
             <tr>
-                <td>${r.username}</td>
+                <td>${r.full_name}</td>
                 <td>${r.role}</td>
                 <td>${new Date(r.created_at).toLocaleString()}</td>
                 <td>${new Date(r.expires_at).toLocaleString()}</td>
+                <td><button onclick= "revokeSession('${r.token}')">Logout</button></td>
             </tr>
             `
         );
 
     });
 }
+function renderViewDistribution(data) {
 
+    const tbody =
+        document.getElementById(
+            'viewDistributionBody'
+        );
+
+    tbody.innerHTML = '';
+
+    const sorted =
+        Object.entries(data)
+            .sort((a, b) => b[1] - a[1]);
+
+    sorted.forEach(([view, count]) => {
+
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr>
+                <td>${view}</td>
+                <td>${count}</td>
+            </tr>
+            `
+        );
+
+    });
+}
 function renderUsers(rows){
 
     const tbody =
@@ -471,6 +629,79 @@ function renderUsers(rows){
         );
 
     });
+}
+async function cleanupVisitors(){
+
+    const confirmed = confirm(
+        'Remove expired visitors?'
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            '/api/admin/cleanup-visitors',
+            {
+                method: 'DELETE'
+            }
+        );
+
+        const result = await response.json();
+
+        if (result.success) {
+
+            alert(
+                'Expired visitors removed.'
+            );
+
+            loadAdminDashboard();
+
+        } else {
+
+            alert(
+                'Cleanup failed.'
+            );
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert(
+            'Cleanup failed.'
+        );
+
+    }
+
+}
+async function revokeSession(
+token
+){
+
+if(
+!confirm(
+'Logout session?'
+)
+){
+return;
+}
+
+await fetch(
+
+`/api/admin/session/${token}`,
+
+{
+method:'DELETE'
+}
+
+);
+
+loadAdminDashboard();
+
 }
 
 loadAdminDashboard();

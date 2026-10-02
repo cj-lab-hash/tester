@@ -1251,7 +1251,7 @@ app.get('/admin', async (req, res) => {
 
     const token = getSessionToken(req);
 
-    console.log('TOKEN:', token);
+    // console.log('TOKEN:', token);
 
     let session = null;
 
@@ -1265,8 +1265,8 @@ app.get('/admin', async (req, res) => {
         session = data;
     }
 
-    console.log('SESSION:', session);
-    console.log('ROLE:', session?.role);
+    // console.log('SESSION:', session);
+    // console.log('ROLE:', session?.role);
 
     if (
         !session ||
@@ -1310,7 +1310,7 @@ res.json(data);
 });
 
 app.get('/api/admin/users', requireAdmin,async (req, res) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseTester
         .from('user_accounts')
         .select('*');
 
@@ -1349,13 +1349,146 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
         });
 });
 
-app.get('/api/admin/health', requireAdmin, async (req, res) => {
-    res.json({
-        ft:"ONLINE",
-        ws:"ONLINE",
-        ftLastRun: new Date().toLocaleString(),
-        wsLastRun:new Date().toLocaleString()
+app.get(
+  '/api/admin/health',
+  requireAdmin,
+  async (req, res) => {
+    console.log('Using tester schema...');
+    const result = await supabaseTester
+        .from('sync_status')
+        .select('*');
+    console.log(result);
+    
+    const { data, error } =
+      await supabaseTester
+        .from('sync_status')
+        .select('*');
+
+    if (error) {
+      return res.status(500).json(error);
+    }
+
+    const ft = data.find(x => x.service === 'FT');
+
+    const ws = data.find(x => x.service === 'WS');
+
+    res.json({ft: ft?.status || 'UNKNOWN',
+             ws: ws?.status || 'UNKNOWN',
+
+             ftLastRun: ft?.last_run || null,
+
+             wsLastRun:
+                ws?.last_run || null,
+
+             ftVisitors: ft?.visitor_count || 0,
+
+             wsVisitors: ws?.visitor_count || 0
     });
+
+});
+
+app.get('/api/admin/view-stats',requireAdmin, async(req,res)=>{
+
+const cutoff =
+Date.now() - 300000;
+
+const { data } =
+await supabase
+.from('active_visitors')
+.select('view')
+.gt('last_seen',cutoff);
+
+const counts = {};
+
+for(const row of data){
+
+counts[row.view] =
+(counts[row.view] || 0) + 1;
+
+}
+
+res.json(counts);
+
+});
+
+app.delete('/api/admin/session/:token', requireAdmin, async(req,res)=>{
+
+        const token =
+        req.params.token;
+
+        await supabase
+        .from('login_sessions')
+        .delete()
+        .eq('token', token);
+
+        res.json({
+        success:true
+        });
+
+});
+
+
+
+
+
+app.delete(
+    '/api/admin/cleanup-visitors',
+    requireAdmin,
+    async(req,res)=>{
+
+        const cutoff =
+            Date.now() -
+            (5 * 60 * 1000);
+
+        const { data, error } =
+            await supabase
+                .from('active_visitors')
+                .delete()
+                .lt(
+                    'last_seen',
+                    cutoff
+                )
+                .select();
+
+        if (error) {
+            return res.status(500).json(error);
+        }
+
+        res.json({
+            success:true,
+            deleted:
+                data?.length || 0
+        });
+
+});
+
+app.get('/api/admin/view-distribution', requireAdmin, async (req, res) => {
+
+    const cutoff =
+        Date.now() - (5 * 60 * 1000);
+
+    const { data, error } = await supabase
+        .from('active_visitors')
+        .select('view')
+        .gt('last_seen', cutoff);
+
+    if (error) {
+        console.error(error);
+        return res.status(500).json(error);
+    }
+
+    const counts = {};
+
+    for (const row of data || []) {
+
+        const view = row.view || 'UNKNOWN';
+
+        counts[view] =
+            (counts[view] || 0) + 1;
+    }
+
+    res.json(counts);
+
 });
 
 // Start the server on port 3000

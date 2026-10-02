@@ -1260,21 +1260,34 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     cell.innerHTML = "";
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    // const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
-
-      const mode = localStorage.getItem("ajaxMode") === "true"
-      ? "ajax"
-      : "statusphere";
-        console.log(
-        `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`
-        );
+      
+      // const mode = localStorage.getItem("ajaxMode") === "true"
+      // ? "ajax"
+      // : "statusphere";
+      //   console.log(`/api/redirect/${encodeURIComponent(id)}?mode=${mode}`);
+      // const a = document.createElement("a");
+      // a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
+      // a.target = "_blank";
+      // a.rel = "noopener noreferrer";
+      // a.textContent = out.label;
+      // a.classList.add("prod-link");
+      // cell.appendChild(a);
       const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
+      a.href = "#";
       a.textContent = out.label;
       a.classList.add("prod-link");
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const mode = localStorage.getItem("ajaxMode") === "true"
+        ? "ajax"
+        : "statusphere";
+        console.log("CURRENT MODE:", mode);
+        window.open(`/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,"_blank",
+        "noopener,noreferrer");
+        
+      });
       cell.appendChild(a);
     } else {
       const span = document.createElement("span");
@@ -1338,17 +1351,29 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    // const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
-      const mode = localStorage.getItem("ajaxMode") === "true"
-      ? "ajax"
-      : "statusphere";
-      const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
+        const a = document.createElement("a");
+
+              a.href = "#";
+              a.textContent = out.label;
+              a.classList.add("prod-link");
+
+              a.addEventListener("click", (e) => {
+
+                  e.preventDefault();
+
+                  const mode =
+                      localStorage.getItem("ajaxMode") === "true"
+                          ? "ajax"
+                          : "statusphere";
+                  console.log("CURRENT MODE:", mode);
+                  window.open(
+                      `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,
+                      "_blank",
+                      "noopener,noreferrer"
+            );
+      });
       cell.appendChild(a);
     } else {
       const span = document.createElement("span");
@@ -1413,18 +1438,30 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    // const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
-      const mode = localStorage.getItem("ajaxMode") === "true"
-      ? "ajax"
-      : "statusphere";
       const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
-      cell.appendChild(a);
+     a.href = "#";
+     a.textContent = out.label;
+     a.classList.add("prod-link");
+
+     a.addEventListener("click", (e) => {
+
+        e.preventDefault();
+
+        const mode =
+            localStorage.getItem("ajaxMode") === "true"
+                ? "ajax"
+                : "statusphere";
+        console.log("CURRENT MODE:", mode);
+        window.open(
+            `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,
+            "_blank",
+            "noopener,noreferrer"
+        );
+    });
+
+    cell.appendChild(a);
     } else {
       const span = document.createElement("span");
       span.textContent = out.label;

@@ -1249,7 +1249,15 @@ app.post("/api/save",requireAuth, async (req, res) => {
 //admin page
 app.get('/admin', async (req, res) => {
     const token = getSessionToken(req);
-    const session = await getSession(token);
+    let session = null;
+
+    if (token) {
+        const { data } = await supabase
+            .from('login_sessions')
+            .select('*')
+            .eq('token', token)
+            .maybeSingle();
+    }
 
     if (!session || session.role !== 'admin') {
         return res.status(403)

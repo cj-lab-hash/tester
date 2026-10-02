@@ -144,8 +144,8 @@ app.get('/api/auth-status', async (req, res) => {
             authenticated: false
         });
     }
-    console.log("COOKIE:", req.headers.cookie);
-    console.log("TOKEN:", token);
+    // console.log("COOKIE:", req.headers.cookie);
+    // console.log("TOKEN:", token);
 
     const { data: session, error } = await supabase
     .from('login_sessions')
@@ -153,8 +153,8 @@ app.get('/api/auth-status', async (req, res) => {
     .eq('token', token)
     .maybeSingle();
 
-    console.log("SESSION:", session);
-    console.log("ERROR:", error);
+    // console.log("SESSION:", session);
+    // console.log("ERROR:", error);
 
 if (error) {
     console.error(error);

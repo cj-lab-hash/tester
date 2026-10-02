@@ -137,6 +137,16 @@ tr:hover{
 }
 
 </style>
+   <div style="
+                position:absolute;
+                top:20px;
+                right:20px;
+                ">
+                    /
+                        ← Tester Monitoring
+                    </a>
+    </div>
+    <button onclick="cleanupVisitors()">Cleanup Expired</button>
 </head>
 
 <body>
@@ -195,6 +205,7 @@ Auto refresh every 30 seconds
 <th>View</th>
 <th>Page</th>
 <th>Last Seen</th>
+<th>Age</th>
 </tr>
 </thead>
 
@@ -220,6 +231,7 @@ Auto refresh every 30 seconds
 <th>Role</th>
 <th>Created</th>
 <th>Expires</th>
+<th>Action</th>
 </tr>
 </thead>
 
@@ -255,7 +267,28 @@ Auto refresh every 30 seconds
 </div>
 
 <!-- HEALTH -->
+<div class="section panel">
 
+    <h2>View Distribution</h2>
+
+    <br>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>View</th>
+                <th>Active Users</th>
+            </tr>
+        </thead>
+
+        <tbody id="viewDistributionBody">
+
+        </tbody>
+
+    </table>
+
+</div>
 <div class="section panel">
 
 <h2>System Health</h2>
@@ -285,25 +318,39 @@ Auto refresh every 30 seconds
 </div>
 
 </div>
-
+<div class="card">
+    <h3>ACT Viewers</h3>
+    <div id="actCount" class="card-value">
+        0
+    </div>
+</div>
+<div class="card">
+    <h3>WS Viewers</h3>
+    <div id="wsViewerCount" class="card-value">
+        0
+    </div>
+</div>
 <script>
 
 async function loadAdminDashboard(){
-
+    
     try{
 
         const [
-            statsRes,
-            visitorsRes,
-            sessionsRes,
-            usersRes,
-            healthRes
+                statsRes,
+                visitorsRes,
+                sessionsRes,
+                usersRes,
+                healthRes,
+                viewStatsRes
+
         ] = await Promise.all([
             fetch('/api/admin/stats'),
             fetch('/api/admin/visitors'),
             fetch('/api/admin/sessions'),
             fetch('/api/admin/users'),
-            fetch('/api/admin/health')
+            fetch('/api/admin/health'),
+            fetch('/api/admin/view-distribution')
         ]);
 
         const stats =
@@ -330,7 +377,10 @@ async function loadAdminDashboard(){
             healthRes.ok
                 ? await healthRes.json()
                 : {};
-
+        const viewStats =
+            viewStatsRes.ok
+                ? await viewStatsRes.json()
+                : {};
         document.getElementById(
             'visitorCount'
         ).textContent =
@@ -386,6 +436,23 @@ async function loadAdminDashboard(){
     catch(err){
         console.error(err);
     }
+    renderViewDistribution(viewStats);
+}
+function formatAge(timestamp){
+
+    const diff =
+        Math.floor(
+            (Date.now() - Number(timestamp))
+            / 1000
+        );
+
+    if(diff < 60)
+        return `${diff}s ago`;
+
+    if(diff < 3600)
+        return `${Math.floor(diff/60)}m ago`;
+
+    return `${Math.floor(diff/3600)}h ago`;
 }
 
 function renderVisitors(rows){
@@ -408,6 +475,7 @@ function renderVisitors(rows){
                 <td>${r.view || ''}</td>
                 <td>${r.page || ''}</td>
                 <td>${new Date(Number(r.last_seen)).toLocaleString()}</td>
+                <td>${formatAge(r.last_seen)}</td>
             </tr>
             `
         );
@@ -434,13 +502,40 @@ function renderSessions(rows){
                 <td>${r.role}</td>
                 <td>${new Date(r.created_at).toLocaleString()}</td>
                 <td>${new Date(r.expires_at).toLocaleString()}</td>
+                <td><button onclick= "revokeSession('${r.token}')">Logout</button></td>
             </tr>
             `
         );
 
     });
 }
+function renderViewDistribution(data) {
 
+    const tbody =
+        document.getElementById(
+            'viewDistributionBody'
+        );
+
+    tbody.innerHTML = '';
+
+    const sorted =
+        Object.entries(data)
+            .sort((a, b) => b[1] - a[1]);
+
+    sorted.forEach(([view, count]) => {
+
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr>
+                <td>${view}</td>
+                <td>${count}</td>
+            </tr>
+            `
+        );
+
+    });
+}
 function renderUsers(rows){
 
     const tbody =
@@ -471,6 +566,31 @@ function renderUsers(rows){
         );
 
     });
+}
+async function revokeSession(
+token
+){
+
+if(
+!confirm(
+'Logout session?'
+)
+){
+return;
+}
+
+await fetch(
+
+`/api/admin/session/${token}`,
+
+{
+method:'DELETE'
+}
+
+);
+
+loadAdminDashboard();
+
 }
 
 loadAdminDashboard();

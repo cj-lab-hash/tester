@@ -1116,7 +1116,7 @@ app.post('/api/heartbeat', async (req, res) => {
         ?.split(',')[0]
         .trim()
     || req.socket.remoteAddress;
-    
+        console.log(req.headers)
         if (!guestId) {
             return res.json({
                 success: true,

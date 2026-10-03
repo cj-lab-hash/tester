@@ -1533,8 +1533,8 @@ app.get('/api/admin/comment-stats', requireAdmin, async (req, res) => {
         completed:0,
         failed:0
     };
-    for(const ror of data || []){
-        const status = row.status?.toLowerCase();
+    for(const rows of data || []){
+        const status = rows.status?.toLowerCase();
         if(stats[status] !== undefined){
             stats[status]++;
         }

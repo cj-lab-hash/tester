@@ -1112,11 +1112,10 @@ app.post('/api/heartbeat', async (req, res) => {
     try {
 
         const guestId = getGuestId(req);
-        const clientIp = req.headers['x-forwarded-for']
+        const clientIp = req.headers['cf-connecting-ip'] || req.headers['true-client-ip'] || req.headers['x-forward-for']
         ?.split(',')[0]
         .trim()
     || req.socket.remoteAddress;
-    
         if (!guestId) {
             return res.json({
                 success: true,
@@ -1380,7 +1379,7 @@ app.get(
   '/api/admin/health',
   requireAdmin,
   async (req, res) => {
-    console.log('Using tester schema...');
+    // console.log('Using tester schema...');
     const result = await supabaseTester
         .from('sync_status')
         .select('*');

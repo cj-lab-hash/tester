@@ -605,7 +605,7 @@ function viewVisitorDetails(guestId){
     alert(`
     User: ${visitor.username || 'Guest'}
     Role: ${visitor.role}
-    View: ${Visitor.view}
+    View: ${visitor.view}
     IP: ${visitor.ip || '-'}
     Browser: ${parseBrowser(visitor.browser)}
     Screen: ${visitor.screen || '-'}
@@ -630,6 +630,7 @@ function parseBrowser(ua = '') {
 
   return 'Unknown';
 }
+
 function renderSessions(rows){
 
     const tbody =

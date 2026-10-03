@@ -1310,14 +1310,32 @@ res.json(data);
 });
 
 app.get('/api/admin/users', requireAdmin,async (req, res) => {
-    const { data, error } = await supabaseTester
+    const { data: users, error } = await supabaseTester
         .from('user_accounts')
         .select('*');
 
     if (error) {
         return res.status(500).json(error);
     }
-    res.json(data);
+    const ids = users.map(u => u.id_number);
+
+    const { data:employees } = await supabaseTester
+                .from('employee_master')
+                .select('id_number', full_name)
+                .in('id_number', ids);
+
+    const nameMap = new Map(
+        (employees || []).map(e => [
+            e.id_number,
+            e.full_name
+        ])
+    );
+    
+    const result = users.map(u => ({
+        ...u,
+        full_name: nameMap.get(u.id_number) || 'UNKNOWN'
+    }));
+    res.json(result);
 });
 
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {

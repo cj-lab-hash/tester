@@ -1377,8 +1377,7 @@ app.get(
 
              ftLastRun: ft?.last_run || null,
 
-             wsLastRun:
-                ws?.last_run || null,
+             wsLastRun: ws?.last_run || null,
 
              ftVisitors: ft?.visitor_count || 0,
 

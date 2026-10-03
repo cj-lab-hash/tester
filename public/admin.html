@@ -432,37 +432,17 @@ async function loadAdminDashboard(){
 
         document.getElementById('ftStatus').textContent = health.ft || 'UNKNOWN';
 
-        document.getElementById(
-            'wsStatus'
-        ).textContent =
-            health.ws || 'UNKNOWN';
-        document.getElementById(
-            'actCount'
-        ).textContent =
-            viewStats.ACT || 0;
+        document.getElementById('wsStatus').textContent = health.ws || 'UNKNOWN';
+        document.getElementById('actCount').textContent = viewStats.ACT || 0;
 
-        document.getElementById(
-            'wsViewerCount'
-        ).textContent =
-            viewStats.WS || 0;
+        document.getElementById('wsViewerCount').textContent = viewStats.WS || 0;
         renderVisitors(visitors);
         renderSessions(sessions);
         renderUsers(users);
         renderViewDistribution(viewStats);
-        document.getElementById(
-            'ftHealth'
-        ).innerHTML =
-            `
-            Last Run:
-            ${
-            health.ftLastRun
-                ? new Date(
-                health.ftLastRun
-                ).toLocaleString(
-              'en-PH',
-              {
-                  timeZone:
-                      'Asia/Manila'
+        document.getElementById('ftHealth').innerHTML = `Last Run:${health.ftLastRun? new Date(health.ftLastRun)
+                    .toLocaleString('en-PH', {
+                        timeZone: 'Asia/Manila'
               }
           )
         : 'N/A'
@@ -472,20 +452,9 @@ async function loadAdminDashboard(){
             ${health.ft || 'UNKNOWN'}
             `;
 
-        document.getElementById(
-            'wsHealth'
-        ).innerHTML =
-            `
-            Last Run:
-            ${
-            health.wsLastRun
-            ? new Date(
-            health.wsLastRun
-          ).toLocaleString(
-              'en-PH',
-              {
-                  timeZone:
-                      'Asia/Manila'
+        document.getElementById('wsHealth').innerHTML = `Last Run:${health.wsLastRun? new Date(health.wsLastRun)
+                    .toLocaleString('en-PH', {
+                        timeZone: 'Asia/Manila'
               }
           )
         : 'N/A'
@@ -615,7 +584,7 @@ function renderUsers(rows){
             `
             <tr>
                 <td>${r.id_number}</td>
-                <td>${r.name}</td>
+                <td>${r.full_name}</td>
                 <td>${r.role}</td>
                 <td>
                     ${

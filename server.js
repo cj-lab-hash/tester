@@ -1508,6 +1508,39 @@ app.get('/api/admin/view-distribution', requireAdmin, async (req, res) => {
 
 });
 
+
+app.get('/api/admin/comment-request', requireAdmin, async (req, res) => {
+
+    const { data, error } = await supabase
+        .from('comment_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error){
+        return res.status(500)
+                  .json(error);
+    }
+    res.json(data);
+});
+
+app.get('/api/admin/comment-stats', requireAdmin, async (req, res) => {
+
+    const { data } = await supabase
+        .from('comment_requests')
+        .select('status');
+    const stats = {
+        pending:0,
+        completed:0,
+        failed:0
+    };
+    for(const ror of data || []){
+        const status = row.status?.toLowerCase();
+        if(stats[status] !== undefined){
+            stats[status]++;
+        }
+    }
+    res.json(stats);
+});
 // Start the server on port 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

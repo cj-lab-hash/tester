@@ -1321,7 +1321,7 @@ app.get('/api/admin/users', requireAdmin,async (req, res) => {
 
     const { data:employees } = await supabaseTester
                 .from('employee_master')
-                .select('id_number', full_name)
+                .select('id_number, full_name')
                 .in('id_number', ids);
 
     const nameMap = new Map(

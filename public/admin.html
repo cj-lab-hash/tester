@@ -157,33 +157,61 @@ tr:hover{
 .danger-btn:hover{
     background:#ef4444;
 }
+.admin-btn{
+    background:#111827;
+    color:white;
+    border:1px solid #35b5aa;
+    border-radius:8px;
+    padding:10px 15px;
+    text-decoration:none;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.admin-btn:hover{
+    background:#35b5aa;
+}
+
+.danger-btn{
+    border-color:#ef4444;
+}
+
+.danger-btn:hover{
+    background:#ef4444;
+}
+.top-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-bottom:20px;
+}
 </style>
-   <div
+<div class="top-actions">
+  <div
 style="
 position:absolute;
 top:20px;
 right:20px;
-">
+display:flex;
+gap:10px;
+align-items:center;
+"
+>
 
-<a
-href="/"
-style="
-color:white;
-text-decoration:none;
-font-weight:bold;
-padding:10px 15px;
-border:1px solid #35b5aa;
-border-radius:8px;
-background:#111827;
-display:inline-block;
-">
-
+/
 ← Tester Monitoring
-
 </a>
-<button onclick="cleanupVisitors()">Cleanup Expired</button>
-</div>
 
+<button
+class="admin-btn danger-btn"
+onclick="cleanupVisitors()"
+>
+🧹 Cleanup Expired
+</button>
+
+</div>
+</div>
     
 </head>
 
@@ -265,6 +293,7 @@ Auto refresh every 30 seconds
 <th>Page</th>
 <th>Age</th>
 <th>Status</th>
+<th>Actions</th>
 </tr>
 </thead>
 
@@ -397,7 +426,7 @@ Auto refresh every 30 seconds
 </div>
 
 <script>
-
+let currentVisitors = [];
 async function loadAdminDashboard(){
     
     try{
@@ -530,13 +559,13 @@ function formatAge(timestamp){
 }
 
 function renderVisitors(rows){
-    const active = Date.now() - Number(r.last_seen) < 2 * 60 * 1000;
+    currentVisitors = rows;
     const tbody = document.getElementById('visitorTableBody');
     
     tbody.innerHTML='';
 
     rows.forEach(r=>{
-
+        const active = Date.now() - Number(r.last_seen) < 2 * 60 * 1000;
         tbody.insertAdjacentHTML(
             'beforeend',
             `
@@ -548,17 +577,42 @@ function renderVisitors(rows){
                 <td>${parseBrowser(r.browser)}</td>
                 <td>${r.screen || '-'}</td>
                 <td>${r.page || ''}</td>
+
                 <td>${formatAge(r.last_seen)}</td>
                 <td>${active
                     ? '<span class="badge online">Online</span>'
                     : '<span class="badge offline">Offline</span>'
                 }
                     </td>
+                <td>
+                    <button onclick="viewVisitorDetails('${r.guest_id}')">
+                        Details
+                        </button>
+                </td>
+                
             </tr>
             `
         );
 
     });
+}
+function viewVisitorDetails(guestId){
+    const visitor = currentVisitors.find(
+        v=> v.guest_id === guestId);
+    if(!visitor){
+        return;
+    }
+    alert(`
+    User: ${visitor.username || 'Guest'}
+    Role: ${visitor.role}
+    View: ${Visitor.view}
+    IP: ${visitor.ip || '-'}
+    Browser: ${parseBrowser(visitor.browser)}
+    Screen: ${visitor.screen || '-'}
+    Page: ${visitor.page || '-'}
+    Timezone: ${visitor.timezone || '-'}
+    `);
+
 }
 function parseBrowser(ua = '') {
 

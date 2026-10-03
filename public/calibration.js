@@ -1909,7 +1909,12 @@ async function sendHeartBeat() {
       },
       body: JSON.stringify({
         page: window.location.pathname,
-        view: currentView
+        view: currentView,
+        browser: navigator.userAgent,
+        screen:`${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat()
+          .resolvedOptions()
+          .timeZone
       })
     });
   } catch (err) {

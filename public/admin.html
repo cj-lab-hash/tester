@@ -259,9 +259,12 @@ Auto refresh every 30 seconds
 <th>User</th>
 <th>Role</th>
 <th>View</th>
+<th>IP</th>
+<th>Browser</th>
+<th>Screen</th>
 <th>Page</th>
-<th>Last Seen</th>
 <th>Age</th>
+<th>Status</th>
 </tr>
 </thead>
 
@@ -527,12 +530,9 @@ function formatAge(timestamp){
 }
 
 function renderVisitors(rows){
-
-    const tbody =
-        document.getElementById(
-            'visitorTableBody'
-        );
-
+    const active = Date.now() - Number(r.last_seen) < 2 * 60 * 1000;
+    const tbody = document.getElementById('visitorTableBody');
+    
     tbody.innerHTML='';
 
     rows.forEach(r=>{
@@ -541,19 +541,41 @@ function renderVisitors(rows){
             'beforeend',
             `
             <tr>
-                <td>${r.full_name || 'Guest'}</td>
+                <td>${r.username || 'Guest'}</td>
                 <td>${r.role || 'guest'}</td>
                 <td>${r.view || ''}</td>
+                <td>${r.ip || '-'}</td>
+                <td>${parseBrowser(r.browser)}</td>
+                <td>${r.screen || '-'}</td>
                 <td>${r.page || ''}</td>
-                <td>${new Date(Number(r.last_seen)).toLocaleString()}</td>
                 <td>${formatAge(r.last_seen)}</td>
+                <td>${active
+                    ? '<span class="badge online">Online</span>'
+                    : '<span class="badge offline">Offline</span>'
+                }
+                    </td>
             </tr>
             `
         );
 
     });
 }
+function parseBrowser(ua = '') {
 
+  if (ua.includes('Edg'))
+    return 'Edge';
+
+  if (ua.includes('Chrome'))
+    return 'Chrome';
+
+  if (ua.includes('Firefox'))
+    return 'Firefox';
+
+  if (ua.includes('Safari'))
+    return 'Safari';
+
+  return 'Unknown';
+}
 function renderSessions(rows){
 
     const tbody =

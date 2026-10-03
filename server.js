@@ -1147,7 +1147,12 @@ app.post('/api/heartbeat', async (req, res) => {
                 page: req.body.page || '/',
                 view: req.body.view || null,
                 authenticated: !!session,
-                role: session?.role || 'guest'
+                role: session?.role || 'guest',
+                browser: req.body.browser,
+                screen: req.body.screen,
+                timezone: req.body.timezone,
+                ip:clientIp
+
             },
         {
             onConflict: 'guest_id'

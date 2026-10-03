@@ -157,33 +157,61 @@ tr:hover{
 .danger-btn:hover{
     background:#ef4444;
 }
+.admin-btn{
+    background:#111827;
+    color:white;
+    border:1px solid #35b5aa;
+    border-radius:8px;
+    padding:10px 15px;
+    text-decoration:none;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.admin-btn:hover{
+    background:#35b5aa;
+}
+
+.danger-btn{
+    border-color:#ef4444;
+}
+
+.danger-btn:hover{
+    background:#ef4444;
+}
+.top-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-bottom:20px;
+}
 </style>
-   <div
+<div class="top-actions">
+  <div
 style="
 position:absolute;
 top:20px;
 right:20px;
-">
+display:flex;
+gap:10px;
+align-items:center;
+"
+>
 
-<a
-href="/"
-style="
-color:white;
-text-decoration:none;
-font-weight:bold;
-padding:10px 15px;
-border:1px solid #35b5aa;
-border-radius:8px;
-background:#111827;
-display:inline-block;
-">
-
+/
 ← Tester Monitoring
-
 </a>
-<button onclick="cleanupVisitors()">Cleanup Expired</button>
-</div>
 
+<button
+class="admin-btn danger-btn"
+onclick="cleanupVisitors()"
+>
+🧹 Cleanup Expired
+</button>
+
+</div>
+</div>
     
 </head>
 
@@ -236,6 +264,12 @@ Auto refresh every 30 seconds
         0
     </div>
 </div>
+<div class="card">
+    <h3>COMMENTS REQUEST</h3>
+    <div id="pendingRequestCount" class="card-value">
+        0
+    </div>
+</div>
 </div>
 
 <!-- ACTIVE VISITORS -->
@@ -253,9 +287,13 @@ Auto refresh every 30 seconds
 <th>User</th>
 <th>Role</th>
 <th>View</th>
+<th>IP</th>
+<th>Browser</th>
+<th>Screen</th>
 <th>Page</th>
-<th>Last Seen</th>
 <th>Age</th>
+<th>Status</th>
+<th>Actions</th>
 </tr>
 </thead>
 
@@ -316,7 +354,7 @@ Auto refresh every 30 seconds
 
 </div>
 
-<!-- HEALTH -->
+
 <div class="section panel">
 
     <h2>View Distribution</h2>
@@ -339,6 +377,24 @@ Auto refresh every 30 seconds
     </table>
 
 </div>
+<!-- COMMENTS REQUEST -->
+<div class="section panel">
+    <h2>COMMENTS REQUEST</h2>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th>EQUIPMENT</th>
+                <th>STATUS</th>
+                <th>CREATED</th>
+            </tr>
+        </thead>
+        <tbody id="requestTableBody">
+
+        </tbody>
+    </table>
+</div>
+<!-- HEALTH -->
 <div class="section panel">
 
 <h2>System Health</h2>
@@ -370,7 +426,7 @@ Auto refresh every 30 seconds
 </div>
 
 <script>
-
+let currentVisitors = [];
 async function loadAdminDashboard(){
     
     try{
@@ -381,7 +437,10 @@ async function loadAdminDashboard(){
                 sessionsRes,
                 usersRes,
                 healthRes,
-                viewStatsRes
+                viewStatsRes,
+                commentRequestRes,
+                commentStatusRes
+                
 
         ] = await Promise.all([
             fetch('/api/admin/stats'),
@@ -389,7 +448,9 @@ async function loadAdminDashboard(){
             fetch('/api/admin/sessions'),
             fetch('/api/admin/users'),
             fetch('/api/admin/health'),
-            fetch('/api/admin/view-distribution')
+            fetch('/api/admin/view-distribution'),
+            fetch('/api/admin/comment-request'),
+            fetch('/api/admin/comment-stats')
         ]);
 
         const stats =
@@ -420,6 +481,14 @@ async function loadAdminDashboard(){
             viewStatsRes.ok
                 ? await viewStatsRes.json()
                 : {};
+        const commentRequest =
+                commentRequestRes.ok
+                ? await commentRequestRes.json()
+                : {};
+        const commentStats =
+                commentStatusRes.ok
+                ? await commentStatusRes.json()
+                : {};
         
         document.getElementById(
             'visitorCount'
@@ -432,37 +501,19 @@ async function loadAdminDashboard(){
 
         document.getElementById('ftStatus').textContent = health.ft || 'UNKNOWN';
 
-        document.getElementById(
-            'wsStatus'
-        ).textContent =
-            health.ws || 'UNKNOWN';
-        document.getElementById(
-            'actCount'
-        ).textContent =
-            viewStats.ACT || 0;
+        document.getElementById('wsStatus').textContent = health.ws || 'UNKNOWN';
+        document.getElementById('actCount').textContent = viewStats.ACT || 0;
 
-        document.getElementById(
-            'wsViewerCount'
-        ).textContent =
-            viewStats.WS || 0;
+        document.getElementById('wsViewerCount').textContent = viewStats.WS || 0;
+        document.getElementById('pendingRequestCount').textContent = commentStats.pending || 0;
         renderVisitors(visitors);
         renderSessions(sessions);
         renderUsers(users);
         renderViewDistribution(viewStats);
-        document.getElementById(
-            'ftHealth'
-        ).innerHTML =
-            `
-            Last Run:
-            ${
-            health.ftLastRun
-                ? new Date(
-                health.ftLastRun
-                ).toLocaleString(
-              'en-PH',
-              {
-                  timeZone:
-                      'Asia/Manila'
+        renderCommentRequests(commentRequest);
+        document.getElementById('ftHealth').innerHTML = `Last Run:${health.ftLastRun? new Date(health.ftLastRun)
+                    .toLocaleString('en-PH', {
+                        timeZone: 'Asia/Manila'
               }
           )
         : 'N/A'
@@ -472,20 +523,9 @@ async function loadAdminDashboard(){
             ${health.ft || 'UNKNOWN'}
             `;
 
-        document.getElementById(
-            'wsHealth'
-        ).innerHTML =
-            `
-            Last Run:
-            ${
-            health.wsLastRun
-            ? new Date(
-            health.wsLastRun
-          ).toLocaleString(
-              'en-PH',
-              {
-                  timeZone:
-                      'Asia/Manila'
+        document.getElementById('wsHealth').innerHTML = `Last Run:${health.wsLastRun? new Date(health.wsLastRun)
+                    .toLocaleString('en-PH', {
+                        timeZone: 'Asia/Manila'
               }
           )
         : 'N/A'
@@ -519,31 +559,71 @@ function formatAge(timestamp){
 }
 
 function renderVisitors(rows){
-
-    const tbody =
-        document.getElementById(
-            'visitorTableBody'
-        );
-
+    currentVisitors = rows;
+    const tbody = document.getElementById('visitorTableBody');
+    
     tbody.innerHTML='';
 
     rows.forEach(r=>{
-
+        const active = Date.now() - Number(r.last_seen) < 2 * 60 * 1000;
         tbody.insertAdjacentHTML(
             'beforeend',
             `
             <tr>
-                <td>${r.full_name || 'Guest'}</td>
+                <td>${r.username || 'Guest'}</td>
                 <td>${r.role || 'guest'}</td>
                 <td>${r.view || ''}</td>
+                <td>${r.ip || '-'}</td>
+                <td>${parseBrowser(r.browser)}</td>
+                <td>${r.screen || '-'}</td>
                 <td>${r.page || ''}</td>
-                <td>${new Date(Number(r.last_seen)).toLocaleString()}</td>
+
                 <td>${formatAge(r.last_seen)}</td>
+                <td>${active
+                    ? '<span class="badge online">Online</span>'
+                    : '<span class="badge offline">Offline</span>'
+                }
+                    </td>
+                <td>
+                    <button onclick="viewVisitorDetails('${r.guest_id}')">
+                        Details
+                        </button>
+                </td>
+                
             </tr>
             `
         );
 
     });
+}
+function viewVisitorDetails(guestId){
+    const visitor = currentVisitors.find(
+        v=> v.guest_id === guestId);
+    if(!visitor){
+        return;
+    }
+    alert(`
+    User: ${visitor.username || 'Guest'}
+    Role: ${visitor.role}
+    View: ${visitor.view}
+    IP: ${visitor.ip || '-'}
+    Browser: ${parseBrowser(visitor.browser)}
+    Screen: ${visitor.screen || '-'}
+    Page: ${visitor.page || '-'}
+    Timezone: ${visitor.timezone || '-'}
+    `);
+
+}
+function parseBrowser(ua = '') {
+
+    ua = String(ua || '');
+
+    if (ua.includes('Edg')) return 'Edge';
+    if (ua.includes('Chrome')) return 'Chrome';
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Safari')) return 'Safari';
+
+    return 'Unknown';
 }
 
 function renderSessions(rows){
@@ -615,7 +695,7 @@ function renderUsers(rows){
             `
             <tr>
                 <td>${r.id_number}</td>
-                <td>${r.name}</td>
+                <td>${r.full_name}</td>
                 <td>${r.role}</td>
                 <td>
                     ${
@@ -678,25 +758,38 @@ async function cleanupVisitors(){
     }
 
 }
-async function revokeSession(
-token
-){
+function renderCommentRequests(rows){
+    const tbody = document.getElementById('requestTableBody');
+            tbody.innerHTML = '';
+        rows.forEach(r=>{
+            tbody.insertAdjacentHTML(
+                'beforeend',
+                `
+                <tr>
+                    <td>
+                        ${r.equipment_id}
+                    </td>
+                    <td>
+                        ${r.status}
+                    </td>
+                    <td>
+                        ${new Date(r.created_at).toLocaleString()}
+                    </td>
+                 </tr>
+                 `       
+            );
+        });
+}
+async function revokeSession(token){
 
-if(
-!confirm(
-'Logout session?'
-)
-){
-return;
+if(!confirm('Logout session?')
+    ){
+    return;
 }
 
-await fetch(
+    await fetch(`/api/admin/session/${token}`,
 
-`/api/admin/session/${token}`,
-
-{
-method:'DELETE'
-}
+    {method:'DELETE'}
 
 );
 

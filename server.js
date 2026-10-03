@@ -1112,7 +1112,11 @@ app.post('/api/heartbeat', async (req, res) => {
     try {
 
         const guestId = getGuestId(req);
-
+        const clientIp = req.headers['x-forwarded-for']
+        ?.split(',')[0]
+        .trim()
+    || req.socket.remoteAddress;
+    
         if (!guestId) {
             return res.json({
                 success: true,
@@ -1147,7 +1151,12 @@ app.post('/api/heartbeat', async (req, res) => {
                 page: req.body.page || '/',
                 view: req.body.view || null,
                 authenticated: !!session,
-                role: session?.role || 'guest'
+                role: session?.role || 'guest',
+                browser: req.body.browser,
+                screen: req.body.screen,
+                timezone: req.body.timezone,
+                ip:clientIp
+
             },
         {
             onConflict: 'guest_id'
@@ -1310,14 +1319,32 @@ res.json(data);
 });
 
 app.get('/api/admin/users', requireAdmin,async (req, res) => {
-    const { data, error } = await supabaseTester
+    const { data: users, error } = await supabaseTester
         .from('user_accounts')
         .select('*');
 
     if (error) {
         return res.status(500).json(error);
     }
-    res.json(data);
+    const ids = users.map(u => u.id_number);
+
+    const { data:employees } = await supabaseTester
+                .from('employee_master')
+                .select('id_number, full_name')
+                .in('id_number', ids);
+
+    const nameMap = new Map(
+        (employees || []).map(e => [
+            e.id_number,
+            e.full_name
+        ])
+    );
+    
+    const result = users.map(u => ({
+        ...u,
+        full_name: nameMap.get(u.id_number) || 'UNKNOWN'
+    }));
+    res.json(result);
 });
 
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {
@@ -1377,8 +1404,7 @@ app.get(
 
              ftLastRun: ft?.last_run || null,
 
-             wsLastRun:
-                ws?.last_run || null,
+             wsLastRun: ws?.last_run || null,
 
              ftVisitors: ft?.visitor_count || 0,
 
@@ -1491,6 +1517,39 @@ app.get('/api/admin/view-distribution', requireAdmin, async (req, res) => {
 
 });
 
+
+app.get('/api/admin/comment-request', requireAdmin, async (req, res) => {
+
+    const { data, error } = await supabase
+        .from('comment_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error){
+        return res.status(500)
+                  .json(error);
+    }
+    res.json(data);
+});
+
+app.get('/api/admin/comment-stats', requireAdmin, async (req, res) => {
+
+    const { data } = await supabase
+        .from('comment_requests')
+        .select('status');
+    const stats = {
+        pending:0,
+        completed:0,
+        failed:0
+    };
+    for(const rows of data || []){
+        const status = rows.status?.toLowerCase();
+        if(stats[status] !== undefined){
+            stats[status]++;
+        }
+    }
+    res.json(stats);
+});
 // Start the server on port 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

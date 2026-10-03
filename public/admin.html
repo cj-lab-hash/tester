@@ -690,7 +690,7 @@ function renderCommentRequests(rows){
     const tbody = document.getElementById('requestTableBody');
             tbody.innerHTML = '';
         rows.forEach(r=>{
-            tbody.insertAdjacentElement(
+            tbody.insertAdjacentHTML(
                 'beforeend',
                 `
                 <tr>
@@ -703,8 +703,6 @@ function renderCommentRequests(rows){
                     <td>
                         ${new Date(r.created_at).toLocaleString()}
                     </td>
-
-
                  </tr>
                  `       
             );

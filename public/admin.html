@@ -616,19 +616,14 @@ function viewVisitorDetails(guestId){
 }
 function parseBrowser(ua = '') {
 
-  if (ua.includes('Edg'))
-    return 'Edge';
+    ua = String(ua || '');
 
-  if (ua.includes('Chrome'))
-    return 'Chrome';
+    if (ua.includes('Edg')) return 'Edge';
+    if (ua.includes('Chrome')) return 'Chrome';
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Safari')) return 'Safari';
 
-  if (ua.includes('Firefox'))
-    return 'Firefox';
-
-  if (ua.includes('Safari'))
-    return 'Safari';
-
-  return 'Unknown';
+    return 'Unknown';
 }
 
 function renderSessions(rows){

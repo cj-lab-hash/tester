@@ -1112,7 +1112,11 @@ app.post('/api/heartbeat', async (req, res) => {
     try {
 
         const guestId = getGuestId(req);
-
+        const clientIp = req.headers['x-forwarded-for']
+        ?.split(',')[0]
+        .trim()
+    || req.socket.remoteAddress;
+    
         if (!guestId) {
             return res.json({
                 success: true,

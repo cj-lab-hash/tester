@@ -105,6 +105,11 @@ function setAuthenticated(
                     } else {
                       ajaxToggle.style.display = "none";
                     }
+                if ( authenticated && ["admin"].includes(permissions.role)){
+                    adminToggle.style.display = "block";
+                  } else {
+                    adminToggle.style.display = "none";
+                }    
             }
   
         
@@ -172,7 +177,9 @@ ajaxToggle.addEventListener("click", () => {
 
   updateAjaxToggle()
 });
-
+adminToggle.addEventListener("click", () => {
+    window.location.href = "/admin";
+});
 function updateAjaxToggle() {
 
     const enabled =
@@ -478,11 +485,11 @@ async function updateLastSyncIndicator(){
   const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const visitors = await fetch('/api/active-user');
+  const visitorsResponse = await fetch('/api/visitors');
   let activeVisitorCount = 0;
-  if (visitors.ok) {
-    const activeVisitors = await visitors.json();
-    activeVisitorCount = activeVisitors.length;
+  if (visitorsResponse.ok) {
+    const visitorData = await visitorsResponse.json();
+    activeVisitorCount = visitorData.count || 0;
   }
 
   if (ageMs > 3.5 * 60 * 1000) {
@@ -490,7 +497,8 @@ async function updateLastSyncIndicator(){
 
   el.textContent = `🔴 OFFLINE`;
   el.style.color = "red";
-if (activeVisitorCount > 0) {
+if (activeVisitorCount > 0 && !viewerToastShown) {
+        viewerToastShown = true;
 
         showViewersToast(
             `Please wait. ${activeVisitorCount} active visitor(s) are triggering a refresh.`
@@ -499,6 +507,7 @@ if (activeVisitorCount > 0) {
     }
 } else {
   resumeDashboard();
+  viewerToastShown = false;
   el.textContent = `🟢 ONLINE`;
   el.style.color = "lime";
  }

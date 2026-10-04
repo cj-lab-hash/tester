@@ -487,6 +487,7 @@ async function updateLastSyncIndicator(){
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const visitorsResponse = await fetch('/api/visitors');
   let activeVisitorCount = 0;
+  let viewerToastShown = false;
   if (visitorsResponse.ok) {
     const visitorData = await visitorsResponse.json();
     activeVisitorCount = visitorData.count || 0;

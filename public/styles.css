@@ -123,12 +123,29 @@ body.dark-mode #updateToastContainer .toast{
   border: 2px solid #f59e0b;
   color: #ffffff;
 }
+body.dark-mode #viewersToastContainer .toast{
+  background: #3a2f14;
+  border: 2px solid #f59e0b;
+  color: #ffffff;
+}
 #darkModeToggle {
   font-size: 14px;
   cursor: pointer;
   font-weight: 600;
   display: inline-block;
   transition: background-color 0.4s ease, color 0.4s ease;
+}
+#ajaxToogle {
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-block;
+}
+#adminToggle {
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-block;
 }
 body.dark-mode .current-user {
   color: #93c5fd;
@@ -748,7 +765,17 @@ td.cal-due, td.pm-due {
   flex-direction: column;
   gap: 10px;
 }
+#viewersToastContainer{
+  position: fixed;
+  right: 16px;
+  top: 30px;
 
+  z-index: 10000;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 #toastContainer{
   position: fixed;
   right: 16px;
@@ -767,7 +794,13 @@ td.cal-due, td.pm-due {
   color: #111827;
   font-weight: 700;
 }
-
+#viewersToastContainer .toast{
+  min-width: 320px;
+  border: 2px solid #ec179b;
+  background: #c9f3d1;
+  color: #111827;
+  font-weight: 700;
+}
 /* wrapper (optional: match your table width) */
 .view-tiles-wrap{
   width: 100%;
@@ -1303,7 +1336,7 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   }
 }
 @media (max-width:768px) {
-  #toastContainer, #updateToastContainer {
+  #toastContainer, #updateToastContainer, #viewersToastContainer {
     left:auto;
     right:8px;
     width: 320px;

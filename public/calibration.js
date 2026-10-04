@@ -44,6 +44,7 @@ const loginError = document.getElementById("loginError");
 const currentUser = document.getElementById("currentUser");
 let ajaxMode = localStorage.getItem("ajaxMode") === "true";
 const ajaxToggle = document.getElementById("ajaxToggle");
+let viewerToastShown = false;
 updateAjaxToggle();
 
 async function checkForUpdates() {
@@ -71,7 +72,7 @@ async function checkForUpdates() {
             'Refreshing dashboard...'
           );
 
-      console.warn("RELOAD WOULD HAPPEN NOW");
+      console.warn("RELOAD WOULD HAPPEN IN 10s");
       setTimeout(() => location.reload(), 10000);
       
     }
@@ -105,6 +106,11 @@ function setAuthenticated(
                     } else {
                       ajaxToggle.style.display = "none";
                     }
+                if ( authenticated && ["admin"].includes(permissions.role)){
+                    adminToggle.style.display = "block";
+                  } else {
+                    adminToggle.style.display = "none";
+                }    
             }
   
         
@@ -172,7 +178,9 @@ ajaxToggle.addEventListener("click", () => {
 
   updateAjaxToggle()
 });
-
+adminToggle.addEventListener("click", () => {
+    window.location.href = "/admin";
+});
 function updateAjaxToggle() {
 
     const enabled =
@@ -437,8 +445,18 @@ document.getElementById("registerForm").addEventListener("submit", async e => {
   registerDialog.close();
 
 })
+function ensureGuestId() {
+  const existing = document.cookie
+  .split('; ')
+  .find(row => row.startsWith('guest_id='));
+  if(!existing) {
+    const guestId= crypto.randomUUID();
+    document.cookie = `guest_id=${guestId}; path=/; max-age=31536000; SameSite=Lax`;
+  }
+}
+
 // ===================== LAST SYNC =====================
-async function updateLastSyncIndicator() {
+async function updateLastSyncIndicator(){
   const el = document.getElementById("lastSync");
   if (!el) return;
 
@@ -468,14 +486,33 @@ async function updateLastSyncIndicator() {
   const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const visitorsResponse = await fetch('/api/visitors');
+  let activeVisitorCount = 0;
   
+  if (visitorsResponse.ok) {
+    const visitorData = await visitorsResponse.json();
+    activeVisitorCount = visitorData.count || 0;
+    // console.log("active visitors count=", activeVisitorCount);
+  }
+
   if (ageMs > 3.5 * 60 * 1000) {
+  // if (ageMs > 10 * 1000) {
     pauseDashboard();
-  // el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
+
   el.textContent = `🔴 OFFLINE`;
   el.style.color = "red";
+if (activeVisitorCount > 0 && !viewerToastShown) {
+        viewerToastShown = true;
+        // console.log("SHOWING TOAST");
+
+        showViewersToast(
+            `Please wait. ${activeVisitorCount} active visitor(s) are triggering a refresh.`
+        );
+
+    }
 } else {
   resumeDashboard();
+  viewerToastShown = false;
   el.textContent = `🟢 ONLINE`;
   el.style.color = "lime";
  }
@@ -591,6 +628,27 @@ function showUpdateToast(message) {
 
     container.appendChild(toast);
 }
+function showViewersToast(message){
+
+  const container = document.getElementById("viewersToastContainer");
+  if(!container) return;
+  const toast = document.createElement("div");
+
+  toast.className = "toast toast-yellow";
+  toast.innerHTML = `<div class="toast-title">
+      Viewers Available
+      </div>
+      <div class="toast-sub">
+      ${message}
+      </div>
+      `;
+      container.appendChild(toast);
+setTimeout(() => {
+  toast.remove();
+}, 10000);
+}
+
+window.showViewersToast = showViewersToast;
 function classifyIssue(stateLong = "", rawTitle = "") {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
 
@@ -1930,17 +1988,20 @@ const UI_REFRESH_MS = 180 * 1000;
 const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
  try {
+  ensureGuestId();
+  await sendHeartBeat();
   await checkAuthentication();
   loadData();
   renderViewTiles();
   setView(getCurrentView());
-  sendHeartBeat();
+  
   await loadDashboardCache();
   await refreshData();
-  updateLastSyncIndicator();
+  // updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
+  
  } catch (err) {
   console.error("BOOT ERROR:", err);
   alert("BOOT ERROR: " + err.message);
@@ -1971,6 +2032,7 @@ dashboardInterval = setInterval(async () => {
   
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
+  
   setInterval(sendHeartBeat, 60000);
   alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);

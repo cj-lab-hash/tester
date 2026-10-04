@@ -598,7 +598,34 @@ app.post('/api/logout', async (req, res) => {
     res.setHeader('Set-Cookie', `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`);
     res.json({ authenticated: false });
 });
-app.get('/api/active-user', requireAuth, async (req, res) => {
+app.get('/api/visitors', async (req, res) => {
+    try {
+    const cutoff = Date.now() - (3 * 60 * 1000);
+    const { count,error } = await supabase
+        .from('active_visitors')
+        .select('*', {
+            count: 'exact',
+            head: true
+        })
+        .gt('last_seen', cutoff);
+
+        if (error) {
+            return res.status(500).json({
+                success: true,
+                error: error.message
+            });
+        }
+
+
+        res.json({count:count || 0});
+    } catch (err) {
+        res.status(500).json({
+            success:false,
+            error: err.message
+        });
+    }
+});
+app.get('/api/active-user', requireAdmin, async (req, res) => {
 
     const cutoff = Date.now() - (3 * 60 * 1000);
     // const token = getSessionToken(req);
@@ -621,6 +648,7 @@ app.get('/api/active-user', requireAuth, async (req, res) => {
 
     res.json(data);
 });
+
 function sortDashboardRows(rows) {
   return [...rows].sort((a, b) => {
 

@@ -482,7 +482,7 @@ async function updateLastSyncIndicator(){
   el.style.color = "red";
 if (activeVisitorCount > 0) {
 
-        showUpdateToast(
+        showViewersToast(
             `Please wait. ${activeVisitorCount} active visitor(s) are triggering a refresh.`
         );
 
@@ -604,6 +604,25 @@ function showUpdateToast(message) {
 
     container.appendChild(toast);
 }
+function showViewersToast(message){
+
+  const container = document.getElementById("viewersToastContainer");
+  if(!container) return;
+  const toast = document.createElement("div");
+
+  toast.className = "toast toast-yellow";
+  toast.innerHTML = `<div class="toast-title">
+      Viewers Available
+      </div>
+      <div class="toast-sub">
+      ${message}
+      </div>
+      `;
+      container.appendChild(message);
+
+}
+
+
 function classifyIssue(stateLong = "", rawTitle = "") {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
 

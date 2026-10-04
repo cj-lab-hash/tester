@@ -617,7 +617,7 @@ app.get('/api/visitors', async (req, res) => {
         }
 
 
-        res.json(count || 0);
+        res.json({count:count || 0});
     } catch (err) {
         res.status(500).json({
             success:false,

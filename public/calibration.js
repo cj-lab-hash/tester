@@ -492,7 +492,7 @@ async function updateLastSyncIndicator(){
   if (visitorsResponse.ok) {
     const visitorData = await visitorsResponse.json();
     activeVisitorCount = visitorData.count || 0;
-    console.log("active visitors count=", activeVisitorCount);
+    // console.log("active visitors count=", activeVisitorCount);
   }
 
   // if (ageMs > 3.5 * 60 * 1000) {
@@ -503,7 +503,7 @@ async function updateLastSyncIndicator(){
   el.style.color = "red";
 if (activeVisitorCount > 0 && !viewerToastShown) {
         viewerToastShown = true;
-        console.log("SHOWING TOAST");
+        // console.log("SHOWING TOAST");
 
         showViewersToast(
             `Please wait. ${activeVisitorCount} active visitor(s) are triggering a refresh.`

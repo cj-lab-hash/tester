@@ -748,7 +748,17 @@ td.cal-due, td.pm-due {
   flex-direction: column;
   gap: 10px;
 }
+#viewersToastContainer{
+  position: fixed;
+  right: 16px;
+  top: 30px;
 
+  z-index: 10000;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 #toastContainer{
   position: fixed;
   right: 16px;

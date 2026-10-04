@@ -492,6 +492,7 @@ async function updateLastSyncIndicator(){
   if (visitorsResponse.ok) {
     const visitorData = await visitorsResponse.json();
     activeVisitorCount = visitorData.count || 0;
+    console.log("active visitors count=", activeVisitorCount);
   }
 
   // if (ageMs > 3.5 * 60 * 1000) {
@@ -2031,6 +2032,7 @@ dashboardInterval = setInterval(async () => {
   
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
+  
   setInterval(sendHeartBeat, 60000);
   alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);

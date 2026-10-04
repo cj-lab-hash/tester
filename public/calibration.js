@@ -44,6 +44,7 @@ const loginError = document.getElementById("loginError");
 const currentUser = document.getElementById("currentUser");
 let ajaxMode = localStorage.getItem("ajaxMode") === "true";
 const ajaxToggle = document.getElementById("ajaxToggle");
+let viewerToastShown = false;
 updateAjaxToggle();
 
 async function checkForUpdates() {
@@ -487,7 +488,7 @@ async function updateLastSyncIndicator(){
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const visitorsResponse = await fetch('/api/visitors');
   let activeVisitorCount = 0;
-  let viewerToastShown = false;
+  
   if (visitorsResponse.ok) {
     const visitorData = await visitorsResponse.json();
     activeVisitorCount = visitorData.count || 0;
@@ -501,6 +502,7 @@ async function updateLastSyncIndicator(){
   el.style.color = "red";
 if (activeVisitorCount > 0 && !viewerToastShown) {
         viewerToastShown = true;
+        console.log("SHOWING TOAST");
 
         showViewersToast(
             `Please wait. ${activeVisitorCount} active visitor(s) are triggering a refresh.`
@@ -645,7 +647,7 @@ setTimeout(() => {
 }, 10000);
 }
 
-
+window.showViewersToast = showViewersToast;
 function classifyIssue(stateLong = "", rawTitle = "") {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
 
@@ -1985,18 +1987,20 @@ const UI_REFRESH_MS = 180 * 1000;
 const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
  try {
+  ensureGuestId();
+  await sendHeartBeat();
   await checkAuthentication();
   loadData();
   renderViewTiles();
   setView(getCurrentView());
-  sendHeartBeat();
+  
   await loadDashboardCache();
   await refreshData();
-  updateLastSyncIndicator();
+  // updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
-  ensureGuestId();
+  
  } catch (err) {
   console.error("BOOT ERROR:", err);
   alert("BOOT ERROR: " + err.message);

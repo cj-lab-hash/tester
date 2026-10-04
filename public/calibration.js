@@ -71,7 +71,7 @@ async function checkForUpdates() {
             'Refreshing dashboard...'
           );
 
-      console.warn("RELOAD WOULD HAPPEN NOW");
+      console.warn("RELOAD WOULD HAPPEN IN 10s");
       setTimeout(() => location.reload(), 10000);
       
     }
@@ -438,7 +438,7 @@ document.getElementById("registerForm").addEventListener("submit", async e => {
 
 })
 // ===================== LAST SYNC =====================
-async function updateLastSyncIndicator() {
+async function updateLastSyncIndicator(){
   const el = document.getElementById("lastSync");
   if (!el) return;
 
@@ -468,12 +468,25 @@ async function updateLastSyncIndicator() {
   const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  
+  const visitors = await fetch('/api/active-user');
+  let activeVisitorCount = 0;
+  if (visitors.ok) {
+    const activeVisitors = await visitors.json();
+    activeVisitorCount = activeVisitors.length;
+  }
+
   if (ageMs > 3.5 * 60 * 1000) {
     pauseDashboard();
-  // el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
+
   el.textContent = `🔴 OFFLINE`;
   el.style.color = "red";
+if (activeVisitorCount > 0) {
+
+        showUpdateToast(
+            `Please wait. ${activeVisitorCount} active visitor(s) are triggering a refresh.`
+        );
+
+    }
 } else {
   resumeDashboard();
   el.textContent = `🟢 ONLINE`;

@@ -493,7 +493,8 @@ async function updateLastSyncIndicator(){
     activeVisitorCount = visitorData.count || 0;
   }
 
-  if (ageMs > 3.5 * 60 * 1000) {
+  // if (ageMs > 3.5 * 60 * 1000) {
+  if (ageMs > 10 * 1000) {
     pauseDashboard();
 
   el.textContent = `🔴 OFFLINE`;

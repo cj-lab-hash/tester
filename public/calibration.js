@@ -437,6 +437,16 @@ document.getElementById("registerForm").addEventListener("submit", async e => {
   registerDialog.close();
 
 })
+function ensureGuestId() {
+  const existing = document.cookie
+  .split('; ')
+  .find(row => row.startsWith('guest_id='));
+  if(!existing) {
+    const guestId= crypto.randomUUID();
+    document.cookie = `guest_id=${guestId}; path=/; max-age=31536000; SameSite=Lax`;
+  }
+}
+
 // ===================== LAST SYNC =====================
 async function updateLastSyncIndicator(){
   const el = document.getElementById("lastSync");
@@ -618,8 +628,10 @@ function showViewersToast(message){
       ${message}
       </div>
       `;
-      container.appendChild(message);
-
+      container.appendChild(toast);
+setTimeout(() => {
+  toast.remove();
+}, 10000);
 }
 
 
@@ -1973,6 +1985,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
+  ensureGuestId();
  } catch (err) {
   console.error("BOOT ERROR:", err);
   alert("BOOT ERROR: " + err.message);

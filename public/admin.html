@@ -181,35 +181,26 @@ tr:hover{
     background:#ef4444;
 }
 .top-actions{
+    position:absolute;
+    top:20px;
+    right:20px;
     display:flex;
-    justify-content:flex-end;
     gap:10px;
-    margin-bottom:20px;
+    align-items:center;
 }
+
 </style>
 <div class="top-actions">
-  <div
-style="
-position:absolute;
-top:20px;
-right:20px;
-display:flex;
-gap:10px;
-align-items:center;
-"
->
-<a href="/">
-← Tester Monitoring
-</a>
 
-<button
-class="admin-btn danger-btn"
+<a href="/">← Tester Monitoring</a>
+
+<button class="admin-btn danger-btn"
 onclick="cleanupVisitors()"
 >
 🧹 Cleanup Expired
 </button>
 
-</div>
+
 </div>
     
 </head>

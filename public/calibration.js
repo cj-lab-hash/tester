@@ -508,7 +508,7 @@ if (activeVisitorCount > 0 && !viewerToastShown) {
         // console.log("SHOWING TOAST");
 
         showViewersToast(
-            `Please wait. ${activeVisitorCount} active visitor(s) are triggering a refresh.`
+            `Please wait. ${activeVisitorCount} active visitor(s) are triggering a data fetch.`
         );
 
     }

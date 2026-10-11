@@ -352,7 +352,9 @@ const VIEWS = [
 // ===================== STATE =====================
 let lastStatusphereCheckedAt = null;
 let lastSyncShownAt = null;
+let lastSyncShownAtWS = null;
 let lastSyncFetchedAtMs = 0;
+let lastSyncFetchedAtMsWs = 0;
 let lastAlertScrapeTs = null;
 const lastViewToastKey = new Map();
 
@@ -499,7 +501,7 @@ async function updateLastSyncIndicator(){
   // if (ageMs > 10 * 1000) {
     pauseDashboard();
 
-  el.textContent = `🔴 OFFLINE`;
+  el.textContent = `🔴FT OFFLINE`;
   el.style.color = "red";
 if (activeVisitorCount > 0 && !viewerToastShown) {
         viewerToastShown = true;
@@ -513,9 +515,56 @@ if (activeVisitorCount > 0 && !viewerToastShown) {
 } else {
   resumeDashboard();
   viewerToastShown = false;
-  el.textContent = `🟢 ONLINE`;
+  el.textContent = `🟢 FT`;
   el.style.color = "lime";
  }
+}
+async function updateLastSyncIndicatorWS(){
+  const el = document.getElementById("lastSyncWS");
+  if (!el) return;
+  const nowMsWS = Date.now();
+  const shouldFetchWS = (nowMs - lastSyncFetchedAtMsWs) > 60_000;
+  if (shouldFetchWS) {
+    lastSyncFetchedAtMsWs = nowMsWS;
+    const response = await fetch('/api/last-sync-ws');
+    if(!response.ok) {
+      el.textContent = 'Last Sync: (error)';
+      return;
+    }
+    const latestData = await response.json();
+    const latest = latestData?.checked_at;
+    lastSyncShownAtWS = latest || null;
+  }
+
+  if(!lastSyncShownAtWS) {
+    el.textContent = "Last Sync: --";
+    el.style.color = "red";
+    return;
+  }
+  const dt = new Date(lastSyncShownAtWS);
+  const ageMs = Date.now() - dt.getTime();
+  const ageMin = Math.max(0, Math.florr((Date.now() - dt.getTime()) / 60000));
+  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
+  const visitorsResponse = await fetch('/api/visitors');
+  let activeVisitorCount = 0;
+
+  if(!visitorsResponse.ok){
+    const visitorData =await visitorsResponse.json();
+    activeVisitorCount = visitorData.count || 0;
+  }
+  if (ageMs > 3.5 * 60 * 1000) {
+    el.textContent = `🔴 WS OFFLINE`;
+    el.style.color = "red";
+    if(activeVisitorCount > 0 && !viewerToastShown) {
+      viewerToastShown = true;
+      showViewersToast(`Please wait. &{activeVisitorCount} active visitor(s) are triggering data fetch.`);
+    }
+  } else {
+    viewerToastShown = false;
+    el.textContent = `🟢 WS`;
+    el.style.color = "lime";
+  }
+
 }
 // ===================== ACT: SMART SCRAPE CHECK =====================
 async function statusphereHasNewScrape(ids) {

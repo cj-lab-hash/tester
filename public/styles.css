@@ -19,7 +19,8 @@ body.dark-mode {
   color: #e5e7eb;
 }
 body.dark-mode .verse-card,
-body.dark-mode .last-sync
+body.dark-mode .last-sync,
+body.dark-mode .last-sync-ws
 /*body.dark-mode th,*/
 {
   background-color: #1a1d23;
@@ -35,7 +36,7 @@ body.dark-mode .verse-ref {
 body.dark-mode .verse-text {
   color: #ddd;
 }
-body.dark-mode .last-sync {
+body.dark-mode .last-sync, body.dark-mode .last-sync-ws {
   color:#ffffff;
 }
 
@@ -676,6 +677,18 @@ td.cal-due, td.pm-due {
   margin-left: 10px;
 }
 .last-sync {
+  display: inline-block;              /* ensures padding/border show properly */
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  background: #f3f4f6;                /* makes the badge visible */
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  text-align: center;
+}
+.last-sync-ws {
   display: inline-block;              /* ensures padding/border show properly */
   font-size: 14px;
   font-weight: 600;

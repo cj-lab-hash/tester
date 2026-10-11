@@ -949,7 +949,18 @@ app.get(
     res.json(data?.[0] ?? null);
 
 });
+app.get('/api/last-sync-ws', async (req, res) => {
+    const { data, error } = await supabase
+    .from('ws_equipment')
+    .select('checked_at')
+    .order('checked_at', { ascending:false })
+    .limit(1);
 
+    if(error){
+        return res.status(500).json(error);
+    }
+    res.json(data?.[0] ?? null);
+})
 app.get(
  '/api/statusphere-equipment',
  async(req,res)=>{

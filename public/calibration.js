@@ -44,7 +44,9 @@ const loginError = document.getElementById("loginError");
 const currentUser = document.getElementById("currentUser");
 let ajaxMode = localStorage.getItem("ajaxMode") === "true";
 const ajaxToggle = document.getElementById("ajaxToggle");
-let viewerToastShown = false;
+let viewerToastShownFT = false;
+let viewerToastShownWS = false;
+
 updateAjaxToggle();
 
 async function checkForUpdates() {
@@ -352,7 +354,9 @@ const VIEWS = [
 // ===================== STATE =====================
 let lastStatusphereCheckedAt = null;
 let lastSyncShownAt = null;
+let lastSyncShownAtWS = null;
 let lastSyncFetchedAtMs = 0;
+let lastSyncFetchedAtMsWs = 0;
 let lastAlertScrapeTs = null;
 const lastViewToastKey = new Map();
 
@@ -456,6 +460,13 @@ function ensureGuestId() {
 }
 
 // ===================== LAST SYNC =====================
+async function getActiveVisitors(){
+  const response = await fetch('/api/visitors');
+  if (!response.ok) return 0;
+  const data = await response.json();
+  return data.count || 0;
+
+}
 async function updateLastSyncIndicator(){
   const el = document.getElementById("lastSync");
   if (!el) return;
@@ -486,36 +497,85 @@ async function updateLastSyncIndicator(){
   const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const visitorsResponse = await fetch('/api/visitors');
-  let activeVisitorCount = 0;
+  const activeVisitorCount = await getActiveVisitors();
+  // const visitorsResponse = await fetch('/api/visitors');
+  // let activeVisitorCount = 0;
   
-  if (visitorsResponse.ok) {
-    const visitorData = await visitorsResponse.json();
-    activeVisitorCount = visitorData.count || 0;
-    // console.log("active visitors count=", activeVisitorCount);
-  }
+  // if (visitorsResponse.ok) {
+  //   const visitorData = await visitorsResponse.json();
+  //   activeVisitorCount = visitorData.count || 0;
+  //   // console.log("active visitors count=", activeVisitorCount);
+  // }
 
   if (ageMs > 3.5 * 60 * 1000) {
   // if (ageMs > 10 * 1000) {
     pauseDashboard();
 
-  el.textContent = `🔴 OFFLINE`;
+  el.textContent = `🔴FT`;
   el.style.color = "red";
-if (activeVisitorCount > 0 && !viewerToastShown) {
-        viewerToastShown = true;
+if (activeVisitorCount > 0 && !viewerToastShownFT) {
+        viewerToastShownFT = true;
         // console.log("SHOWING TOAST");
 
         showViewersToast(
-            `Please wait. ${activeVisitorCount} active visitor(s) are triggering a refresh.`
+            `Please wait. ${activeVisitorCount} active visitor(s) are triggering a data fetch.`
         );
 
     }
 } else {
   resumeDashboard();
-  viewerToastShown = false;
-  el.textContent = `🟢 ONLINE`;
+  viewerToastShownFT = false;
+  el.textContent = `🟢 FT`;
   el.style.color = "lime";
  }
+}
+async function updateLastSyncIndicatorWS(){
+  const el = document.getElementById("lastSyncWS");
+  if (!el) return;
+  const nowMsWS = Date.now();
+  const shouldFetchWS = (nowMsWS - lastSyncFetchedAtMsWs) > 60_000;
+  if (shouldFetchWS) {
+    lastSyncFetchedAtMsWs = nowMsWS;
+    const response = await fetch('/api/last-sync-ws');
+    if(!response.ok) {
+      el.textContent = 'Last Sync: (error)';
+      return;
+    }
+    const latestData = await response.json();
+    const latest = latestData?.checked_at;
+    lastSyncShownAtWS = latest || null;
+  }
+
+  if(!lastSyncShownAtWS) {
+    el.textContent = "Last Sync: --";
+    el.style.color = "red";
+    return;
+  }
+  const dt = new Date(lastSyncShownAtWS);
+  const ageMs = Date.now() - dt.getTime();
+  const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
+  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
+  const activeVisitorCount = await getActiveVisitors();
+  // const visitorsResponse = await fetch('/api/visitors');
+  // let activeVisitorCount = 0;
+
+  // if(visitorsResponse.ok){
+  //   const visitorData =await visitorsResponse.json();
+  //   activeVisitorCount = visitorData.count || 0;
+  // }
+  if (ageMs > 3.5 * 60 * 1000) {
+    el.textContent = `🔴 WS`;
+    el.style.color = "red";
+    if(activeVisitorCount > 0 && !viewerToastShownWS) {
+      viewerToastShownWS = true;
+      showViewersToast(`Please wait. ${activeVisitorCount} active visitor(s) are triggering data fetch.`);
+    }
+  } else {
+    viewerToastShownWS = false;
+    el.textContent = `🟢 WS`;
+    el.style.color = "lime";
+  }
+
 }
 // ===================== ACT: SMART SCRAPE CHECK =====================
 async function statusphereHasNewScrape(ids) {
@@ -1850,6 +1910,7 @@ async function refreshData() {
 
   try {
     await updateLastSyncIndicator();
+    await updateLastSyncIndicatorWS();
 
     const view = getCurrentView();
 
@@ -1902,7 +1963,7 @@ async function refreshData() {
       //   return db - da;
       // });
       // renderProductionStatusUnified(tableEl, data);
-      showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt);
+      showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt,lastSyncShownAtWS);
       return;
     }
 
@@ -1911,7 +1972,7 @@ async function refreshData() {
 
     if (loader && tableEl) {
       await loader(tableEl);
-      showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt);
+      showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt,lastSyncShownAtWS);
     }
 
   } catch (err) {
@@ -2032,7 +2093,7 @@ dashboardInterval = setInterval(async () => {
   
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
-  
+  setInterval(updateLastSyncIndicatorWS, LAST_SYNC_MS);
   setInterval(sendHeartBeat, 60000);
   alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);

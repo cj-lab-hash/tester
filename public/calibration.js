@@ -44,7 +44,9 @@ const loginError = document.getElementById("loginError");
 const currentUser = document.getElementById("currentUser");
 let ajaxMode = localStorage.getItem("ajaxMode") === "true";
 const ajaxToggle = document.getElementById("ajaxToggle");
-let viewerToastShown = false;
+let viewerToastShownFT = false;
+let viewerToastShownWS = false;
+
 updateAjaxToggle();
 
 async function checkForUpdates() {
@@ -503,8 +505,8 @@ async function updateLastSyncIndicator(){
 
   el.textContent = `🔴FT`;
   el.style.color = "red";
-if (activeVisitorCount > 0 && !viewerToastShown) {
-        viewerToastShown = true;
+if (activeVisitorCount > 0 && !viewerToastShownFT) {
+        viewerToastShownFT = true;
         // console.log("SHOWING TOAST");
 
         showViewersToast(
@@ -514,7 +516,7 @@ if (activeVisitorCount > 0 && !viewerToastShown) {
     }
 } else {
   resumeDashboard();
-  viewerToastShown = false;
+  viewerToastShownFT = false;
   el.textContent = `🟢 FT`;
   el.style.color = "lime";
  }
@@ -548,19 +550,19 @@ async function updateLastSyncIndicatorWS(){
   const visitorsResponse = await fetch('/api/visitors');
   let activeVisitorCount = 0;
 
-  if(!visitorsResponse.ok){
+  if(visitorsResponse.ok){
     const visitorData =await visitorsResponse.json();
     activeVisitorCount = visitorData.count || 0;
   }
   if (ageMs > 3.5 * 60 * 1000) {
     el.textContent = `🔴 WS`;
     el.style.color = "red";
-    if(activeVisitorCount > 0 && !viewerToastShown) {
-      viewerToastShown = true;
-      showViewersToast(`Please wait. &{activeVisitorCount} active visitor(s) are triggering data fetch.`);
+    if(activeVisitorCount > 0 && !viewerToastShownWS) {
+      viewerToastShownWS = true;
+      showViewersToast(`Please wait. ${activeVisitorCount} active visitor(s) are triggering data fetch.`);
     }
   } else {
-    viewerToastShown = false;
+    viewerToastShownWS = false;
     el.textContent = `🟢 WS`;
     el.style.color = "lime";
   }

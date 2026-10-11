@@ -523,7 +523,7 @@ async function updateLastSyncIndicatorWS(){
   const el = document.getElementById("lastSyncWS");
   if (!el) return;
   const nowMsWS = Date.now();
-  const shouldFetchWS = (nowMs - lastSyncFetchedAtMsWs) > 60_000;
+  const shouldFetchWS = (nowMsWS - lastSyncFetchedAtMsWs) > 60_000;
   if (shouldFetchWS) {
     lastSyncFetchedAtMsWs = nowMsWS;
     const response = await fetch('/api/last-sync-ws');

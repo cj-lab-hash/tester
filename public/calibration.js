@@ -460,6 +460,13 @@ function ensureGuestId() {
 }
 
 // ===================== LAST SYNC =====================
+async function getActiveVisitors(){
+  const response = await fetch('/api/visitors');
+  if (!response.ok) return 0;
+  const data = await response.json();
+  return data.count || 0;
+
+}
 async function updateLastSyncIndicator(){
   const el = document.getElementById("lastSync");
   if (!el) return;
@@ -490,14 +497,15 @@ async function updateLastSyncIndicator(){
   const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const visitorsResponse = await fetch('/api/visitors');
-  let activeVisitorCount = 0;
+  const activeVisitorCount = await getActiveVisitors();
+  // const visitorsResponse = await fetch('/api/visitors');
+  // let activeVisitorCount = 0;
   
-  if (visitorsResponse.ok) {
-    const visitorData = await visitorsResponse.json();
-    activeVisitorCount = visitorData.count || 0;
-    // console.log("active visitors count=", activeVisitorCount);
-  }
+  // if (visitorsResponse.ok) {
+  //   const visitorData = await visitorsResponse.json();
+  //   activeVisitorCount = visitorData.count || 0;
+  //   // console.log("active visitors count=", activeVisitorCount);
+  // }
 
   if (ageMs > 3.5 * 60 * 1000) {
   // if (ageMs > 10 * 1000) {
@@ -547,13 +555,14 @@ async function updateLastSyncIndicatorWS(){
   const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
-  const visitorsResponse = await fetch('/api/visitors');
-  let activeVisitorCount = 0;
+  const activeVisitorCount = await getActiveVisitors();
+  // const visitorsResponse = await fetch('/api/visitors');
+  // let activeVisitorCount = 0;
 
-  if(visitorsResponse.ok){
-    const visitorData =await visitorsResponse.json();
-    activeVisitorCount = visitorData.count || 0;
-  }
+  // if(visitorsResponse.ok){
+  //   const visitorData =await visitorsResponse.json();
+  //   activeVisitorCount = visitorData.count || 0;
+  // }
   if (ageMs > 3.5 * 60 * 1000) {
     el.textContent = `🔴 WS`;
     el.style.color = "red";

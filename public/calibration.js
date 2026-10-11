@@ -543,7 +543,7 @@ async function updateLastSyncIndicatorWS(){
   }
   const dt = new Date(lastSyncShownAtWS);
   const ageMs = Date.now() - dt.getTime();
-  const ageMin = Math.max(0, Math.florr((Date.now() - dt.getTime()) / 60000));
+  const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
   const visitorsResponse = await fetch('/api/visitors');
   let activeVisitorCount = 0;

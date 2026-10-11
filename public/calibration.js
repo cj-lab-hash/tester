@@ -1899,6 +1899,7 @@ async function refreshData() {
 
   try {
     await updateLastSyncIndicator();
+    await updateLastSyncIndicatorWS();
 
     const view = getCurrentView();
 
@@ -1951,7 +1952,7 @@ async function refreshData() {
       //   return db - da;
       // });
       // renderProductionStatusUnified(tableEl, data);
-      showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt);
+      showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt,lastSyncShownAtWS);
       return;
     }
 
@@ -1960,7 +1961,7 @@ async function refreshData() {
 
     if (loader && tableEl) {
       await loader(tableEl);
-      showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt);
+      showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt,lastSyncShownAtWS);
     }
 
   } catch (err) {
@@ -2081,7 +2082,7 @@ dashboardInterval = setInterval(async () => {
   
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
-  
+  setInterval(updateLastSyncIndicatorWS, LAST_SYNC_MS);
   setInterval(sendHeartBeat, 60000);
   alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);

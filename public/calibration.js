@@ -501,7 +501,7 @@ async function updateLastSyncIndicator(){
   // if (ageMs > 10 * 1000) {
     pauseDashboard();
 
-  el.textContent = `🔴FT OFFLINE`;
+  el.textContent = `🔴FT`;
   el.style.color = "red";
 if (activeVisitorCount > 0 && !viewerToastShown) {
         viewerToastShown = true;
@@ -553,7 +553,7 @@ async function updateLastSyncIndicatorWS(){
     activeVisitorCount = visitorData.count || 0;
   }
   if (ageMs > 3.5 * 60 * 1000) {
-    el.textContent = `🔴 WS OFFLINE`;
+    el.textContent = `🔴 WS`;
     el.style.color = "red";
     if(activeVisitorCount > 0 && !viewerToastShown) {
       viewerToastShown = true;

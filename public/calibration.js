@@ -179,7 +179,7 @@ ajaxToggle.addEventListener("click", () => {
   updateAjaxToggle()
 });
 adminToggle.addEventListener("click", () => {
-    window.location.href = "/admin";
+    window.open('/admin',"_blank", "noopener, noreferrer");
 });
 function updateAjaxToggle() {
 

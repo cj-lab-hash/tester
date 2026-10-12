@@ -1195,7 +1195,7 @@ function collectIssueAlerts(tableEl) {
   if (!tableEl) return [];
   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
 
-  const alerts = { YIELD:[], CONTACT:[], RKGU:[], SYSTEM:[], QUALIFICATION:[], HW_CHECKER:[], QA:[],HANDLER:[] };
+  const alerts = { YIELD:[], CONTACT:[], RKGU:[], SYSTEM:[], QUALIFICATION:[], HW_CHECKER:[], QA:[],HANDLER:[],CONTACT_KMG:[],CONTACT_MECHANICAL:[],CONTACT_CMG:[] };
 
   for (const tr of rows) {
     const tester = (tr.cells?.[0]?.textContent || "").trim();
@@ -1208,17 +1208,32 @@ function collectIssueAlerts(tableEl) {
     const text = (cell.textContent || "").toUpperCase();
 
     if (text.includes("YIELD ISSUE")) alerts.YIELD.push(tester);
-    if (text.includes("CONTACT ISSUE")) alerts.CONTACT.push(tester);
+    // if (text.includes("CONTACT ISSUE")) alerts.CONTACT.push(tester);
     if (text.includes("RKGU FAIL")) alerts.RKGU.push(tester);
     if (text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM")) alerts.SYSTEM.push(tester);
     if (text.includes("QUALIFICATION FAILURE")) alerts.QUALIFICATION.push(tester);
     if (text.includes("HW CHECKER ISSUE")) alerts.HW_CHECKER.push(tester);
     if (text.includes("QA FAILURE")) alerts.QA.push(tester);
     if (text.includes("HANDLER PROBLEM")) alerts.HANDLER.push(tester);
+    if (text.includes("CONTACT ISSUE-KMG")) {
+      alerts.CONTACT_KMG.push(tester);
+    }
+    else if (text.includes("CONTACT ISSUE-CMG")) {
+      alerts.CONTACT_MECHANICAL.push(tester);
+    }
+    else if (text.includes("CONTACT ISSUE-MECHANICAL")) {
+      alerts.CONTACT_MECHANICAL.push(tester);
+    }
+      else if (text.includes("CONTACT ISSUE")) {
+        alerts.CONTACT.push(tester);
+    }
   }
 
   const result = [];
   if (alerts.YIELD.length) result.push({key:"YIELD", list: alerts.YIELD, type:"blue", label:"YIELD ISSUE"});
+  if (alerts.CONTACT_KMG.length) result.push({key:"CONTACT_KMG", list: alerts.CONTACT_KMG, type:"red", label:"CONTACT ISSUE-KMG"});
+  if (alerts.CONTACT_CMG.length) result.push({key:"CONTACT_CMG", list: alerts.CONTACT_CMG, type:"red", label:"CONTACT ISSUE-CMG"});
+  if (alerts.CONTACT_MECHANICAL.length) result.push({key:"CONTACT_MECHANICAL", list: alerts.CONTACT_MECHANICAL, type:"red", label:"CONTACT ISSUE-MECHANICAL"});
   if (alerts.CONTACT.length) result.push({key:"CONTACT", list: alerts.CONTACT, type:"red", label:"CONTACT ISSUE"});
   if (alerts.RKGU.length) result.push({key:"RKGU", list: alerts.RKGU, type:"pink", label:"RKGU FAIL"});
   if (alerts.SYSTEM.length) result.push({key:"SYSTEM", list: alerts.SYSTEM, type:"yellow", label:"SYSTEM ISSUE"});

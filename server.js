@@ -1029,6 +1029,9 @@ app.get(
         if (error) throw error;
 
         const buckets = {
+            "CONTACT ISSUE-KMG":[],
+            "CONTACT ISSUE-CMG":[],
+            "CONTACT ISSUE-MECHANICAL":[],
             "CONTACT ISSUE": [],
             "YIELD ISSUE": [],
             "RKGU FAIL": [],
@@ -1043,6 +1046,12 @@ app.get(
             let issue = null;
             if (text.includes("YIELD ISSUE"))
                 issue = "YIELD ISSUE";
+            else if (text.includes("CONTACT ISSUE-CMG"))
+                issue = "CONTACT ISSUE-CMG";
+            else if (text.includes("CONTACT ISSUE-KMG"))
+                issue = "CONTACT ISSUE-KMG";
+            else if (text.includes("CONTACT ISSUE-MECHANICAL"))
+                issue = "CONTACT ISSUE-MECHANICAL";
             else if (text.includes("CONTACT ISSUE"))
                 issue = "CONTACT ISSUE";
             else if (text.includes("RKGU FAIL"))

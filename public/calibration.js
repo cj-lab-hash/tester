@@ -1020,8 +1020,8 @@ function extractIssue(stateShort, stateLong, rawTitle) {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
   if (!s) return null;
 
-  // const m = text.match(new RegExp(`${s}\\s*->\\s*([^->]+)`, "i"));
-  // if (m && m[1]) return m[1].trim();
+  const m = text.match(new RegExp(`${s}\\s*->\\s*(.+?)(?:->|$)`, "i"));
+  if (m && m[1]) return m[1].trim();
 
   const known = [
     "CONTACT ISSUE-KMG","CONTACT ISSUE-CMG","CONTACT ISSUE-MECHANICAL","YIELD ISSUE","RKGU FAIL",

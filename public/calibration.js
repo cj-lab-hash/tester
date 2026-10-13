@@ -1031,7 +1031,12 @@ function extractIssue(stateShort, stateLong, rawTitle) {
     "QA FAIL","STANDBY/IDLE","LOT COMPLETION","CONTACT ISSUE",
     "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION", "KGU / RKGU RELOAD", "KGU RETEST"
   ];
-  for (const k of known) if (text.includes(k)) return k;
+  for (const k of known) {
+    if (text.includes(k)) {
+    console.log("matched issue:", k);
+    return k;
+  }
+}
   return null;
 }
 

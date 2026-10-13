@@ -713,6 +713,9 @@ function classifyIssue(stateLong = "", rawTitle = "") {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
 
   if (text.includes("YIELD ISSUE")) return "YIELD ISSUE";
+  if (text.includes("CONTACT ISSUE-KMG")) return "CONTACT ISSUE-KMG";
+  if (text.includes("CONTACT ISSUE-CMG")) return "CONTACT ISSUE-CMG";
+  if (text.includes("CONTACT ISSUE-MECHANICAL")) return "CONTACT ISSUE-MECHANICAL";
   if (text.includes("CONTACT ISSUE")) return "CONTACT ISSUE";
   if (text.includes("RKGU FAIL")) return "RKGU FAIL";
 
@@ -1021,11 +1024,11 @@ function extractIssue(stateShort, stateLong, rawTitle) {
   if (m && m[1]) return m[1].trim();
 
   const known = [
-    "CONTACT ISSUE","YIELD ISSUE","RKGU FAIL",
+    "CONTACT ISSUE-KMG","CONTACT ISSUE-CMG","CONTACT ISSUE-MECHANICAL","YIELD ISSUE","RKGU FAIL",
     "QA TEST","MISMATCH RESCREEN","RESCREEN",
     "NO INVENTORY","PLANNED IDLE","INACTIVE",
     "PRODUCT EVAL","INCOMPLETE RESOURCES",
-    "QA FAIL","STANDBY/IDLE","LOT COMPLETION",
+    "QA FAIL","STANDBY/IDLE","LOT COMPLETION","CONTACT ISSUE",
     "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION", "KGU / RKGU RELOAD", "KGU RETEST"
   ];
   for (const k of known) if (text.includes(k)) return k;
@@ -1219,7 +1222,7 @@ function collectIssueAlerts(tableEl) {
       alerts.CONTACT_KMG.push(tester);
     }
     else if (text.includes("CONTACT ISSUE-CMG")) {
-      alerts.CONTACT_MECHANICAL.push(tester);
+      alerts.CONTACT_CMG.push(tester);
     }
     else if (text.includes("CONTACT ISSUE-MECHANICAL")) {
       alerts.CONTACT_MECHANICAL.push(tester);

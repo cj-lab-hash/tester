@@ -466,7 +466,7 @@ function ensureGuestId() {
 
 // ===================== LAST SYNC =====================
 async function getActiveVisitors(){
-  const now = date.now();
+  const now = Date.now();
 
   if (now - visitorsFetchedAt < 30000){
     return activeVisitorCount;

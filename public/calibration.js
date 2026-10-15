@@ -5,7 +5,8 @@ import { loadVerseFromAPI } from "./bible.js";
 const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
 const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
-const lastIssueCounts = new Map();
+// const lastIssueCounts = new Map();
+const lastIssueCountsByView = new Map();
 const HIDE_STATES = new Set([
   "PRODN",
   "ENGG",
@@ -757,6 +758,48 @@ function classifyIssue(stateLong = "", rawTitle = "") {
   return null;
 }
 
+
+function alertViewIssues(viewName, alerts) {
+
+  if (!lastIssueCountsByView.has(viewName)) {
+    lastIssueCountsByView.set(viewName, new Map());
+  }
+
+  const countsMap = lastIssueCountsByView.get(viewName);
+
+  let shouldPlaySound = false;
+
+  for (const alert of alerts) {
+
+    const issueName = alert.label;
+    const newCount = alert.list.length;
+
+    const prevCount =
+      countsMap.get(issueName) || 0;
+
+    if (newCount > prevCount) {
+      shouldPlaySound = true;
+    }
+
+    countsMap.set(
+      issueName,
+      newCount
+    );
+
+    showToast({
+      type: alert.type,
+      title: `[${viewName}] ${issueName}: ${newCount}`,
+      message:
+        alert.list.slice(0, 6).join(", ") +
+        (alert.list.length > 6 ? " ..." : "")
+    });
+  }
+
+  if (shouldPlaySound) {
+    playAlertSound();
+  }
+}
+
 // Alerts for ALL groups based on DB “latest scrape timestamp”
 async function alertIssuesAllGroupsIfNewScrape() {
 
@@ -783,19 +826,6 @@ async function alertIssuesAllGroupsIfNewScrape() {
 
     if (!list.length) continue;
 
-    const prevCount =
-      lastIssueCounts.get(issueName) || 0;
-
-    const newCount = list.length;
-
-    if (newCount > prevCount) {
-      playAlertSound();
-    }
-
-    lastIssueCounts.set(
-      issueName,
-      newCount
-    );
 
     const type =
       issueName === "RKGU FAIL"
@@ -1288,14 +1318,14 @@ function showViewAlertsOncePerChange(viewName, tableEl, scrapeTs) {
 
   if (lastViewToastKey.get(viewName) === signature) return;
   lastViewToastKey.set(viewName, signature);
-
-  for (const a of alerts) {
-    showToast({
-      type: a.type,
-      title: `[${viewName}] ${a.label}: ${a.list.length}`,
-      message: a.list.slice(0, 6).join(", ") + (a.list.length > 6 ? " ..." : ""),
-    });
-  }
+  alertViewIssues(viewName,alerts);
+//   for (const a of alerts) {
+//     showToast({
+//       type: a.type,
+//       title: `[${viewName}] ${a.label}: ${a.list.length}`,
+//       message: a.list.slice(0, 6).join(", ") + (a.list.length > 6 ? " ..." : ""),
+//     });
+//   }
 }
 // ===================== RENDER: SYSTEM PROBLEM ONLY (same style as other tables) =====================
 // async function loadSYSTEMLatest(tableEl) {
@@ -1481,7 +1511,7 @@ function playAlertSound() {
     audioId = "superSound";
   }
   // const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(role);
-  const audtio = document.getElementById(audioId);
+  const audio = document.getElementById(audioId);
   // const audio = document.getElementById(
   //   isPrivileged
   //   ? "superSound"

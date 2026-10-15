@@ -756,7 +756,7 @@ async function requireAdmin(
 }
 
 //issue counts//
-app.get ('/api/issue-count-history/trend', async (req, res) => {
+app.get ('/api/issue-count-history/trend', requireAdmin, async (req, res) => {
     try {
         const {view, issue } = req.query;
         if (!view || !issue) {
@@ -785,7 +785,7 @@ app.get ('/api/issue-count-history/trend', async (req, res) => {
         });
     }
 });
-app.get("/api/issue-count-history/latest", async (req, res) => {
+app.get("/api/issue-count-history/latest", requireAdmin, async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT DISTINCT ON (
@@ -896,7 +896,7 @@ try {
     client.release();
 }
 });
-app.get("/api/issue-count-history/top-today", async (req, res) => {
+app.get("/api/issue-count-history/top-today", requireAdmin, async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT
@@ -917,9 +917,7 @@ app.get("/api/issue-count-history/top-today", async (req, res) => {
     });
   }
 });
-app.get(
-  "/api/issue-count-history/occurrences",
-  async (req, res) => {
+app.get("/api/issue-count-history/occurrences", requireAdmin, async (req, res) => {
     try {
 
       const { rows } = await pool.query(`

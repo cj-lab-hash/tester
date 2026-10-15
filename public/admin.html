@@ -190,6 +190,13 @@ tr:hover{
 }
 
 </style>
+
+    
+</head>
+
+<body>
+
+<h1>⚙ TESTER MONITORING ADMIN</h1>
 <div class="top-actions">
 
 <a href="/">← Tester Monitoring</a>
@@ -202,13 +209,6 @@ onclick="cleanupVisitors()"
 
 
 </div>
-    
-</head>
-
-<body>
-
-<h1>⚙ TESTER MONITORING ADMIN</h1>
-
 <div class="refresh-label">
 Auto refresh every 30 seconds
 </div>
@@ -414,9 +414,41 @@ Auto refresh every 30 seconds
 </div>
 
 </div>
+<div id="currentIssues"></div>
 
+<div id="topIssues"></div>
+
+<select id="viewSelect">
+  <option>ACT</option>
+  <option>UFLEX</option>
+  <option>EAGLE</option>
+  <option>SPEA</option>
+  <option>LTXMX</option>
+  <option>MAV</option>
+  <option>TMT</option>
+  <option>LEGACY</option>
+  <option>LTX</option>
+  <option>ARK</option>
+  <option>WS</option>
+</select>
+
+<select id="issueSelect">
+  <option>YIELD ISSUE</option>
+  <option>CONTACT ISSUE</option>
+  <option>CONTACT ISSUE-KMG</option>
+  <option>CONTACT ISSUE-CMG</option>
+  <option>CONTACT ISSUE-MECHANICAL</option>
+  <option>SYSTEM ISSUE</option>
+  <option>HANDLER PROBLEM</option>
+  <option>QA FAILURE</option>
+  <option>RKGU FAIL</option>
+</select>
+
+<canvas id="trendChart"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 let currentVisitors = [];
+let trendChart = null;
 async function loadAdminDashboard(){
     
     try{
@@ -474,7 +506,7 @@ async function loadAdminDashboard(){
         const commentRequest =
                 commentRequestRes.ok
                 ? await commentRequestRes.json()
-                : {};
+                : [];
         const commentStats =
                 commentStatusRes.ok
                 ? await commentStatusRes.json()
@@ -770,6 +802,186 @@ function renderCommentRequests(rows){
             );
         });
 }
+
+
+
+async function loadCurrentIssues() {
+
+    const response =
+        await fetch(
+            "/api/issue-count-history/latest"
+        );
+
+    if (!response.ok) return;
+
+    const data =
+        await response.json();
+
+    const container =
+        document.getElementById(
+            "currentIssues"
+        );
+
+    container.innerHTML = "";
+
+    const grouped = {};
+
+    data.forEach(row => {
+
+        if (!grouped[row.view_name]) {
+            grouped[row.view_name] = [];
+        }
+
+        grouped[row.view_name]
+            .push(row);
+
+    });
+
+    Object.entries(grouped)
+        .forEach(([view, issues]) => {
+
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "dashboard-card";
+
+            card.innerHTML = `
+                <h3>${view}</h3>
+            `;
+
+            issues.forEach(issue => {
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+                div.innerHTML = `
+                    <span>
+                        ${issue.issue_name}
+                    </span>
+                    <strong>
+                        ${issue.count}
+                    </strong>
+                `;
+
+                card.appendChild(div);
+
+            });
+
+            container.appendChild(card);
+
+        });
+
+}
+async function loadTopIssues() {
+
+    const response =
+        await fetch(
+            "/api/issue-count-history/top-today"
+        );
+
+    if (!response.ok) return;
+
+    const data =
+        await response.json();
+
+    const container =
+        document.getElementById(
+            "topIssues"
+        );
+
+    container.innerHTML =
+        "<h2>Top Issues Today</h2>";
+
+    data.forEach((item, index) => {
+
+        const row =
+            document.createElement("div");
+
+        row.innerHTML = `
+            #${index + 1}
+            ${item.issue_name}
+            (${item.peak_count})
+        `;
+
+        container.appendChild(row);
+
+    });
+
+}
+async function loadTrendChart() {
+
+    const view =
+        document.getElementById(
+            "viewSelect"
+        ).value;
+
+    const issue =
+        document.getElementById(
+            "issueSelect"
+        ).value;
+
+    const response =
+        await fetch(
+            `/api/issue-count-history/trend?view=${encodeURIComponent(view)}&issue=${encodeURIComponent(issue)}`
+        );
+
+    if (!response.ok) return;
+
+    const data =
+        await response.json();
+
+    const labels =
+        data.map(x =>
+            new Date(
+                x.recorded_at
+            ).toLocaleTimeString()
+        );
+
+    const counts =
+        data.map(x => x.count);
+    const canvas =
+    document.getElementById("trendChart");
+
+if (!canvas) return;
+
+const ctx =
+    canvas.getContext("2d");
+
+    if (trendChart) {
+        trendChart.destroy();
+    }
+
+    trendChart =
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label:
+                            `${view} - ${issue}`,
+                        data: counts,
+                        borderWidth: 3,
+                        tension: 0.2,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+}
+
 async function revokeSession(token){
 
 if(!confirm('Logout session?')
@@ -786,13 +998,41 @@ if(!confirm('Logout session?')
 loadAdminDashboard();
 
 }
+async function refreshDashboard() {
 
-loadAdminDashboard();
+    await Promise.all([
+        loadCurrentIssues(),
+        loadTopIssues()
+    ]);
 
-setInterval(
-    loadAdminDashboard,
-    30000
-);
+    await loadTrendChart();
+
+}
+
+
+window.addEventListener("DOMContentLoaded", async () => {
+    loadAdminDashboard();
+    await refreshDashboard();
+
+    document
+        .getElementById("viewSelect")
+        ?.addEventListener(
+            "change",
+            loadTrendChart
+        );
+
+    document
+        .getElementById("issueSelect")
+        ?.addEventListener(
+            "change",
+            loadTrendChart
+        );
+});
+
+setInterval(async () => {
+    await loadAdminDashboard();
+    await refreshDashboard();
+}, 30000);
 
 </script>
 

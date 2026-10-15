@@ -785,7 +785,19 @@ function alertViewIssues(viewName, alerts) {
       issueName,
       newCount
     );
-
+    fetch("/api/issue-counts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        view: viewName,
+        issues: alerts.map(alert => ({
+          name: alert.label,
+          count: alert.list.length
+        }))
+      })
+    }).catch(console.error);
     showToast({
       type: alert.type,
       title: `[${viewName}] ${issueName}: ${newCount}`,

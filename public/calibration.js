@@ -1470,10 +1470,10 @@ function playAlertSound() {
   
   const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(currentRole);
   const audio = document.getElementById(isPrivileged
-    ? "supersound"
+    ? "superSound"
     : "alertSound"
   );
-  
+
   if (!audio) return;
 
   audio.currentTime = 0; // restart sound

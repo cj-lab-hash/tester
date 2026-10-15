@@ -755,6 +755,198 @@ async function requireAdmin(
     next();
 }
 
+//issue counts//
+app.get ('/api/issue-count-history/trend', requireAdmin, async (req, res) => {
+    try {
+        const {view, issue } = req.query;
+        if (!view || !issue) {
+            return res.status(400).json({
+                error: "view and issue are required"
+            });
+        }
+        const { rows } = await pool.query(
+            `
+            SELECT
+            count,
+            recorded_at
+            FROM tester.issue_count_history
+            WHERE view_name = $1
+            AND issue_name = $2
+            ORDER BY recorded_at ASC
+            `,
+            [view, issue]
+        );
+        res.json(rows);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            error: "Database error"
+        });
+    }
+});
+app.get("/api/issue-count-history/latest", requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT DISTINCT ON (
+        view_name,
+        issue_name
+      )
+        view_name,
+        issue_name,
+        count,
+        recorded_at
+      FROM tester.issue_count_history
+      ORDER BY
+        view_name,
+        issue_name,
+        recorded_at DESC
+    `);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Database error"
+    });
+  }
+});
+app.post ('/api/issue-counts', async (req, res) => {
+    const client = await pool.connect();
+try {
+    const { view, issues } = req.body;
+    if (!view || !Array.isArray(issues)) {
+        return res.status(400).json({
+            error: "Invalid payload"
+        });
+    }
+    await client.query("BEGIN");
+
+    for (const issue of issues) {
+        const existing = await client.query(
+            `
+            SELECT count
+            FROM tester.issue_counts
+            WHERE view_name = $1
+            AND issue_name = $2
+            `,
+            [
+                view,
+                issue.name
+            ]
+        );
+        const oldCount = existing.rows.length > 0
+            ? Number(existing.rows[0].count)
+            : null;
+
+        await client.query(
+            `
+            INSERT INTO tester.issue_counts (
+            view_name,
+            issue_name,
+            count,
+            last_changed
+            )
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (view_name, issue_name)
+            DO UPDATE SET
+                count = EXCLUDED.count,
+                last_changed = NOW()
+                `,
+                [
+                    view,
+                    issue.name,
+                    issue.count
+                    
+                ]
+        );
+        if (oldCount !== Number(issue.count)) {
+            await client.query(
+                `
+                INSERT INTO tester.issue_count_history (
+                view_name,
+                issue_name,
+                count,
+                tester_list,
+                recorded_at
+                )
+                VALUES ($1, $2, $3, $4, NOW())
+                `,
+                [
+                    view,
+                    issue.name,
+                    issue.count,
+                    JSON.stringify(issue.testers)
+                ]
+            );
+        }
+    }
+    await client.query("COMMIT");
+
+    res.json({
+        success:true
+    });
+} catch (err) {
+    console.error(err);
+    res.status(500).json({
+        error: "Database error"
+    });
+} finally {
+    client.release();
+}
+});
+app.get("/api/issue-count-history/top-today", requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        issue_name,
+        MAX(count) AS peak_count
+      FROM tester.issue_count_history
+      WHERE recorded_at >= CURRENT_DATE
+      GROUP BY issue_name
+      ORDER BY peak_count DESC
+    `);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Database error"
+    });
+  }
+});
+app.get("/api/issue-count-history/occurrences", requireAdmin, async (req, res) => {
+    try {
+
+      const { rows } = await pool.query(`
+        SELECT
+          view_name,
+          issue_name,
+          COUNT(*) AS occurrences
+        FROM tester.issue_count_history
+        WHERE recorded_at >= CURRENT_DATE
+        GROUP BY
+          view_name,
+          issue_name
+        ORDER BY occurrences DESC
+      `);
+
+      res.json(rows);
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        error: "Database error"
+      });
+
+    }
+  }
+);
+//issue counts//
 
 app.post ('/api/comments/request', async (req,res) => {
     const {

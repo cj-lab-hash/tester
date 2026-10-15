@@ -785,7 +785,20 @@ function alertViewIssues(viewName, alerts) {
       issueName,
       newCount
     );
-
+    fetch("/api/issue-counts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        view: viewName,
+        issues: alerts.map(alert => ({
+          name: alert.label,
+          count: alert.list.length,
+          testers:alert.list
+        }))
+      })
+    }).catch(console.error);
     showToast({
       type: alert.type,
       title: `[${viewName}] ${issueName}: ${newCount}`,
@@ -799,7 +812,51 @@ function alertViewIssues(viewName, alerts) {
     playAlertSound();
   }
 }
+async function loadOccurrences() {
 
+    const response =
+        await fetch(
+            "/api/issue-count-history/occurrences"
+        );
+
+    if (!response.ok) {
+        return;
+    }
+
+    const data =
+        await response.json();
+
+    const container =
+        document.getElementById(
+            "occurrenceIssues"
+        );
+
+    container.innerHTML =
+        "<h2>Most Frequent Issues Today</h2>";
+
+    data.slice(0,10).forEach(
+        (item, index) => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+            row.innerHTML = `
+                #${index + 1}
+                ${item.view_name}
+                ${item.issue_name}
+                (${item.occurrences})
+            `;
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
 // Alerts for ALL groups based on DB “latest scrape timestamp”
 async function alertIssuesAllGroupsIfNewScrape() {
 

@@ -46,6 +46,9 @@ let ajaxMode = localStorage.getItem("ajaxMode") === "true";
 const ajaxToggle = document.getElementById("ajaxToggle");
 let viewerToastShownFT = false;
 let viewerToastShownWS = false;
+let activeVisitorCount = 0;
+let visitorsFetchedAt = 0;
+
 
 updateAjaxToggle();
 
@@ -89,6 +92,10 @@ function setAuthenticated(
                 authenticated, 
                 permissions = {} 
             ) {
+              document.body.dataset.role = 
+                authenticated
+                      ? (permissions.role || "guest")
+                      : "guest";
                 document.body.classList.toggle("authenticated", authenticated);
                 document.body.classList.toggle("auth-locked", !authenticated);
                 loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
@@ -463,10 +470,26 @@ function ensureGuestId() {
 
 // ===================== LAST SYNC =====================
 async function getActiveVisitors(){
-  const response = await fetch('/api/visitors');
-  if (!response.ok) return 0;
+  const now = Date.now();
+
+  if (now - visitorsFetchedAt < 30000){
+    return activeVisitorCount;
+  }
+  visitorsFetchedAt = now;
+
+  try{
+      const response = await fetch('/api/visitors');
+  if (!response.ok) {
+    return activeVisitorCount;
+  }
+
   const data = await response.json();
-  return data.count || 0;
+  activeVisitorCount = data.count || 0;
+  return activeVisitorCount;
+  } catch (err) {
+    console.error(err);
+    return activeVisitorCount;
+  }
 
 }
 async function updateLastSyncIndicator(){
@@ -497,9 +520,9 @@ async function updateLastSyncIndicator(){
 
   const dt = new Date(lastSyncShownAt);
   const ageMs = Date.now() - dt.getTime();
-  const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
-  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const activeVisitorCount = await getActiveVisitors();
+  // const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
+  // const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const VisitorCount = await getActiveVisitors();
   // const visitorsResponse = await fetch('/api/visitors');
   // let activeVisitorCount = 0;
   
@@ -515,12 +538,12 @@ async function updateLastSyncIndicator(){
 
   el.textContent = `🔴FT`;
   el.style.color = "red";
-if (activeVisitorCount > 0 && !viewerToastShownFT) {
+if (VisitorCount > 0 && !viewerToastShownFT) {
         viewerToastShownFT = true;
         // console.log("SHOWING TOAST");
 
         showViewersToast(
-            `Please wait. ${activeVisitorCount} active visitor(s) are triggering a data fetch.`
+            `Please wait. ${VisitorCount} active visitor(s) are triggering a data fetch.`
         );
 
     }
@@ -555,9 +578,9 @@ async function updateLastSyncIndicatorWS(){
   }
   const dt = new Date(lastSyncShownAtWS);
   const ageMs = Date.now() - dt.getTime();
-  const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
-  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
-  const activeVisitorCount = await getActiveVisitors();
+  // const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
+  // const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
+  const VisitorCount = activeVisitorCount;
   // const visitorsResponse = await fetch('/api/visitors');
   // let activeVisitorCount = 0;
 
@@ -568,9 +591,9 @@ async function updateLastSyncIndicatorWS(){
   if (ageMs > 3.5 * 60 * 1000) {
     el.textContent = `🔴 WS`;
     el.style.color = "red";
-    if(activeVisitorCount > 0 && !viewerToastShownWS) {
+    if(VisitorCount > 0 && !viewerToastShownWS) {
       viewerToastShownWS = true;
-      showViewersToast(`Please wait. ${activeVisitorCount} active visitor(s) are triggering data fetch.`);
+      showViewersToast(`Please wait. ${VisitorCount} active visitor(s) are triggering data fetch.`);
     }
   } else {
     viewerToastShownWS = false;
@@ -1448,7 +1471,19 @@ function renderProductionStatusUnified(tableEl, dataRows) {
   }
 }
 function playAlertSound() {
-  const audio = document.getElementById("alertSound");
+  const role = document.body.dataset.role || "guest";
+  const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(role);
+
+  const audio = document.getElementById(
+    isPrivileged
+    ? "superSound"
+    : "alertSound"
+  );
+  // console.log({
+  //   role,
+  //   isPrivileged,
+  //   audioId: audio?.id
+  // });
   if (!audio) return;
 
   audio.currentTime = 0; // restart sound

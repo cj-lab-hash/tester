@@ -17,7 +17,6 @@ const HIDE_STATES = new Set([
 const TPE_DOWNTIME = new Set([
   "YIELD ISSUE",
   "R/KGU FAIL",
-  "CONTACT ISSUE",
   "QUALIFICATION FAIL DFL",
   "TPE VERIFICATION",
   "QA FAIL",
@@ -326,8 +325,10 @@ function editCell(td) {
 
 function isTPEDowntime(stateLong) {
   const state = (stateLong || "").toUpperCase();
+ if (state === "CONTACT ISSUE") return true;
   return [...TPE_DOWNTIME].some(issue => state.includes(issue));
 }
+
 function isPRESETUP(statelong) {
   const state = (statelong || "").toUpperCase();
   return [...PRE_SETUP].some(pre => state.includes(pre)) 

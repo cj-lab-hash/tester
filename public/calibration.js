@@ -47,6 +47,8 @@ const ajaxToggle = document.getElementById("ajaxToggle");
 let viewerToastShownFT = false;
 let viewerToastShownWS = false;
 let activeVisitorCount = 0;
+let visitorsFetchedAt = 0;
+
 
 updateAjaxToggle();
 
@@ -464,11 +466,27 @@ function ensureGuestId() {
 
 // ===================== LAST SYNC =====================
 async function getActiveVisitors(){
-  const response = await fetch('/api/visitors');
-  if (!response.ok) return 0;
+  const now = date.now();
+
+  if (now - visitorsFetchedAt < 30000){
+    return activeVisitorCount;
+  }
+  visitorsFetchedAt = now;
+
+  try{
+      const response = await fetch('/api/visitors');
+  if (!response.ok) {
+    return activeVisitorCount;
+  }
+
   const data = await response.json();
   activeVisitorCount = data.count || 0;
   return activeVisitorCount;
+  } catch (err) {
+    console.error(err);
+    return activeVisitorCount;
+  }
+
 }
 async function updateLastSyncIndicator(){
   const el = document.getElementById("lastSync");
@@ -498,9 +516,9 @@ async function updateLastSyncIndicator(){
 
   const dt = new Date(lastSyncShownAt);
   const ageMs = Date.now() - dt.getTime();
-  const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
-  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const VisitorCount = activeVisitorCount;
+  // const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
+  // const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const VisitorCount = await getActiveVisitors();
   // const visitorsResponse = await fetch('/api/visitors');
   // let activeVisitorCount = 0;
   
@@ -556,8 +574,8 @@ async function updateLastSyncIndicatorWS(){
   }
   const dt = new Date(lastSyncShownAtWS);
   const ageMs = Date.now() - dt.getTime();
-  const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
-  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
+  // const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
+  // const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
   const VisitorCount = activeVisitorCount;
   // const visitorsResponse = await fetch('/api/visitors');
   // let activeVisitorCount = 0;

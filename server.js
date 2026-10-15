@@ -837,7 +837,7 @@ try {
             ]
         );
         const oldCount = existing.rows.length > 0
-            ? existing.rows[0].count
+            ? Number(existing.rows[0].count)
             : null;
 
         await client.query(
@@ -858,23 +858,26 @@ try {
                     view,
                     issue.name,
                     issue.count
+                    
                 ]
         );
-        if (oldCount !== issue.count) {
+        if (oldCount !== Number(issue.count)) {
             await client.query(
                 `
                 INSERT INTO tester.issue_count_history (
                 view_name,
                 issue_name,
                 count,
+                tester_list,
                 recorded_at
                 )
-                VALUES ($1, $2, $3, NOW())
+                VALUES ($1, $2, $3, $4, NOW())
                 `,
                 [
                     view,
                     issue.name,
-                    issue.count
+                    issue.count,
+                    JSON.stringify(issue.testers)
                 ]
             );
         }
@@ -914,6 +917,37 @@ app.get("/api/issue-count-history/top-today", async (req, res) => {
     });
   }
 });
+app.get(
+  "/api/issue-count-history/occurrences",
+  async (req, res) => {
+    try {
+
+      const { rows } = await pool.query(`
+        SELECT
+          view_name,
+          issue_name,
+          COUNT(*) AS occurrences
+        FROM tester.issue_count_history
+        WHERE recorded_at >= CURRENT_DATE
+        GROUP BY
+          view_name,
+          issue_name
+        ORDER BY occurrences DESC
+      `);
+
+      res.json(rows);
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        error: "Database error"
+      });
+
+    }
+  }
+);
 //issue counts//
 
 app.post ('/api/comments/request', async (req,res) => {

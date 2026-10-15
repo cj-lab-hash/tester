@@ -1479,11 +1479,11 @@ function playAlertSound() {
     ? "superSound"
     : "alertSound"
   );
-  console.log({
-    role,
-    isPrivileged,
-    audioId: audio?.id
-  });
+  // console.log({
+  //   role,
+  //   isPrivileged,
+  //   audioId: audio?.id
+  // });
   if (!audio) return;
 
   audio.currentTime = 0; // restart sound

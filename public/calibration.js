@@ -1469,6 +1469,11 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 function playAlertSound() {
   
   const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(currentRole);
+   console.log({
+    currentRole,
+    authenticated: document.body.classList.contains("authenticated"),
+    isPrivileged
+  });
   const audio = document.getElementById(isPrivileged
     ? "superSound"
     : "alertSound"

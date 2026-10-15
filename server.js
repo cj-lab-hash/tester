@@ -680,10 +680,11 @@ function getIssuePriority(row) {
   if (text.includes("QUALIFICATION FAIL DFL")) return 3;
   if (text.includes("RKGU FAIL")) return 4;
   if (text.includes("QA FAIL")) return 5;
-  if (text.includes("HANDLER PROBLEM")) return 6;
-  if (text.includes("HW CHECKER")) return 7;
+  if (text.includes("QUALIFICATION FAIL CNTC")) return 6;
+  if (text.includes("HANDLER PROBLEM")) return 7;
+  if (text.includes("HW CHECKER")) return 8;
   if (text.includes("SYSTEM PROBLEM") ||
-  text.includes("SYSTEM ISSUE")) return 8;
+  text.includes("SYSTEM ISSUE")) return 9;
 
 
   const state = (row.state_short || "").toUpperCase();
@@ -1059,6 +1060,8 @@ app.get(
             else if (text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM"))
                 issue = "SYSTEM ISSUE";
             else if (text.includes("QUALIFICATION FAIL DFL"))
+                issue = "QUALIFICATION FAILURE";
+            else if (text.includes("QUALIFICATION FAIL CNTC"))
                 issue = "QUALIFICATION FAILURE";
             else if (text.includes("HW CHECKER"))
                 issue = "HW CHECKER ISSUE";

@@ -1472,18 +1472,22 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 }
 function playAlertSound() {
   const role = document.body.dataset.role || "guest";
-  const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(role);
+  let audioId = "alertSound";
+  if (role === "admin"){
+    audioId = "adminSound";
+  }
 
-  const audio = document.getElementById(
-    isPrivileged
-    ? "superSound"
-    : "alertSound"
-  );
-  // console.log({
-  //   role,
-  //   isPrivileged,
-  //   audioId: audio?.id
-  // });
+  if (role === "superuser"){
+    audioId = "superSound";
+  }
+  // const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(role);
+  const audtio = document.getElementById(audioId);
+  // const audio = document.getElementById(
+  //   isPrivileged
+  //   ? "superSound"
+  //   : "alertSound"
+  // );
+
   if (!audio) return;
 
   audio.currentTime = 0; // restart sound

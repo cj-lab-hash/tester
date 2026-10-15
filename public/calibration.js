@@ -826,19 +826,6 @@ async function alertIssuesAllGroupsIfNewScrape() {
 
     if (!list.length) continue;
 
-    const countsMap =
-      lastIssueCountsByView.get(issueName) || 0;
-    const prevCount = countsMap.get(issueName) || 0;
-    const newCount = list.length;
-
-    if (newCount > prevCount) {
-      playAlertSound();
-    }
-
-    countsMap.set(
-      issueName,
-      newCount
-    );
 
     const type =
       issueName === "RKGU FAIL"

@@ -468,7 +468,7 @@ async function getActiveVisitors(){
   if (!response.ok) return 0;
   const data = await response.json();
   activeVisitorCount = data.count || 0;
-
+  return activeVisitorCount;
 }
 async function updateLastSyncIndicator(){
   const el = document.getElementById("lastSync");

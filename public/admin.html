@@ -169,6 +169,22 @@ tr:hover{
     text-decoration:none;
     font-weight:bold;
 }
+.stats-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-top:20px;
+}
+
+#topIssues,
+#occurrenceIssues{
+    padding:15px;
+}
+
+.issue-rank{
+    padding:6px 0;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
 
 .admin-btn:hover{
     background:#35b5aa;
@@ -438,10 +454,15 @@ Auto refresh every 30 seconds
 </div>
 
 </div>
-<div id="currentIssues"></div>
 
-<div id="topIssues"></div>
-<div id="occurrenceIssues"></div>
+<div id="currentIssues"></div>
+<div class="stats-row">
+
+    <div id="topIssues" class="panel"></div>
+
+    <div id="occurrenceIssues" class="panel"></div>
+
+</div>
 <select id="viewSelect">
   <option>ACT</option>
   <option>UFLEX</option>
@@ -923,7 +944,7 @@ async function loadTopIssues() {
 
         const row =
             document.createElement("div");
-
+        row.className = "issue-rank";
         row.innerHTML = `
             #${index + 1}
             ${item.issue_name}
@@ -1052,7 +1073,7 @@ async function loadOccurrences() {
                 document.createElement(
                     "div"
                 );
-
+            row.className = "issue-rank";
             row.innerHTML = `
                 #${index + 1}
                 ${item.view_name}

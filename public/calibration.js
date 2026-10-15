@@ -18,6 +18,7 @@ const TPE_DOWNTIME = new Set([
   "YIELD ISSUE",
   "R/KGU FAIL",
   "QUALIFICATION FAIL DFL",
+  "QUALIFICATION FAIL CNTC",
   "TPE VERIFICATION",
   "QA FAIL",
   "HW CHECKER PROBLEM"
@@ -724,7 +725,8 @@ function classifyIssue(stateLong = "", rawTitle = "") {
     return "SYSTEM ISSUE";
   }
 
-  if (text.includes("QUALIFICATION FAIL DFL")) return "QUALIFICATION FAILURE";
+  if (text.includes("QUALIFICATION FAIL DFL")) return "QUALIFICATION FAILURE DFL";
+  if (text.includes("QUALIFICATION FAIL CNTC")) return "QUALIFICATION FAILURE CNTC";
   if (text.includes("HW CHECKER PROBLEM") || text.includes("HW CHECKER")) return "HW CHECKER ISSUE";
   if (text.includes("QA FAIL")) return "QA FAILURE";
   if (text.includes("HANDLER PROBLEM")) return "HANDLER PROBLEM";
@@ -1030,7 +1032,7 @@ function extractIssue(stateShort, stateLong, rawTitle) {
     "NO INVENTORY","PLANNED IDLE","INACTIVE",
     "PRODUCT EVAL","INCOMPLETE RESOURCES",
     "QA FAIL","STANDBY/IDLE","LOT COMPLETION","CONTACT ISSUE",
-    "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION", "KGU / RKGU RELOAD", "KGU RETEST"
+    "QUALIFICATION FAIL DFL","QUALIFICATION FAIL CNTC","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION", "KGU / RKGU RELOAD", "KGU RETEST"
   ];
   for (const k of known) {
     if (text.includes(k)) {

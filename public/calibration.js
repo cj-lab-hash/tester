@@ -92,6 +92,10 @@ function setAuthenticated(
                 authenticated, 
                 permissions = {} 
             ) {
+              document.body.dataset.role = 
+                authenticated
+                      ? (permissions.role || "guest")
+                      : "guest";
                 document.body.classList.toggle("authenticated", authenticated);
                 document.body.classList.toggle("auth-locked", !authenticated);
                 loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
@@ -1467,23 +1471,18 @@ function renderProductionStatusUnified(tableEl, dataRows) {
   }
 }
 function playAlertSound() {
-  
-  const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(currentRole);
-  //  console.log({
-  //   currentRole,
-  //   authenticated: document.body.classList.contains("authenticated"),
-  //   isPrivileged
-  // });
-  const audio = document.getElementById(isPrivileged
+  const role = document.body.dataset.role || "guest";
+  const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(role);
+
+  const audio = document.getElementById(
+    isPrivileged
     ? "superSound"
     : "alertSound"
   );
   console.log({
-    currentRole,
-    authenticated: document.body.classList.contains("authenticated"),
+    role,
     isPrivileged,
-    audioId: audio?.id,
-    src: audio?.src
+    audioId: audio?.id
   });
   if (!audio) return;
 

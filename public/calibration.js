@@ -46,6 +46,7 @@ let ajaxMode = localStorage.getItem("ajaxMode") === "true";
 const ajaxToggle = document.getElementById("ajaxToggle");
 let viewerToastShownFT = false;
 let viewerToastShownWS = false;
+let activeVisitorCount = 0;
 
 updateAjaxToggle();
 
@@ -466,7 +467,7 @@ async function getActiveVisitors(){
   const response = await fetch('/api/visitors');
   if (!response.ok) return 0;
   const data = await response.json();
-  return data.count || 0;
+  activeVisitorCount = data.count || 0;
 
 }
 async function updateLastSyncIndicator(){
@@ -499,7 +500,7 @@ async function updateLastSyncIndicator(){
   const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const activeVisitorCount = await getActiveVisitors();
+  const VisitorCount = activeVisitorCount;
   // const visitorsResponse = await fetch('/api/visitors');
   // let activeVisitorCount = 0;
   
@@ -515,12 +516,12 @@ async function updateLastSyncIndicator(){
 
   el.textContent = `🔴FT`;
   el.style.color = "red";
-if (activeVisitorCount > 0 && !viewerToastShownFT) {
+if (VisitorCount > 0 && !viewerToastShownFT) {
         viewerToastShownFT = true;
         // console.log("SHOWING TOAST");
 
         showViewersToast(
-            `Please wait. ${activeVisitorCount} active visitor(s) are triggering a data fetch.`
+            `Please wait. ${VisitorCount} active visitor(s) are triggering a data fetch.`
         );
 
     }
@@ -557,7 +558,7 @@ async function updateLastSyncIndicatorWS(){
   const ageMs = Date.now() - dt.getTime();
   const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
   const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
-  const activeVisitorCount = await getActiveVisitors();
+  const VisitorCount = activeVisitorCount;
   // const visitorsResponse = await fetch('/api/visitors');
   // let activeVisitorCount = 0;
 
@@ -568,9 +569,9 @@ async function updateLastSyncIndicatorWS(){
   if (ageMs > 3.5 * 60 * 1000) {
     el.textContent = `🔴 WS`;
     el.style.color = "red";
-    if(activeVisitorCount > 0 && !viewerToastShownWS) {
+    if(VisitorCount > 0 && !viewerToastShownWS) {
       viewerToastShownWS = true;
-      showViewersToast(`Please wait. ${activeVisitorCount} active visitor(s) are triggering data fetch.`);
+      showViewersToast(`Please wait. ${VisitorCount} active visitor(s) are triggering data fetch.`);
     }
   } else {
     viewerToastShownWS = false;

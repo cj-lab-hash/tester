@@ -826,16 +826,16 @@ async function alertIssuesAllGroupsIfNewScrape() {
 
     if (!list.length) continue;
 
-    const prevCount =
-      lastIssueCounts.get(issueName) || 0;
-
+    const countsMap =
+      lastIssueCountsByView.get(issueName) || 0;
+    const prevCount = countsMap.get(issueName) || 0;
     const newCount = list.length;
 
     if (newCount > prevCount) {
       playAlertSound();
     }
 
-    lastIssueCounts.set(
+    countsMap.set(
       issueName,
       newCount
     );

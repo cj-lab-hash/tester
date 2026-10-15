@@ -1469,16 +1469,22 @@ function renderProductionStatusUnified(tableEl, dataRows) {
 function playAlertSound() {
   
   const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(currentRole);
-   console.log({
-    currentRole,
-    authenticated: document.body.classList.contains("authenticated"),
-    isPrivileged
-  });
+  //  console.log({
+  //   currentRole,
+  //   authenticated: document.body.classList.contains("authenticated"),
+  //   isPrivileged
+  // });
   const audio = document.getElementById(isPrivileged
     ? "superSound"
     : "alertSound"
   );
-
+  console.log({
+    currentRole,
+    authenticated: document.body.classList.contains("authenticated"),
+    isPrivileged,
+    audioId: audio?.id,
+    src: audio?.src
+  });
   if (!audio) return;
 
   audio.currentTime = 0; // restart sound

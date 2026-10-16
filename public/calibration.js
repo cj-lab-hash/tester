@@ -1861,21 +1861,33 @@ async function loadDashboardCache() {
 function showEmptyTableMessage(tableEl, message) {
   if (!tableEl) return;
 
+  const wrap = tableEl.closest(".table-wrap");
   const tbody = tableEl.querySelector("tbody");
-  if (!tbody) return;
+  if (tbody) tbody.innerHTML = "";
 
-  tbody.innerHTML = "";
+  let banner = wrap?.querySelector(".system-empty-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.className = "system-empty-banner";
+    banner.style.cssText = [
+      "margin: 10px 0 14px;",
+      "padding: 10px 14px;",
+      "border-radius: 10px;",
+      "background: rgba(235, 180, 52, 0.12);",
+      "border: 1px solid rgba(235, 180, 52, 0.5);",
+      "color: #f3e7b0;",
+      "font-weight: 700;",
+      "text-align: center;",
+      "letter-spacing: 0.02em;",
+      "box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);"
+    ].join("");
 
-  const tr = document.createElement("tr");
-  const td = document.createElement("td");
-  td.colSpan = 5;
-  td.textContent = message;
-  td.style.textAlign = "center";
-  td.style.padding = "18px 12px";
-  td.style.color = "#c9d1dc";
-  td.style.fontStyle = "italic";
-  tr.appendChild(td);
-  tbody.appendChild(tr);
+    if (wrap) {
+      wrap.insertBefore(banner, tableEl);
+    }
+  }
+
+  banner.textContent = message;
 }
 
 function loadFromCache({
@@ -2183,6 +2195,15 @@ async function refreshData() {
 
     if (loader && tableEl) {
       await loader(tableEl);
+      const hasSystemIssue = (dashboardCache.SYSTEM || []).some(item => {
+        const text = ((item.state_long || "") + " " + (item.raw_title || "")).toUpperCase();
+        return text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM FAILURE");
+      });
+
+      if (!hasSystemIssue) {
+        showEmptyTableMessage(tableEl, "No current system issue.");
+      }
+
       showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt,lastSyncShownAtWS);
     }
 

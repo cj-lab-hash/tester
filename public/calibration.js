@@ -1896,7 +1896,7 @@ function updateStatusSummary(dataRows = []) {
   let contactIssue = 0;
   let system = 0;
   let yieldIssues = 0;
-  let handlerissue = 0;
+  let handlerIssue = 0;
 
   for (const row of dataRows) {
 
@@ -1921,12 +1921,11 @@ function updateStatusSummary(dataRows = []) {
       text.includes("CONTACT ISSUE-MECHANICAL")
     ) {
       contactIssue++;
-
     }
     if (
       text.includes("HANDLER PROBLEM")
     ) {
-      handlerissue++;
+      handlerIssue++;
     }
     if (
       text.includes("SYSTEM ISSUE") ||
@@ -1958,8 +1957,10 @@ function updateStatusSummary(dataRows = []) {
 
   document.getElementById("yieldCount").textContent =
     yieldIssues;
+
   document.getElementById("handlerCount").textContent =
-  handlerissue;
+  handlerIssue;
+
 }
 function loadFromCache({
   tableEl,

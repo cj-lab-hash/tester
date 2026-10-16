@@ -28,7 +28,9 @@ const PRE_SETUP = new Set ([
 "PRE SETUP"
 ]);
 const SYSTEM_PROBLEM = new Set ([
-  "SYSTEM PROBLEM"
+  "SYSTEM PROBLEM",
+  "SYSTEM ISSUE",
+  "SYSTEM FAILURE"
 ]);
 
 let dashboardCache = {};
@@ -360,6 +362,7 @@ function isPRESETUP(statelong) {
 }
 function isSYSTEM(statelong) {
   const state = (statelong || "").toUpperCase();
+  console.log("SYSTEM CHECK:", state);
   return [...SYSTEM_PROBLEM].some(system => state.includes(system))
 }
 // ===================== VIEW (Tiles) =====================

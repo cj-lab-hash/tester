@@ -1,3 +1,4 @@
+
 import { loadVerseFromAPI } from "./bible.js";
 // ===================== CONFIG =====================
 
@@ -27,8 +28,10 @@ const TPE_DOWNTIME = new Set([
 const PRE_SETUP = new Set ([
 "PRE SETUP"
 ]);
-const SYSTEM_PROBLEM = new Set ([
-  "SYSTEM PROBLEM"
+const SYSTEM_PROBLEM = new Set([
+  "SYSTEM ISSUE",
+  "SYSTEM PROBLEM",
+  "SYSTEM FAILURE"
 ]);
 
 let dashboardCache = {};
@@ -338,6 +341,7 @@ function editCell(td) {
 function isTPEDowntime(stateLong) {
   const state = (stateLong || "").toUpperCase();
 
+
   // if (state.includes("CONTACT ISSUE-KMG")) return false;
   // if (state.includes("CONTACT ISSUE-CMG")) return false;
   // if (state.includes("CONTACT ISSUE-MECHANICAL")) return false;
@@ -356,11 +360,12 @@ function isTPEDowntime(stateLong) {
 
 function isPRESETUP(statelong) {
   const state = (statelong || "").toUpperCase();
-  return [...PRE_SETUP].some(pre => state.includes(pre)) 
+  return [...PRE_SETUP].some(pre => state.includes(pre));
 }
+
 function isSYSTEM(statelong) {
   const state = (statelong || "").toUpperCase();
-  return [...SYSTEM_PROBLEM].some(system => state.includes(system))
+  return [...SYSTEM_PROBLEM].some(system => state.includes(system));
 }
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
@@ -1519,7 +1524,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
       (filterMode === "downtime" && HIDE_STATES.has(state)) ||
       (filterMode === "tpe" && !isTPEDowntime(stateLong)) ||
       (filterMode === "presetup" && !isPRESETUP(stateLong)) ||
-      (filterMode === "system" && !isSYSTEM(stateLong)))  {
+      (filterMode === "system" && !isSYSTEM(stateLong))) {
       tr.style.display = "none";
       continue;
     }
@@ -1723,9 +1728,8 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     }
     if (filterMode === "system" && !isSYSTEM(stateLong)) {
       tr.style.display = "none";
-    continue;
+      continue;
     }
-      
     tr.style.display = "";
     
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
@@ -1854,7 +1858,114 @@ async function loadDashboardCache() {
 
 //   renderProductionStatusUnified(actTable, dashboardCache.ACT);
 // }
+//WALA PA PURPOSE
+function showEmptyTableMessage(tableEl, message) {
+  if (!tableEl) return;
 
+  const wrap = tableEl.closest(".table-wrap");
+  const tbody = tableEl.querySelector("tbody");
+  if (tbody) tbody.innerHTML = "";
+
+  let banner = wrap?.querySelector(".system-empty-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.className = "system-empty-banner";
+    banner.style.cssText = [
+      "margin: 10px 0 14px;",
+      "padding: 10px 14px;",
+      "border-radius: 10px;",
+      "background: rgba(235, 180, 52, 0.12);",
+      "border: 1px solid rgba(235, 180, 52, 0.5);",
+      "color: #f3e7b0;",
+      "font-weight: 700;",
+      "text-align: center;",
+      "letter-spacing: 0.02em;",
+      "box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);"
+    ].join("");
+
+    if (wrap) {
+      wrap.insertBefore(banner, tableEl);
+    }
+  }
+
+  banner.textContent = message;
+}
+function updateStatusSummary(dataRows = []) {
+
+  let production = 0;
+  let contactIssue = 0;
+  let system = 0;
+  let yieldIssues = 0;
+  let handlerIssue = 0;
+
+  for (const row of dataRows) {
+
+    const stateShort =
+      (row.state_short || "").toUpperCase();
+
+    const text =
+      ((row.state_long || "") + " " +
+       (row.raw_title || ""))
+      .toUpperCase();
+
+    if (
+      ["PRODN","LOT"]
+        .includes(stateShort)
+    ) {
+      production++;
+    }
+    if (
+      text.includes("CONTACT ISSUE")
+    ) {
+      contactIssue++;
+    }
+    if (
+      text.includes("HANDLER PROBLEM")
+    ) {
+      handlerIssue++;
+    }
+    if (
+      text.includes("SYSTEM PROBLEM")
+    ) {
+      system++;
+    }
+
+    if (
+      text.includes("YIELD ISSUE") ||
+      text.includes("R/KGU FAIL") ||
+      text.includes("QA FAIL") ||
+      text.includes("QUALIFICATION FAIL DFL") ||
+      text.includes("HW CHECKER PROBLEM")
+    ) {
+      yieldIssues++;
+    }
+  }
+// console.log("Summary rows", dataRows.length);
+
+// console.table(
+//   dataRows.map(r => ({
+//     tester: r.equipment_id,
+//     state: r.state_short,
+//     stateLong: r.state_long
+//   }))
+// );
+
+  document.getElementById("prodCount").textContent =
+    production;
+
+  document.getElementById("contactCount").textContent =
+    contactIssue;
+
+  document.getElementById("systemCount").textContent =
+    system;
+
+  document.getElementById("yieldCount").textContent =
+    yieldIssues;
+
+  document.getElementById("handlerCount").textContent =
+  handlerIssue;
+
+}
 function loadFromCache({
   tableEl,
   tbodyId,
@@ -1889,6 +2000,16 @@ function loadFromCache({
     tableEl,
     data
   );
+
+  const systemData = dashboardCache.SYSTEM || [];
+  const hasSystemIssue = (systemData.some(item => {
+    const text = ((item.state_long || "") + " " + (item.raw_title || "")).toUpperCase();
+    return text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM FAILURE");
+  }));
+
+  if (!hasSystemIssue) {
+    showEmptyTableMessage(tableEl, "No current system issue.");
+  }
 }
 async function deleteComments() {
   try {
@@ -2091,7 +2212,12 @@ async function refreshData() {
     await updateLastSyncIndicatorWS();
 
     const view = getCurrentView();
+    const summaryData =
+  view === "ACT"
+    ? dashboardCache.ACT
+    : dashboardCache[view];
 
+updateStatusSummary(summaryData || []);
     const tableMap = {
       ACT: document.getElementById("editableTable"),
       UFLEX: document.getElementById("uflexTable"),
@@ -2150,6 +2276,15 @@ async function refreshData() {
 
     if (loader && tableEl) {
       await loader(tableEl);
+      const hasSystemIssue = (dashboardCache.SYSTEM || []).some(item => {
+        const text = ((item.state_long || "") + " " + (item.raw_title || "")).toUpperCase();
+        return text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM FAILURE");
+      });
+
+      if (!hasSystemIssue) {
+        showEmptyTableMessage(tableEl, "No current system issue.");
+      }
+
       showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt,lastSyncShownAtWS);
     }
 

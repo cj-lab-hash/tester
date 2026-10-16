@@ -1253,7 +1253,7 @@ app.get(
             "HW CHECKER ISSUE": [],
             "QA FAILURE": [],
             "HANDLER PROBLEM": [],
-            "TEMP STABILIZATION PROBLEM": [],
+            "TEMP STABILIZATION PROBLEM": []
         };
         for (const r of rows || []) {
             const text = `${r.state_long || ""} ${r.raw_title || ""}`.toUpperCase();

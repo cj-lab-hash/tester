@@ -1518,7 +1518,8 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     if (!stateLong ||
       (filterMode === "downtime" && HIDE_STATES.has(state)) ||
       (filterMode === "tpe" && !isTPEDowntime(stateLong)) ||
-      (filterMode === "presetup" && !isPRESETUP(stateLong))) {
+      (filterMode === "presetup" && !isPRESETUP(stateLong)) ||
+      (filterMode === "system" && !isSYSTEM(stateLong)))  {
       tr.style.display = "none";
       continue;
     }
@@ -1720,6 +1721,11 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
       tr.style.display = "none";
       continue;
     }
+    if (filterMode === "system" && !isSYSTEM(stateLong)) {
+      tr.style.display = "none";
+    continue;
+    }
+      
     tr.style.display = "";
     
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
@@ -2243,7 +2249,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   
 
   // refreshData();  
-  const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
+  const savedFilterMode = ["all", "downtime", "tpe", "presetup", "system"].includes(filterMode)
     ? filterMode
     : "all";
   filterMode = savedFilterMode;

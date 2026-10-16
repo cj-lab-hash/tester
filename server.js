@@ -1283,7 +1283,7 @@ app.get(
             else if (text.includes("HANDLER PROBLEM"))
                 issue = "HANDLER PROBLEM";
             else if (text.includes("TEMP STABILIZATION PROBLEM"))
-                issue = "TEMP STAB PROBLEM";
+                issue = "TEMP STABILIZATION PROBLEM";
             if (!issue) continue;
             buckets[issue].push({
                 id:r.equipment_id,

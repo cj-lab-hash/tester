@@ -1912,12 +1912,15 @@ function loadFromCache({
     tableEl,
     data
   );
-  
-  if (tableEl?.id === "systemTable") {
-    const visibleRows = Array.from(tbody.querySelectorAll("tr")).filter(row => row.style.display !== "none");
-    if (!visibleRows.length || !(data || []).length) {
-      showEmptyTableMessage(tableEl, "No current system issue.");
-    }
+
+  const systemData = dashboardCache.SYSTEM || [];
+  const hasSystemIssue = (systemData.some(item => {
+    const text = ((item.state_long || "") + " " + (item.raw_title || "")).toUpperCase();
+    return text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM FAILURE");
+  }));
+
+  if (!hasSystemIssue) {
+    showEmptyTableMessage(tableEl, "No current system issue.");
   }
 }
 async function deleteComments() {

@@ -710,6 +710,9 @@ td.cal-due, td.pm-due {
 .badge.blue{
     background:#1565c0;
 }
+.badge.pink{
+  background: #e3558e;
+}
 .last-sync {
   display: inline-block;              /* ensures padding/border show properly */
   font-size: 14px;

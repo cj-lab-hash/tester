@@ -1915,10 +1915,7 @@ function updateStatusSummary(dataRows = []) {
       production++;
     }
     if (
-      text.includes("CONTACT ISSUE") ||
-      text.includes("CONTACT ISSUE-KMG") ||
-      text.includes("CONTACT ISSUE-CMG") ||
-      text.includes("CONTACT ISSUE-MECHANICAL")
+      text.includes("CONTACT ISSUE")
     ) {
       contactIssue++;
     }
@@ -1937,7 +1934,7 @@ function updateStatusSummary(dataRows = []) {
 
     if (
       text.includes("YIELD ISSUE") ||
-      text.includes("R/KGU FAIL") ||
+      text.includes("RKGU FAIL") ||
       text.includes("QA FAIL") ||
       text.includes("QUALIFICATION FAIL DFL") ||
       text.includes("HW CHECKER PROBLEM")

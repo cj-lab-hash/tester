@@ -28,6 +28,11 @@ const TPE_DOWNTIME = new Set([
 const PRE_SETUP = new Set ([
 "PRE SETUP"
 ]);
+const SYSTEM_PROBLEM = new Set([
+  "SYSTEM ISSUE",
+  "SYSTEM PROBLEM",
+  "SYSTEM FAILURE"
+]);
 
 let dashboardCache = {};
 let plansMap = new Map();
@@ -355,7 +360,12 @@ function isTPEDowntime(stateLong) {
 
 function isPRESETUP(statelong) {
   const state = (statelong || "").toUpperCase();
-  return [...PRE_SETUP].some(pre => state.includes(pre)) 
+  return [...PRE_SETUP].some(pre => state.includes(pre));
+}
+
+function isSYSTEM(statelong) {
+  const state = (statelong || "").toUpperCase();
+  return [...SYSTEM_PROBLEM].some(system => state.includes(system));
 }
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
@@ -1513,7 +1523,8 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     if (!stateLong ||
       (filterMode === "downtime" && HIDE_STATES.has(state)) ||
       (filterMode === "tpe" && !isTPEDowntime(stateLong)) ||
-      (filterMode === "presetup" && !isPRESETUP(stateLong))) {
+      (filterMode === "presetup" && !isPRESETUP(stateLong)) ||
+      (filterMode === "system" && !isSYSTEM(stateLong))) {
       tr.style.display = "none";
       continue;
     }
@@ -1712,6 +1723,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     tr.style.display = "";
 
     if (filterMode === "presetup" && !isPRESETUP(stateLong)) {
+      tr.style.display = "none";
+      continue;
+    }
+    if (filterMode === "system" && !isSYSTEM(stateLong)) {
       tr.style.display = "none";
       continue;
     }

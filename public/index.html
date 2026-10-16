@@ -109,7 +109,20 @@
     <div class="view-tiles-wrap">
         <div id="viewTiles" class="view-tiles" aria-label="View selector"></div>
      </div>           
-           
+    <div id="statusSummary" class="status-summary">
+        <div class="badge green">
+            PRODUCTION: <span id="prodCount">0</span>
+        </div>
+        <div class="badge red">
+            DOWNTIME: <span id="downtimeCount">0</span>
+        </div>
+        <div class="badge yellow">
+            System: <span id="systemCount">0</span>
+        </div>
+        <div class="badge blue">
+            Yield: <span id="yieldCount">0</span>
+        </div>
+    </div>
         <section id="sectionACT">
         <h3>ACT CELL</h3>
 

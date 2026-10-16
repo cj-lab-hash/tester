@@ -676,6 +676,40 @@ td.cal-due, td.pm-due {
   margin-top: 6px;
   margin-left: 10px;
 }
+.status-summary{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin:15px 0 25px;
+    flex-wrap:wrap;
+}
+
+.badge{
+    padding:10px 18px;
+    border-radius:12px;
+    font-weight:700;
+    color:#fff;
+    min-width:140px;
+    text-align:center;
+    box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+
+.badge.green{
+    background:#2e7d32;
+}
+
+.badge.red{
+    background:#c62828;
+}
+
+.badge.yellow{
+    background:#f9a825;
+    color:#000;
+}
+
+.badge.blue{
+    background:#1565c0;
+}
 .last-sync {
   display: inline-block;              /* ensures padding/border show properly */
   font-size: 14px;

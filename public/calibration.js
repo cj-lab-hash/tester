@@ -1858,6 +1858,7 @@ async function loadDashboardCache() {
 
 //   renderProductionStatusUnified(actTable, dashboardCache.ACT);
 // }
+//WALA PA PURPOSE
 function showEmptyTableMessage(tableEl, message) {
   if (!tableEl) return;
 
@@ -1889,7 +1890,70 @@ function showEmptyTableMessage(tableEl, message) {
 
   banner.textContent = message;
 }
+function updateStatusSummary(dataRows = []) {
 
+  let production = 0;
+  let contactIssue = 0;
+  let system = 0;
+  let yieldIssues = 0;
+  let handlerissue = 0;
+
+  for (const row of dataRows) {
+
+    const stateShort =
+      (row.state_short || "").toUpperCase();
+
+    const text =
+      ((row.state_long || "") + " " +
+       (row.raw_title || ""))
+      .toUpperCase();
+
+    if (
+      ["PRODN","ENGG","LOT"]
+        .includes(stateShort)
+    ) {
+      production++;
+    }
+    if (
+      text.includes("CONTACT ISSUE") ||
+      text.includes("CONTACT ISSUE-KMG") ||
+      text.includes("CONTACT ISSUE-CMG") ||
+      text.includes("CONTACT ISSUE-MECHANICAL")
+    )
+    if (
+      text.includes("HANDLER PROBLEM")
+    )
+    if (
+      text.includes("SYSTEM ISSUE") ||
+      text.includes("SYSTEM PROBLEM") ||
+      text.includes("SYSTEM FAILURE")
+    ) {
+      system++;
+    }
+
+    if (
+      text.includes("YIELD ISSUE") ||
+      text.includes("R/KGU FAIL") ||
+      text.includes("QA FAIL") ||
+      text.includes("QUALIFICATION FAIL DFL") ||
+      text.includes("HW CHECKER PROBLEM")
+    ) {
+      yieldIssues++;
+    }
+  }
+
+  document.getElementById("prodCount").textContent =
+    production;
+
+  document.getElementById("downtimeCount").textContent =
+    downtime;
+
+  document.getElementById("systemCount").textContent =
+    system;
+
+  document.getElementById("yieldCount").textContent =
+    yieldIssues;
+}
 function loadFromCache({
   tableEl,
   tbodyId,
@@ -2136,7 +2200,12 @@ async function refreshData() {
     await updateLastSyncIndicatorWS();
 
     const view = getCurrentView();
+    const summaryData =
+  view === "ACT"
+    ? dashboardCache.ACT
+    : dashboardCache[view];
 
+updateStatusSummary(summaryData || []);
     const tableMap = {
       ACT: document.getElementById("editableTable"),
       UFLEX: document.getElementById("uflexTable"),

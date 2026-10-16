@@ -1942,6 +1942,15 @@ function updateStatusSummary(dataRows = []) {
       yieldIssues++;
     }
   }
+console.log("Summary rows", dataRows.length);
+
+console.table(
+  dataRows.map(r => ({
+    tester: r.equipment_id,
+    state: r.state_short,
+    stateLong: r.state_long
+  }))
+);
 
   document.getElementById("prodCount").textContent =
     production;

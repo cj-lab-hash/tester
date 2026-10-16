@@ -2238,7 +2238,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   
 
   // refreshData();  
-  const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
+  const savedFilterMode = ["all", "downtime", "tpe", "presetup", "system"].includes(filterMode)
     ? filterMode
     : "all";
   filterMode = savedFilterMode;

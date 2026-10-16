@@ -1858,6 +1858,25 @@ async function loadDashboardCache() {
 
 //   renderProductionStatusUnified(actTable, dashboardCache.ACT);
 // }
+function showEmptyTableMessage(tableEl, message) {
+  if (!tableEl) return;
+
+  const tbody = tableEl.querySelector("tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  const tr = document.createElement("tr");
+  const td = document.createElement("td");
+  td.colSpan = 5;
+  td.textContent = message;
+  td.style.textAlign = "center";
+  td.style.padding = "18px 12px";
+  td.style.color = "#c9d1dc";
+  td.style.fontStyle = "italic";
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+}
 
 function loadFromCache({
   tableEl,
@@ -1893,6 +1912,13 @@ function loadFromCache({
     tableEl,
     data
   );
+  
+  if (tableEl?.id === "systemTable") {
+    const visibleRows = Array.from(tbody.querySelectorAll("tr")).filter(row => row.style.display !== "none");
+    if (!visibleRows.length || !(data || []).length) {
+      showEmptyTableMessage(tableEl, "No current system issue.");
+    }
+  }
 }
 async function deleteComments() {
   try {

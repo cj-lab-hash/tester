@@ -754,7 +754,27 @@ async function requireAdmin(
     req.session = session;
     next();
 }
+async function cleanupIssueHistory() {
+  try {
 
+    const result = await pool.query(`
+      DELETE FROM tester.issue_count_history
+      WHERE recorded_at < NOW() - INTERVAL '7 days'
+    `);
+
+    console.log(
+      `Deleted ${result.rowCount} history records`
+    );
+
+  } catch (err) {
+
+    console.error(
+      "History cleanup failed:",
+      err
+    );
+
+  }
+}
 //issue counts//
 app.get ('/api/issue-count-history/trend', requireAdmin, async (req, res) => {
     try {
@@ -1233,6 +1253,7 @@ app.get(
             "HW CHECKER ISSUE": [],
             "QA FAILURE": [],
             "HANDLER PROBLEM": [],
+            "TEMP STABILIZATION PROBLEM": [],
         };
         for (const r of rows || []) {
             const text = `${r.state_long || ""} ${r.raw_title || ""}`.toUpperCase();
@@ -1261,6 +1282,8 @@ app.get(
                 issue = "QA FAILURE";
             else if (text.includes("HANDLER PROBLEM"))
                 issue = "HANDLER PROBLEM";
+            else if (text.includes("TEMP STABILIZATION PROBLEM"))
+                issue = "TEMP STAB PROBLEM";
             if (!issue) continue;
             buckets[issue].push({
                 id:r.equipment_id,

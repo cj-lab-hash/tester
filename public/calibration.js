@@ -1919,10 +1919,15 @@ function updateStatusSummary(dataRows = []) {
       text.includes("CONTACT ISSUE-KMG") ||
       text.includes("CONTACT ISSUE-CMG") ||
       text.includes("CONTACT ISSUE-MECHANICAL")
-    )
+    ) {
+      contactIssue++;
+
+    }
     if (
       text.includes("HANDLER PROBLEM")
-    )
+    ) {
+      handlerissue++;
+    }
     if (
       text.includes("SYSTEM ISSUE") ||
       text.includes("SYSTEM PROBLEM") ||
@@ -1945,14 +1950,16 @@ function updateStatusSummary(dataRows = []) {
   document.getElementById("prodCount").textContent =
     production;
 
-  document.getElementById("downtimeCount").textContent =
-    downtime;
+  document.getElementById("contactCount").textContent =
+    contactIssue;
 
   document.getElementById("systemCount").textContent =
     system;
 
   document.getElementById("yieldCount").textContent =
     yieldIssues;
+  document.getElementById("handlerCount").textContent =
+  handlerissue;
 }
 function loadFromCache({
   tableEl,

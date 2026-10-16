@@ -27,11 +27,11 @@ const TPE_DOWNTIME = new Set([
 const PRE_SETUP = new Set ([
 "PRE SETUP"
 ]);
-const SYSTEM_PROBLEM = new Set ([
-  "SYSTEM PROBLEM",
-  "SYSTEM ISSUE",
-  "SYSTEM FAILURE"
-]);
+// const SYSTEM_PROBLEM = new Set ([
+//   "SYSTEM PROBLEM",
+//   "SYSTEM ISSUE",
+//   "SYSTEM FAILURE"
+// ]);
 
 let dashboardCache = {};
 let plansMap = new Map();
@@ -360,11 +360,11 @@ function isPRESETUP(statelong) {
   const state = (statelong || "").toUpperCase();
   return [...PRE_SETUP].some(pre => state.includes(pre)) 
 }
-function isSYSTEM(statelong) {
-  const state = (statelong || "").toUpperCase();
-  console.log("SYSTEM CHECK:", state);
-  return [...SYSTEM_PROBLEM].some(system => state.includes(system))
-}
+// function isSYSTEM(statelong) {
+//   const state = (statelong || "").toUpperCase();
+//   console.log("SYSTEM CHECK:", state);
+//   return [...SYSTEM_PROBLEM].some(system => state.includes(system))
+// }
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
 let currentView = localStorage.getItem(VIEW_KEY) || "ACT";
@@ -1521,8 +1521,7 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     if (!stateLong ||
       (filterMode === "downtime" && HIDE_STATES.has(state)) ||
       (filterMode === "tpe" && !isTPEDowntime(stateLong)) ||
-      (filterMode === "presetup" && !isPRESETUP(stateLong)) ||
-      (filterMode === "system" && !isSYSTEM(stateLong)))  {
+      (filterMode === "presetup" && !isPRESETUP(stateLong)))  {
       tr.style.display = "none";
       continue;
     }
@@ -1724,10 +1723,10 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
       tr.style.display = "none";
       continue;
     }
-    if (filterMode === "system" && !isSYSTEM(stateLong)) {
-      tr.style.display = "none";
-    continue;
-    }
+    // if (filterMode === "system" && !isSYSTEM(stateLong)) {
+    //   tr.style.display = "none";
+    // continue;
+    // }
       
     tr.style.display = "";
     
@@ -2252,7 +2251,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   
 
   // refreshData();  
-  const savedFilterMode = ["all", "downtime", "tpe", "presetup", "system"].includes(filterMode)
+  const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
     ? filterMode
     : "all";
   filterMode = savedFilterMode;

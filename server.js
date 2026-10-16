@@ -1,4 +1,5 @@
 require('dotenv').config();
+const bcrypt = require('bcrypt');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -8,13 +9,15 @@ require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const { log } = require('console');
 const { arrayBuffer } = require('stream/consumers');
-const { match } = require('assert');
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
+// console.log(
+//     process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0,20)
+// );
+const supabaseTester = supabase.schema('tester');
 const SHARED_KEY = process.env.SHARED_KEY;
 
 const sessionTIMEOUT = 12 * 60 * 60 * 1000;
@@ -23,36 +26,53 @@ const app = express();
 // const loginSessions = new Set();
 // const loginSessions = new Map();
 app.use(express.json());
-// app.use(cors());
-app.use(cors({credentials: true, origin: true}));
+app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// setInterval(() => {
+//     const now = Date.now();
+//     for (const [token, session] of loginSessions.entries()) {
+//         if (session.expiresAt < now) {
+//             loginSessions.delete(token);
+
+//         }
+//     }
+// }, 60 * 1000);
 setInterval(async () => {
-    await supabase
-    .from('login_sessions')
-    .delete()
-    .lt('expires_at', new Date().toISOString());
-}, 60000);
+    try {
+        await supabase
+            .from('login_sessions')
+            .delete()
+            .lt('expires_at', Date.now());
 
-setInterval(async () => {
-    const cutoff = Date.now() - (2 * 60 * 1000);
+        await supabase
+            .from('active_visitors')
+            .delete()
+            .lt('last_seen', Date.now() - (3 * 60 * 1000));
 
-    const { error } = await supabase
-    .from('active_visitors')
-    .delete()
-    .lt('last_seen', cutoff);
-
-    if (error) {
-        console.error('Visitor cleanup failed:', error);
+    } catch (err) {
+        console.error('Cleanup error:', err);
     }
-}, 60000);
+}, 60 * 1000);
+
+
 
 function getSessionToken(req) {
     const cookies = req.headers.cookie || '';
     const match = cookies.match(/(?:^|;\s*)tester_session=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : null;
 }
+function getGuestId(req) {
+    const cookies = req.headers.cookie || '';
 
+    const match = cookies.match(
+        /(?:^|;\s*)guest_id=([^;]+)/
+    );
+
+    return match
+        ? decodeURIComponent(match[1])
+        : null;
+}
 async function requireAuth(req, res, next) {
 
     const token = getSessionToken(req);
@@ -63,30 +83,41 @@ async function requireAuth(req, res, next) {
         });
     }
 
-    // const session = loginSessions.get(token);
-    const { data:session } = await supabase
-    .from('login_sessions')
-    .select('*')
-    .eq('token', token)
-    .single();
+    const { data: session, error } = await supabase
+        .from('login_sessions')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+    if (error) {
+            console.error(error);
+             
+            return res.status(500).json({
+            message: 'Authentication failed'
+            });
+    }
     if (!session) {
         return res.status(401).json({
             message: 'Unauthorized'
         });
     }
+
     if (session.expires_at < Date.now()) {
-        // loginSessions.delete(token);
+
         await supabase
-        .from('login_sessions')
-        .delete()
-        .eq('token', token);
+            .from('login_sessions')
+            .delete()
+            .eq('token', token);
 
         return res.status(401).json({
             message: 'Session expired'
         });
     }
+
+    req.session = session;
+
     next();
 }
+
 
 const APP_VERSION = process.env.RENDER_GIT_COMMIT || 'dev';
 
@@ -94,138 +125,89 @@ app.get('/api/version', (req, res) => {
     res.json({ version: APP_VERSION });
 });
 
-app.use((req, res, next) => {
-    const cookies = req.headers.cookie || '';
-    const match = cookies.match(
-        /(?:^|;\s*)guest_id=([^;]+)/
-    );
-    let guestId = match
-    ? decodeURIComponent(match[1])
-    : null;
 
-    if (!guestId) {
-        guestId = crypto.randomUUID();
-
-        res.setHeader(
-            'Set-Cookie',
-            `guest_id=${guestId}; ${COOKIE_OPTIONS}; Max-Age=31536000`
-        );
-    }
-
-    req.guestId = guestId;
-    next();
-});
-
-app.post('/api/heartbeat', async (req, res) => {
-
-    // console.log('=== HEARTBEAT ===');
-    // console.log('guestId:', req.guestId);
-    // console.log('body:', req.body);
-
-    const token = getSessionToken(req);
-
-    const { data: session } = token
-        ? await supabase
-            .from('login_sessions')
-            .select('*')
-            .eq('token', token)
-            .single()
-        : { data: null };
-
-    const { error } = await supabase
-        .from('active_visitors')
-        .upsert({
-            guest_id: req.guestId,
-            last_seen: Date.now(),
-            page: req.body.page || '/',
-            view: req.body.view || null,
-            authenticated: !!session
-        })
-        .select();
-        if (error) {
-            console.error('Heartbeat error:', error);
-        }
-    res.json({ success: true });
-});
-
-app.get('/api/active-visitors', async (req, res) => {
-
-    const { data, error } = await supabase
-        .from('active_visitors')
-        .select('*');
-    if (error) {
-        return res.status(500).json(error);
-    }
-    const visitors = data.map(v => ({
-        ...v,
-        last_seen_local: new Date(v.last_seen)
-            .toLocaleString('en-PH', {
-                timeZone: 'Asia/Manila'
-            })
-    }));
-    res.json(visitors);
-})
+// app.get('/api/auth-status', (req, res) => {
+//     res.json({ authenticated: loginSessions.has(getSessionToken(req)) });
+// });
 app.get('/api/auth-status', async (req, res) => {
-    console.log("===AUTH STATUS===");
-    console.log("Cookies:", req.headers.cookie);
 
     const token = getSessionToken(req);
-    console.log("Token:", token);
-
+    
     if (!token) {
+
         res.setHeader(
             'Set-Cookie',
             `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
+
         return res.json({
-            authenticated:false
+            authenticated: false
         });
     }
+  
 
-    const { data:session, error } = await supabase
+    const { data: session, error } = await supabase
     .from('login_sessions')
     .select('*')
     .eq('token', token)
-    .single();
+    .maybeSingle();
 
-    if(error || !session) {
+
+
+if (error) {
+    console.error(error);
+
+    return res.status(500).json({
+        authenticated: false
+        });
+    }
+    
+
+    if (!session) {
+
         res.setHeader(
             'Set-Cookie',
             `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
+
         return res.json({
             authenticated: false
         });
     }
 
     if (session.expires_at < Date.now()) {
-        // loginSessions.delete(token);
+
         await supabase
-        .from('login_sessions')
-        .delete()
-        .eq('token', token);
+            .from('login_sessions')
+            .delete()
+            .eq('token', token);
 
         res.setHeader(
             'Set-Cookie',
             `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`
         );
+
         return res.json({
-            authenticated:false
+            authenticated: false
         });
     }
-    // session.expiresAt = Date.now() + sessionTIMEOUT;
-    await supabase
-    .from('login_sessions')
-    .update({
-        expires_at: new Date(Date.now() + sessionTIMEOUT).toISOString()
-    })
-    .eq('token', token);
 
-    res.json({
+    await supabase
+        .from('login_sessions')
+        .update({
+            expires_at:
+                Date.now() + sessionTIMEOUT
+        })
+        .eq('token', token);
+
+        res.json({
         authenticated: true,
         comments: session.comments,
-        username: session.username
+        username: session.username,
+        name: session.full_name,
+        role: session.role
     });
+
 });
 
 app.get('/api/dashboard-data', async (req, res) => {
@@ -397,9 +379,9 @@ app.get('/api/dashboard-data', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body || {};
-    console.log("===LOG IN ATTEMPT===");
-    console.log("Username: ", username);
-    console.log("User-Agent: ", req.headers['user-agent']);
+
+
+
     const loginTime = new Date().toISOString();
     const loginDateObj = new Date(loginTime);
     const localTime = loginDateObj.toLocaleTimeString()
@@ -410,100 +392,261 @@ app.post('/api/login', async (req, res) => {
     req.socket.remoteAddress;
 
     const token = crypto.randomBytes(32).toString('hex');
-    let session = null;
-    
+    const { data: user } = await supabaseTester
+    .from("user_accounts")
+    .select("*")
+    .eq("id_number", username)
+    .maybeSingle();
 
-    if (
-        username === process.env.LOGIN_USERNAME &&
-        password === process.env.LOGIN_PASSWORD
-    ) {
-        session = {
-            username,
-            comments: false,
-            ip: clientIp,
-            localTime,
-            expiresAt: Date.now() + sessionTIMEOUT
-        };
-
-    } else if (
-        username === process.env.COMMENTS_USERNAME &&
-        password === process.env.COMMENTS_PASSWORD
-    ) {
-        session = {
-            username,
-            comments: true,
-            ip: clientIp,
-            localTime,
-            expiresAt: Date.now() + sessionTIMEOUT
-        };
-    }
-    if (!session) {
+    if (!user) {
         return res.status(401).json({
-            message: 'Invalid username or password'
+            message: "Invalid ID Number or Password"
         });
     }
-    console.log("New token:", token);
-    // loginSessions.set(token, session);
-    await supabase
-    .from('login_sessions')
-    .insert({
+
+    if (!user.approved) {
+        return res.status(403).json({
+            message: "Account is pending approval."
+        });
+    }
+    const valid = await bcrypt.compare(password, user.password_hash);
+
+    if (!valid) {
+        return res.status(401).json({
+            message: "Invalid ID Number or Password"
+        });
+    }
+
+    const { data: employee } =await supabaseTester
+    .from("employee_master")
+    .select("*")
+    .eq("id_number", username)
+    .maybeSingle();
+
+    const session = {
+        username,
+        name: employee?.full_name || username,
+        role: user.role,
+        // comments: user.role === "admin",
+        comments: ["admin", "superuser"].includes(user.role),
+        ip:clientIp,
+        localTime,
+        expiresAt: Date.now() + sessionTIMEOUT
+    }
+    
+const { error: sessionError } = await supabase
+    .from("login_sessions")
+    .upsert({
         token,
-        username: session.username,
-        comments:session.comments,
-        ip: session.ip,
-        local_time: session.localTime,
-        expires_at:session.expiresAt
+        username,
+        full_name: employee?.full_name,
+        role: user.role,
+        comments: ["admin", "superuser"].includes(user.role),
+        ip: clientIp,
+        local_time: localTime,
+        expires_at: Date.now() + sessionTIMEOUT
     });
-    // console.log("ALL SESSIONS:", Array.from(loginSessions.keys()));
+
+console.log("SESSION ERROR:", sessionError);
+
+if (sessionError) {
+    return res.status(500).json({
+        message: sessionError.message
+    });
+}
     res.setHeader(
-        `Set-Cookie`,
-        // `tester_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+        "Set-Cookie",
         `tester_session=${token}; ${COOKIE_OPTIONS}; Max-Age=43200`
     );
-
-    console.log("Username:", username);
-    console.log("Comments user:", process.env.COMMENTS_USERNAME);
-
     res.json({
         authenticated: true,
         comments: session.comments
     });
+
     
     
-    
-    
+});
+
+app.get('/api/test-role', async (req,res) => {
+
+    const result = await supabaseTester
+        .from('employee_master')
+        .select('*')
+        .limit(1);
+
+    // console.log(result);
+
+    res.json(result);
+});
+app.post('/api/register', async (req, res) => {
+    try {
+        const {
+            idNumber,
+            password,
+            confirmPassword
+        } = req.body;
+        if (
+            !idNumber ||
+            !password ||
+            !confirmPassword
+        ) {
+            return res.status(404).json({
+                message: "All fields are required."
+            });
+        }
+        if (password !== confirmPassword) {
+            return res.status(404).json({
+                message: "Password not match."
+            });
+        }
+        if (password.length < 8) {
+            return res.status(404).json({
+                message: "Password must containt at least 8 characters."
+            });
+        }
+
+        const {
+            data:employee,
+            error: employeeError
+        } = await supabaseTester
+        .from("employee_master")
+        .select("*")
+        .eq("id_number", idNumber)
+        .eq("active", true)
+        .maybeSingle();
+
+        // console.log("=== REGISTER ===");
+        // console.log("idNumber =", idNumber);
+        // console.log("employee =", employee);
+        // console.log("employeeError =", employeeError);
+
+        if (employeeError) {
+            return res.status(500).json({
+                message: employeeError.message
+            });
+        }
+
+        if (!employee) {
+            return res.status(403).json({
+                message: "ID number is not authorized."
+            });
+        }   
+ 
+        const passwordHash = await bcrypt.hash(
+            password,
+            10
+        );
+        const {
+                data: existingUser,
+                error: existingUserError
+            } = await supabaseTester
+            .from("user_accounts")
+            .select("id_number")
+            .eq("id_number", idNumber)
+            .maybeSingle();
+
+            // console.log("existingUser =", existingUser);
+            // console.log("existingUserError =", existingUserError);
+        
+        if(existingUser) {
+            return res.status(409).json({
+                message: "Account already existed."
+            });
+        }
+
+        const { error: insertError } =
+            await supabaseTester
+        .from("user_accounts")
+        .insert({
+            id_number: idNumber,
+            password_hash: passwordHash,
+            approved: true,
+            role: employee.role || "user"
+        });
+
+        // console.log("insertError =", insertError);
+        if (insertError) {
+            // console.log("INSERT ERROR:");
+            // console.log(insertError);
+
+            return res.status(500).json({
+                message: insertError.message
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: "Registration successful."
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            message: "Internal server error."
+        });
+    }
 });
 
 app.post('/api/logout', async (req, res) => {
     const token = getSessionToken(req);
-    // if (token) loginSessions.delete(token);
-    if (token) await supabase
-    .from('login_sessions')
-    .delete()
-    .eq('token', token);
-
+    
+    if (token) {
+        await supabase
+            .from('login_sessions')
+            .delete()
+            .eq('token', token);
+    }
     res.setHeader('Set-Cookie', `tester_session=; ${COOKIE_OPTIONS}; Max-Age=0`);
     res.json({ authenticated: false });
 });
-app.get('/api/active-user', async (req, res) => {
-
-    const { data } = await supabase
-    .from('login_sessions')
-    .select('*')
-    .gt('expires_at', Date.now());
-
-    const sessions = data.map(s => ({
-        ...s,
-        expires_local:new Date(s.expires_at)
-        .toLocaleString('en-PH', {
-            timeZone: 'Asia/Manila'
+app.get('/api/visitors', async (req, res) => {
+    try {
+    const cutoff = Date.now() - (3 * 60 * 1000);
+    const { count,error } = await supabase
+        .from('active_visitors')
+        .select('*', {
+            count: 'exact',
+            head: true
         })
-    }));
-    res.json({
-        activeUsers: sessions.length,
-        session: sessions,
-        
-    });
+        .gt('last_seen', cutoff);
+
+        if (error) {
+            return res.status(500).json({
+                success: true,
+                error: error.message
+            });
+        }
+
+
+        res.json({count:count || 0});
+    } catch (err) {
+        res.status(500).json({
+            success:false,
+            error: err.message
+        });
+    }
+});
+app.get('/api/active-user', requireAdmin, async (req, res) => {
+
+    const cutoff = Date.now() - (3 * 60 * 1000);
+    // const token = getSessionToken(req);
+    // const session = loginSessions.get(token);
+    const session = req.session;
+
+    if (session?.role !== 'admin') {
+        return res.status(403).json({
+            message: "Admin access required"
+        });
+    }
+    const { data, error } = await supabase
+        .from('active_visitors')
+        .select('*')
+        .gt('last_seen', cutoff);
+
+    if (error) {
+        return res.status(500).json(error);
+    }
+
+    res.json(data);
 });
 
 function sortDashboardRows(rows) {
@@ -537,10 +680,11 @@ function getIssuePriority(row) {
   if (text.includes("QUALIFICATION FAIL DFL")) return 3;
   if (text.includes("RKGU FAIL")) return 4;
   if (text.includes("QA FAIL")) return 5;
-  if (text.includes("HANDLER PROBLEM")) return 6;
-  if (text.includes("HW CHECKER")) return 7;
+  if (text.includes("QUALIFICATION FAIL CNTC")) return 6;
+  if (text.includes("HANDLER PROBLEM")) return 7;
+  if (text.includes("HW CHECKER")) return 8;
   if (text.includes("SYSTEM PROBLEM") ||
-  text.includes("SYSTEM ISSUE")) return 8;
+  text.includes("SYSTEM ISSUE")) return 9;
 
 
   const state = (row.state_short || "").toUpperCase();
@@ -581,6 +725,249 @@ function extractDurationSeconds(rawTitle = "") {
 
   return value;
 }
+async function requireAdmin(
+    req, res, next
+){
+    const token = getSessionToken(req);
+    if(!token){
+        return res
+            .status(401)
+            .json({
+                message:'Unathorized'
+            });
+    }
+    const { data:session } = await supabase
+            .from('login_sessions')
+            .select('*')
+            .eq('token', token)
+            .maybeSingle();
+    if(!session) {
+        return res.status(401).json({
+            message: 'Session not found'
+        });
+    }
+    if(session.role != 'admin') {
+        return res.status(403).json({
+            message: 'Admin access only'
+        });
+    }
+    req.session = session;
+    next();
+}
+async function cleanupIssueHistory() {
+  try {
+
+    const result = await pool.query(`
+      DELETE FROM tester.issue_count_history
+      WHERE recorded_at < NOW() - INTERVAL '7 days'
+    `);
+
+    console.log(
+      `Deleted ${result.rowCount} history records`
+    );
+
+  } catch (err) {
+
+    console.error(
+      "History cleanup failed:",
+      err
+    );
+
+  }
+}
+//issue counts//
+app.get ('/api/issue-count-history/trend', requireAdmin, async (req, res) => {
+    try {
+        const {view, issue } = req.query;
+        if (!view || !issue) {
+            return res.status(400).json({
+                error: "view and issue are required"
+            });
+        }
+        const { rows } = await pool.query(
+            `
+            SELECT
+            count,
+            recorded_at
+            FROM tester.issue_count_history
+            WHERE view_name = $1
+            AND issue_name = $2
+            ORDER BY recorded_at ASC
+            `,
+            [view, issue]
+        );
+        res.json(rows);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            error: "Database error"
+        });
+    }
+});
+app.get("/api/issue-count-history/latest", requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT DISTINCT ON (
+        view_name,
+        issue_name
+      )
+        view_name,
+        issue_name,
+        count,
+        recorded_at
+      FROM tester.issue_count_history
+      ORDER BY
+        view_name,
+        issue_name,
+        recorded_at DESC
+    `);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Database error"
+    });
+  }
+});
+app.post ('/api/issue-counts', async (req, res) => {
+    const client = await pool.connect();
+try {
+    const { view, issues } = req.body;
+    if (!view || !Array.isArray(issues)) {
+        return res.status(400).json({
+            error: "Invalid payload"
+        });
+    }
+    await client.query("BEGIN");
+
+    for (const issue of issues) {
+        const existing = await client.query(
+            `
+            SELECT count
+            FROM tester.issue_counts
+            WHERE view_name = $1
+            AND issue_name = $2
+            `,
+            [
+                view,
+                issue.name
+            ]
+        );
+        const oldCount = existing.rows.length > 0
+            ? Number(existing.rows[0].count)
+            : null;
+
+        await client.query(
+            `
+            INSERT INTO tester.issue_counts (
+            view_name,
+            issue_name,
+            count,
+            last_changed
+            )
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (view_name, issue_name)
+            DO UPDATE SET
+                count = EXCLUDED.count,
+                last_changed = NOW()
+                `,
+                [
+                    view,
+                    issue.name,
+                    issue.count
+                    
+                ]
+        );
+        if (oldCount !== Number(issue.count)) {
+            await client.query(
+                `
+                INSERT INTO tester.issue_count_history (
+                view_name,
+                issue_name,
+                count,
+                tester_list,
+                recorded_at
+                )
+                VALUES ($1, $2, $3, $4, NOW())
+                `,
+                [
+                    view,
+                    issue.name,
+                    issue.count,
+                    JSON.stringify(issue.testers)
+                ]
+            );
+        }
+    }
+    await client.query("COMMIT");
+
+    res.json({
+        success:true
+    });
+} catch (err) {
+    console.error(err);
+    res.status(500).json({
+        error: "Database error"
+    });
+} finally {
+    client.release();
+}
+});
+app.get("/api/issue-count-history/top-today", requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        issue_name,
+        MAX(count) AS peak_count
+      FROM tester.issue_count_history
+      WHERE recorded_at >= CURRENT_DATE
+      GROUP BY issue_name
+      ORDER BY peak_count DESC
+    `);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Database error"
+    });
+  }
+});
+app.get("/api/issue-count-history/occurrences", requireAdmin, async (req, res) => {
+    try {
+
+      const { rows } = await pool.query(`
+        SELECT
+          view_name,
+          issue_name,
+          COUNT(*) AS occurrences
+        FROM tester.issue_count_history
+        WHERE recorded_at >= CURRENT_DATE
+        GROUP BY
+          view_name,
+          issue_name
+        ORDER BY occurrences DESC
+      `);
+
+      res.json(rows);
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        error: "Database error"
+      });
+
+    }
+  }
+);
+//issue counts//
+
 app.post ('/api/comments/request', async (req,res) => {
     const {
         equipment_id,
@@ -648,30 +1035,45 @@ const STATUSPHERE_BASE =
 app.get("/api/redirect/:equipmentId", async (req, res) => {
   const id = req.params.equipmentId;
   const token = getSessionToken(req);
-  const { data: session } = await supabase
-  .from('login_sessions')
-  .select('*')
-  .eq('token', token)
-  .single();
 
-//   const session = loginSessions.get(token);
+    let session = null;
 
-//   console.log("Token:", token);
-//   console.log("Authentication status:", loginSessions.has(token));
+     if (token) {
+        const { data } = await supabase
+            .from('login_sessions')
+            .select('*')
+            .eq('token', token)
+            .maybeSingle();
+
+        session = data;
+    }
+
   const timestamp = Math.trunc(Date.now() / 1000);
   const payload = `${timestamp}`;
   const signature = crypto.createHmac("sha256", SHARED_KEY).update(payload).digest("hex"); 
+  const mode = req.query.mode || "statusphere";
+  const ajaxUrl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
 
 
+    // console.log("========== REDIRECT ==========");
+    // console.log("Equipment:", req.params.equipmentId);
+    // console.log("Mode:", req.query.mode);
+    // console.log("Token:", token);
 
+    // console.log("Session:", session);
 
-    if (session?.comments) {
-    return res.redirect(
-      `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}&ts=${payload}&sig=${signature}`
-    );
+    // console.log("Role:", session?.role);
+    // console.log("==============================");
+    if (
+        mode === "ajax" &&
+        ["admin", "superuser"].includes(session?.role)
+     ) {
+    //     console.log("AJAX REDIRECT ALLOWED");
+    // console.log("AJAX URL:", ajaxUrl);
+    return res.redirect(ajaxUrl);
   }
 
-  
+//   console.log("STATUSPHERE REDIRECT");
   return res.redirect(
     `${STATUSPHERE_BASE}?q=br/equipment-hist/TEST&EQUIPMENT=${encodeURIComponent(id)}`
   );
@@ -760,7 +1162,18 @@ app.get(
     res.json(data?.[0] ?? null);
 
 });
+app.get('/api/last-sync-ws', async (req, res) => {
+    const { data, error } = await supabase
+    .from('ws_equipment')
+    .select('checked_at')
+    .order('checked_at', { ascending:false })
+    .limit(1);
 
+    if(error){
+        return res.status(500).json(error);
+    }
+    res.json(data?.[0] ?? null);
+})
 app.get(
  '/api/statusphere-equipment',
  async(req,res)=>{
@@ -829,6 +1242,9 @@ app.get(
         if (error) throw error;
 
         const buckets = {
+            "CONTACT ISSUE-KMG":[],
+            "CONTACT ISSUE-CMG":[],
+            "CONTACT ISSUE-MECHANICAL":[],
             "CONTACT ISSUE": [],
             "YIELD ISSUE": [],
             "RKGU FAIL": [],
@@ -837,12 +1253,19 @@ app.get(
             "HW CHECKER ISSUE": [],
             "QA FAILURE": [],
             "HANDLER PROBLEM": [],
+            "TEMP STABILIZATION PROBLEM": []
         };
         for (const r of rows || []) {
             const text = `${r.state_long || ""} ${r.raw_title || ""}`.toUpperCase();
             let issue = null;
             if (text.includes("YIELD ISSUE"))
                 issue = "YIELD ISSUE";
+            else if (text.includes("CONTACT ISSUE-CMG"))
+                issue = "CONTACT ISSUE-CMG";
+            else if (text.includes("CONTACT ISSUE-KMG"))
+                issue = "CONTACT ISSUE-KMG";
+            else if (text.includes("CONTACT ISSUE-MECHANICAL"))
+                issue = "CONTACT ISSUE-MECHANICAL";
             else if (text.includes("CONTACT ISSUE"))
                 issue = "CONTACT ISSUE";
             else if (text.includes("RKGU FAIL"))
@@ -851,12 +1274,16 @@ app.get(
                 issue = "SYSTEM ISSUE";
             else if (text.includes("QUALIFICATION FAIL DFL"))
                 issue = "QUALIFICATION FAILURE";
+            else if (text.includes("QUALIFICATION FAIL CNTC"))
+                issue = "QUALIFICATION FAILURE";
             else if (text.includes("HW CHECKER"))
                 issue = "HW CHECKER ISSUE";
             else if (text.includes("QA FAIL"))
                 issue = "QA FAILURE";
             else if (text.includes("HANDLER PROBLEM"))
                 issue = "HANDLER PROBLEM";
+            else if (text.includes("TEMP STABILIZATION PROBLEM"))
+                issue = "TEMP STABILIZATION PROBLEM";
             if (!issue) continue;
             buckets[issue].push({
                 id:r.equipment_id,
@@ -944,37 +1371,88 @@ filteredData.sort((a, b) => {
 res.json(filteredData);
 
  });
+
 app.post('/api/heartbeat', async (req, res) => {
+// console.log("guestId:", getGuestId(req));
+// console.log("body:", req.body);
+    try {
 
-    console.log('=== HEARTBEAT ===');
-    console.log('guestId:', req.guestId);
-    console.log('body:', req.body);
+        const guestId = getGuestId(req);
+        const clientIp = req.headers['cf-connecting-ip'] || req.headers['true-client-ip'] || req.headers['x-forward-for']
+        ?.split(',')[0]
+        .trim()
+    || req.socket.remoteAddress;
+        if (!guestId) {
+            return res.json({
+                success: true,
+                message: "No guest_id found"
+            });
+        }
 
-    const token = getSessionToken(req);
+        const token = getSessionToken(req);
 
-    const { data: session } = token
-        ? await supabase
-            .from('login_sessions')
-            .select('*')
-            .eq('token', token)
-            .single()
-        : { data: null };
+        // const session =
+        //     token && loginSessions.has(token)
+        //         ? loginSessions.get(token)
+        //         : null;
+        let session = null;
 
-    const { data, error } = await supabase
-        .from('active_visitors')
-        .upsert({
-            guest_id: req.guestId,
-            last_seen: Date.now(),
-            page: req.body.page || '/',
-            authenticated: !!session
-        })
-        .select();
+        if (token) {
+            const { data } = await supabase
+                .from('login_sessions')
+                .select('*')
+                .eq('token', token)
+                .maybeSingle();
 
-    console.log('UPSERT DATA:', data);
-    console.log('UPSERT ERROR:', error);
+            session = data;
+        }
 
-    res.json({ success: true });
+        const { data, error } = await supabase
+            .from('active_visitors')
+            .upsert({
+                guest_id: guestId,
+                username: session?.full_name || session?.username || null,
+                last_seen: Date.now(),
+                page: req.body.page || '/',
+                view: req.body.view || null,
+                authenticated: !!session,
+                role: session?.role || 'guest',
+                browser: req.body.browser,
+                screen: req.body.screen,
+                timezone: req.body.timezone,
+                ip:clientIp
+
+            },
+        {
+            onConflict: 'guest_id'
+        }
+    )
+            .select();
+
+        if (error) {
+            console.error('HEARTBEAT ERROR:', error);
+
+            return res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+
+        res.json({
+            success: true
+        });
+
+    } catch (err) {
+
+        console.error('HEARTBEAT EXCEPTION:', err);
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
 });
+
 app.post("/api/save",requireAuth, async (req, res) => {
     const { index, value } = req.body;
     
@@ -996,6 +1474,7 @@ app.post("/api/save",requireAuth, async (req, res) => {
         res.status(500).json({ message: 'Error saving data' });
     }
 });
+
     app.get(
  '/api/system-problems',
  async(req,res)=>{
@@ -1026,7 +1505,7 @@ app.post("/api/save",requireAuth, async (req, res) => {
 
     app.get('/api/data', async (req, res) => {
         try {
-            console.log('Fetching data from database...');
+            // console.log('Fetching data from database...');
             const result = await pool.query(
             "SELECT cell_index, value FROM data"
         );
@@ -1041,9 +1520,301 @@ app.post("/api/save",requireAuth, async (req, res) => {
     res.status(500).json({ message: 'Database Error' });
 }
 });
+//admin page
+app.get('/admin', async (req, res) => {
+
+    const token = getSessionToken(req);
+
+    // console.log('TOKEN:', token);
+
+    let session = null;
+
+    if (token) {
+        const { data } = await supabase
+            .from('login_sessions')
+            .select('*')
+            .eq('token', token)
+            .maybeSingle();
+
+        session = data;
+    }
+
+    // console.log('SESSION:', session);
+    // console.log('ROLE:', session?.role);
+
+    if (
+        !session ||
+        session.role !== 'admin'
+    ) {
+        return res.status(403).send('Admin only');
+    }
+
+    res.sendFile(
+        path.join(
+            __dirname,
+            'public',
+            'admin.html'
+        )
+    );
+});
+app.get('/api/admin/visitors', requireAdmin, async (req, res) => {
+    const { data, error } =
+    await supabase
+        .from('active_visitors')
+        .select('*')
+        .order('last_seen', {
+            ascending:false
+        });
+
+    if (error) {
+        return res.status(500).json(error);
+    }
+    res.json(data);
+});
+
+app.get('/api/admin/sessions', requireAdmin, async (req, res) => {
+    const { data, error } = await supabase
+    .from('login_sessions')
+    .select('*');
+
+if (error) {
+    return res.status(500).json(error);
+}
+res.json(data);
+});
+
+app.get('/api/admin/users', requireAdmin,async (req, res) => {
+    const { data: users, error } = await supabaseTester
+        .from('user_accounts')
+        .select('*');
+
+    if (error) {
+        return res.status(500).json(error);
+    }
+    const ids = users.map(u => u.id_number);
+
+    const { data:employees } = await supabaseTester
+                .from('employee_master')
+                .select('id_number, full_name')
+                .in('id_number', ids);
+
+    const nameMap = new Map(
+        (employees || []).map(e => [
+            e.id_number,
+            e.full_name
+        ])
+    );
+    
+    const result = users.map(u => ({
+        ...u,
+        full_name: nameMap.get(u.id_number) || 'UNKNOWN'
+    }));
+    res.json(result);
+});
+
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+    const visitors = await supabase
+        .from('active_visitors')
+        .select('*', {
+            count: 'exact',
+            head: true
+        });
+
+    const sessions = await supabase
+        .from('login_sessions')
+        .select('*', {
+            count: 'exact',
+            head: true
+        });
+
+    const users = await supabaseTester
+        .from('user_accounts')
+        .select('*', {
+            count: 'exact',
+            head: true
+        });
+        res.json({
+            visitors: visitors.count || 0,
+            sessions: sessions.count || 0,
+            users: users.count || 0
+
+        });
+});
+
+app.get(
+  '/api/admin/health',
+  requireAdmin,
+  async (req, res) => {
+    // console.log('Using tester schema...');
+    const result = await supabaseTester
+        .from('sync_status')
+        .select('*');
+    console.log(result);
+    
+    const { data, error } =
+      await supabaseTester
+        .from('sync_status')
+        .select('*');
+
+    if (error) {
+      return res.status(500).json(error);
+    }
+
+    const ft = data.find(x => x.service === 'FT');
+
+    const ws = data.find(x => x.service === 'WS');
+
+    res.json({ft: ft?.status || 'UNKNOWN',
+             ws: ws?.status || 'UNKNOWN',
+
+             ftLastRun: ft?.last_run || null,
+
+             wsLastRun: ws?.last_run || null,
+
+             ftVisitors: ft?.visitor_count || 0,
+
+             wsVisitors: ws?.visitor_count || 0
+    });
+
+});
+
+app.get('/api/admin/view-stats',requireAdmin, async(req,res)=>{
+
+const cutoff =
+Date.now() - 300000;
+
+const { data } =
+await supabase
+.from('active_visitors')
+.select('view')
+.gt('last_seen',cutoff);
+
+const counts = {};
+
+for(const row of data){
+
+counts[row.view] =
+(counts[row.view] || 0) + 1;
+
+}
+
+res.json(counts);
+
+});
+
+app.delete('/api/admin/session/:token', requireAdmin, async(req,res)=>{
+
+        const token =
+        req.params.token;
+
+        await supabase
+        .from('login_sessions')
+        .delete()
+        .eq('token', token);
+
+        res.json({
+        success:true
+        });
+
+});
 
 
 
+
+
+app.delete(
+    '/api/admin/cleanup-visitors',
+    requireAdmin,
+    async(req,res)=>{
+
+        const cutoff =
+            Date.now() -
+            (5 * 60 * 1000);
+
+        const { data, error } =
+            await supabase
+                .from('active_visitors')
+                .delete()
+                .lt(
+                    'last_seen',
+                    cutoff
+                )
+                .select();
+
+        if (error) {
+            return res.status(500).json(error);
+        }
+
+        res.json({
+            success:true,
+            deleted:
+                data?.length || 0
+        });
+
+});
+
+app.get('/api/admin/view-distribution', requireAdmin, async (req, res) => {
+
+    const cutoff =
+        Date.now() - (5 * 60 * 1000);
+
+    const { data, error } = await supabase
+        .from('active_visitors')
+        .select('view')
+        .gt('last_seen', cutoff);
+
+    if (error) {
+        console.error(error);
+        return res.status(500).json(error);
+    }
+
+    const counts = {};
+
+    for (const row of data || []) {
+
+        const view = row.view || 'UNKNOWN';
+
+        counts[view] =
+            (counts[view] || 0) + 1;
+    }
+
+    res.json(counts);
+
+});
+
+
+app.get('/api/admin/comment-request', requireAdmin, async (req, res) => {
+
+    const { data, error } = await supabase
+        .from('comment_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error){
+        return res.status(500)
+                  .json(error);
+    }
+    res.json(data);
+});
+
+app.get('/api/admin/comment-stats', requireAdmin, async (req, res) => {
+
+    const { data } = await supabase
+        .from('comment_requests')
+        .select('status');
+    const stats = {
+        pending:0,
+        completed:0,
+        failed:0
+    };
+    for(const rows of data || []){
+        const status = rows.status?.toLowerCase();
+        if(stats[status] !== undefined){
+            stats[status]++;
+        }
+    }
+    res.json(stats);
+});
 // Start the server on port 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

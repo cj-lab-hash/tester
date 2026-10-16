@@ -5,7 +5,8 @@ import { loadVerseFromAPI } from "./bible.js";
 const CRITICAL = 3;
 const DUE_SOON_DAYS = 10;
 const STATUSPHERE_BASE = "http://statusphere.maxim-ic.com/dp/";
-const lastIssueCounts = new Map();
+// const lastIssueCounts = new Map();
+const lastIssueCountsByView = new Map();
 const HIDE_STATES = new Set([
   "PRODN",
   "ENGG",
@@ -17,14 +18,17 @@ const HIDE_STATES = new Set([
 const TPE_DOWNTIME = new Set([
   "YIELD ISSUE",
   "R/KGU FAIL",
-  "CONTACT ISSUE",
   "QUALIFICATION FAIL DFL",
+  "QUALIFICATION FAIL CNTC",
   "TPE VERIFICATION",
   "QA FAIL",
   "HW CHECKER PROBLEM"
 ]);
 const PRE_SETUP = new Set ([
 "PRE SETUP"
+]);
+const SYSTEM_PROBLEM = new Set ([
+  "SYSTEM PROBLEM"
 ]);
 
 let dashboardCache = {};
@@ -42,6 +46,15 @@ const loginDialog = document.getElementById("loginDialog");
 const loginForm = document.getElementById("loginForm");
 const loginError = document.getElementById("loginError");
 const currentUser = document.getElementById("currentUser");
+let ajaxMode = localStorage.getItem("ajaxMode") === "true";
+const ajaxToggle = document.getElementById("ajaxToggle");
+let viewerToastShownFT = false;
+let viewerToastShownWS = false;
+let activeVisitorCount = 0;
+let visitorsFetchedAt = 0;
+
+
+updateAjaxToggle();
 
 async function checkForUpdates() {
   try {
@@ -68,7 +81,7 @@ async function checkForUpdates() {
             'Refreshing dashboard...'
           );
 
-      console.warn("RELOAD WOULD HAPPEN NOW");
+      console.warn("RELOAD WOULD HAPPEN IN 10s");
       setTimeout(() => location.reload(), 10000);
       
     }
@@ -83,6 +96,10 @@ function setAuthenticated(
                 authenticated, 
                 permissions = {} 
             ) {
+              document.body.dataset.role = 
+                authenticated
+                      ? (permissions.role || "guest")
+                      : "guest";
                 document.body.classList.toggle("authenticated", authenticated);
                 document.body.classList.toggle("auth-locked", !authenticated);
                 loginButton.textContent = authenticated ? "LOGOUT" : "LOGIN";
@@ -92,24 +109,33 @@ function setAuthenticated(
                 document.body.classList.toggle("can-view-comments", userPermissions.comments);
                 document.body.classList.toggle("comments-locked", !userPermissions.comments);
                 if (authenticated) {
-                    const accessLevel = 
-                    permissions.comments
-                    ? "Complete Access"
-                    : "Complete View";
-                    // currentUser.textContent = `Logged in as: ${permissions.username}`;
-                    currentUser.textContent = accessLevel;
+                    currentUser.textContent =
+                    `${permissions.name} (${permissions.role})`;
                 } else {
                     currentUser.textContent = "View only";
                 }
+                if ( authenticated && ["admin", "superuser"].includes(permissions.role)) {
+                      ajaxToggle.style.display = "block";
+                    } else {
+                      ajaxToggle.style.display = "none";
+                    }
+                if ( authenticated && ["admin"].includes(permissions.role)){
+                    adminToggle.style.display = "block";
+                  } else {
+                    adminToggle.style.display = "none";
+                }    
             }
+  
         
         
 async function checkAuthentication() {
 const response = await fetch('/api/auth-status', {
   credentials: 'include'
 });
+
+
 const result = await response.json();
-// console.log("result=", result);
+
 setAuthenticated(result.authenticated === true, result);
 }
 
@@ -154,7 +180,31 @@ loginForm.addEventListener("submit", async (event) => {
             // setAuthenticated(true);
             await checkAuthentication();
 });
-// checkAuthentication().catch(() => setAuthenticated(false));
+
+
+ajaxToggle.addEventListener("click", () => {
+  ajaxMode = !ajaxMode;
+
+  // const enabled = localStorage.getItem("ajaxMode") === "true";
+
+  localStorage.setItem("ajaxMode", ajaxMode);
+
+  updateAjaxToggle()
+});
+adminToggle.addEventListener("click", () => {
+    window.open('/admin',"_blank", "noopener, noreferrer");
+});
+function updateAjaxToggle() {
+
+    const enabled =
+        localStorage.getItem("ajaxMode")
+        === "true";
+
+    ajaxToggle.textContent =
+        enabled
+            ? "● AJAX"
+            : "○ AJAX";
+}
 
       // Function to load saved data from the server when the page loads
         function normalizeActTableRows() {
@@ -287,11 +337,30 @@ function editCell(td) {
 
 function isTPEDowntime(stateLong) {
   const state = (stateLong || "").toUpperCase();
+
+  // if (state.includes("CONTACT ISSUE-KMG")) return false;
+  // if (state.includes("CONTACT ISSUE-CMG")) return false;
+  // if (state.includes("CONTACT ISSUE-MECHANICAL")) return false;
+
+  const excludedContact = [
+    "CONTACT ISSUE-KMG",
+    "CONTACT ISSUE-CMG",
+    "CONTACT ISSUE-MECHANICAL"
+  ];
+  if (excludedContact.some(issue => state.includes(issue))) {
+    return false;
+  }
+  if (state.includes("CONTACT ISSUE")) return true;
   return [...TPE_DOWNTIME].some(issue => state.includes(issue));
 }
+
 function isPRESETUP(statelong) {
   const state = (statelong || "").toUpperCase();
   return [...PRE_SETUP].some(pre => state.includes(pre)) 
+}
+function isSYSTEM(statelong) {
+  const state = (statelong || "").toUpperCase();
+  return [...SYSTEM_PROBLEM].some(system => state.includes(system))
 }
 // ===================== VIEW (Tiles) =====================
 const VIEW_KEY = "tester_monitoring_view";
@@ -315,7 +384,9 @@ const VIEWS = [
 // ===================== STATE =====================
 let lastStatusphereCheckedAt = null;
 let lastSyncShownAt = null;
+let lastSyncShownAtWS = null;
 let lastSyncFetchedAtMs = 0;
+let lastSyncFetchedAtMsWs = 0;
 let lastAlertScrapeTs = null;
 const lastViewToastKey = new Map();
 
@@ -368,8 +439,81 @@ function buildStatusphereUrlFromRow(rowHref, equipmentId) {
   return null;
 }
 
+
+const registerDialog = document.getElementById("registerDialog");
+document.getElementById("showRegisterButton").addEventListener("click", () => {
+  loginDialog.close();
+  registerDialog.showModal();
+});
+document.getElementById("cancelRegisterButton").addEventListener("click", () => {
+  registerDialog.close();
+});
+document.getElementById("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const idNumber = document.getElementById("registerId").value.trim();
+
+  const password = document.getElementById("registerPassword").value;
+  const confirmPassword = document.getElementById("registerConfirmPassword").value;
+  const response = await fetch("/api/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      idNumber,
+      password,
+      confirmPassword
+    })
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    const err = document.getElementById("registerError");
+    err.hidden = false;
+    err.textContent = result.message;
+    // console.log(result);
+    // document.getElementById("registerError").textContent=result.message;
+    return;
+  }
+  alert("Account created successfully.");
+  registerDialog.close();
+
+})
+function ensureGuestId() {
+  const existing = document.cookie
+  .split('; ')
+  .find(row => row.startsWith('guest_id='));
+  if(!existing) {
+    const guestId= crypto.randomUUID();
+    document.cookie = `guest_id=${guestId}; path=/; max-age=31536000; SameSite=Lax`;
+  }
+}
+
 // ===================== LAST SYNC =====================
-async function updateLastSyncIndicator() {
+async function getActiveVisitors(){
+  const now = Date.now();
+
+  if (now - visitorsFetchedAt < 30000){
+    return activeVisitorCount;
+  }
+  visitorsFetchedAt = now;
+
+  try{
+      const response = await fetch('/api/visitors');
+  if (!response.ok) {
+    return activeVisitorCount;
+  }
+
+  const data = await response.json();
+  activeVisitorCount = data.count || 0;
+  return activeVisitorCount;
+  } catch (err) {
+    console.error(err);
+    return activeVisitorCount;
+  }
+
+}
+async function updateLastSyncIndicator(){
   const el = document.getElementById("lastSync");
   if (!el) return;
 
@@ -397,19 +541,87 @@ async function updateLastSyncIndicator() {
 
   const dt = new Date(lastSyncShownAt);
   const ageMs = Date.now() - dt.getTime();
-  const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
-  const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  // const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
+  // const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const VisitorCount = await getActiveVisitors();
+  // const visitorsResponse = await fetch('/api/visitors');
+  // let activeVisitorCount = 0;
   
+  // if (visitorsResponse.ok) {
+  //   const visitorData = await visitorsResponse.json();
+  //   activeVisitorCount = visitorData.count || 0;
+  //   // console.log("active visitors count=", activeVisitorCount);
+  // }
+
   if (ageMs > 3.5 * 60 * 1000) {
+  // if (ageMs > 10 * 1000) {
     pauseDashboard();
-  // el.textContent = `Last Sync: ${timeOnly} (${ageMin}m ago)`;
-  el.textContent = `🔴 OFFLINE`;
+
+  el.textContent = `🔴FT`;
   el.style.color = "red";
+if (VisitorCount > 0 && !viewerToastShownFT) {
+        viewerToastShownFT = true;
+        // console.log("SHOWING TOAST");
+
+        showViewersToast(
+            `Please wait. ${VisitorCount} active visitor(s) are triggering a data fetch.`
+        );
+
+    }
 } else {
   resumeDashboard();
-  el.textContent = `🟢 ONLINE`;
+  viewerToastShownFT = false;
+  el.textContent = `🟢 FT`;
   el.style.color = "lime";
  }
+}
+async function updateLastSyncIndicatorWS(){
+  const el = document.getElementById("lastSyncWS");
+  if (!el) return;
+  const nowMsWS = Date.now();
+  const shouldFetchWS = (nowMsWS - lastSyncFetchedAtMsWs) > 60_000;
+  if (shouldFetchWS) {
+    lastSyncFetchedAtMsWs = nowMsWS;
+    const response = await fetch('/api/last-sync-ws');
+    if(!response.ok) {
+      el.textContent = 'Last Sync: (error)';
+      return;
+    }
+    const latestData = await response.json();
+    const latest = latestData?.checked_at;
+    lastSyncShownAtWS = latest || null;
+  }
+
+  if(!lastSyncShownAtWS) {
+    el.textContent = "Last Sync: --";
+    el.style.color = "red";
+    return;
+  }
+  const dt = new Date(lastSyncShownAtWS);
+  const ageMs = Date.now() - dt.getTime();
+  // const ageMin = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 60000));
+  // const timeOnly = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit"});
+  const VisitorCount = activeVisitorCount;
+  // const visitorsResponse = await fetch('/api/visitors');
+  // let activeVisitorCount = 0;
+
+  // if(visitorsResponse.ok){
+  //   const visitorData =await visitorsResponse.json();
+  //   activeVisitorCount = visitorData.count || 0;
+  // }
+  if (ageMs > 3.5 * 60 * 1000) {
+    el.textContent = `🔴 WS`;
+    el.style.color = "red";
+    if(VisitorCount > 0 && !viewerToastShownWS) {
+      viewerToastShownWS = true;
+      showViewersToast(`Please wait. ${VisitorCount} active visitor(s) are triggering data fetch.`);
+    }
+  } else {
+    viewerToastShownWS = false;
+    el.textContent = `🟢 WS`;
+    el.style.color = "lime";
+  }
+
 }
 // ===================== ACT: SMART SCRAPE CHECK =====================
 async function statusphereHasNewScrape(ids) {
@@ -522,10 +734,34 @@ function showUpdateToast(message) {
 
     container.appendChild(toast);
 }
+function showViewersToast(message){
+
+  const container = document.getElementById("viewersToastContainer");
+  if(!container) return;
+  const toast = document.createElement("div");
+
+  toast.className = "toast toast-yellow";
+  toast.innerHTML = `<div class="toast-title">
+      Viewers Available
+      </div>
+      <div class="toast-sub">
+      ${message}
+      </div>
+      `;
+      container.appendChild(toast);
+setTimeout(() => {
+  toast.remove();
+}, 10000);
+}
+
+window.showViewersToast = showViewersToast;
 function classifyIssue(stateLong = "", rawTitle = "") {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
 
   if (text.includes("YIELD ISSUE")) return "YIELD ISSUE";
+  if (text.includes("CONTACT ISSUE-KMG")) return "CONTACT ISSUE-KMG";
+  if (text.includes("CONTACT ISSUE-CMG")) return "CONTACT ISSUE-CMG";
+  if (text.includes("CONTACT ISSUE-MECHANICAL")) return "CONTACT ISSUE-MECHANICAL";
   if (text.includes("CONTACT ISSUE")) return "CONTACT ISSUE";
   if (text.includes("RKGU FAIL")) return "RKGU FAIL";
 
@@ -533,7 +769,8 @@ function classifyIssue(stateLong = "", rawTitle = "") {
     return "SYSTEM ISSUE";
   }
 
-  if (text.includes("QUALIFICATION FAIL DFL")) return "QUALIFICATION FAILURE";
+  if (text.includes("QUALIFICATION FAIL DFL")) return "QUALIFICATION FAILURE DFL";
+  if (text.includes("QUALIFICATION FAIL CNTC")) return "QUALIFICATION FAILURE CNTC";
   if (text.includes("HW CHECKER PROBLEM") || text.includes("HW CHECKER")) return "HW CHECKER ISSUE";
   if (text.includes("QA FAIL")) return "QA FAILURE";
   if (text.includes("HANDLER PROBLEM")) return "HANDLER PROBLEM";
@@ -541,6 +778,105 @@ function classifyIssue(stateLong = "", rawTitle = "") {
   return null;
 }
 
+
+function alertViewIssues(viewName, alerts) {
+
+  if (!lastIssueCountsByView.has(viewName)) {
+    lastIssueCountsByView.set(viewName, new Map());
+  }
+
+  const countsMap = lastIssueCountsByView.get(viewName);
+
+  let shouldPlaySound = false;
+
+  for (const alert of alerts) {
+
+    const issueName = alert.label;
+    const newCount = alert.list.length;
+
+    const prevCount =
+      countsMap.get(issueName) || 0;
+
+    if (newCount > prevCount) {
+      shouldPlaySound = true;
+    }
+
+    countsMap.set(
+      issueName,
+      newCount
+    );
+    fetch("/api/issue-counts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        view: viewName,
+        issues: alerts.map(alert => ({
+          name: alert.label,
+          count: alert.list.length,
+          testers:alert.list
+        }))
+      })
+    }).catch(console.error);
+    showToast({
+      type: alert.type,
+      title: `[${viewName}] ${issueName}: ${newCount}`,
+      message:
+        alert.list.slice(0, 6).join(", ") +
+        (alert.list.length > 6 ? " ..." : "")
+    });
+  }
+
+  if (shouldPlaySound) {
+    playAlertSound();
+  }
+}
+async function loadOccurrences() {
+
+    const response =
+        await fetch(
+            "/api/issue-count-history/occurrences"
+        );
+
+    if (!response.ok) {
+        return;
+    }
+
+    const data =
+        await response.json();
+
+    const container =
+        document.getElementById(
+            "occurrenceIssues"
+        );
+
+    container.innerHTML =
+        "<h2>Most Frequent Issues Today</h2>";
+
+    data.slice(0,10).forEach(
+        (item, index) => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+            row.innerHTML = `
+                #${index + 1}
+                ${item.view_name}
+                ${item.issue_name}
+                (${item.occurrences})
+            `;
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
 // Alerts for ALL groups based on DB “latest scrape timestamp”
 async function alertIssuesAllGroupsIfNewScrape() {
 
@@ -567,19 +903,6 @@ async function alertIssuesAllGroupsIfNewScrape() {
 
     if (!list.length) continue;
 
-    const prevCount =
-      lastIssueCounts.get(issueName) || 0;
-
-    const newCount = list.length;
-
-    if (newCount > prevCount) {
-      playAlertSound();
-    }
-
-    lastIssueCounts.set(
-      issueName,
-      newCount
-    );
 
     const type =
       issueName === "RKGU FAIL"
@@ -830,18 +1153,23 @@ function extractIssue(stateShort, stateLong, rawTitle) {
   const text = ((stateLong || "") + " " + (rawTitle || "")).toUpperCase();
   if (!s) return null;
 
-  const m = text.match(new RegExp(`${s}\\s*->\\s*([^->]+)`, "i"));
+  const m = text.match(new RegExp(`${s}\\s*->\\s*(.+?)(?:->|$)`, "i"));
   if (m && m[1]) return m[1].trim();
 
   const known = [
-    "CONTACT ISSUE","YIELD ISSUE","RKGU FAIL",
+    "CONTACT ISSUE-KMG","CONTACT ISSUE-CMG","CONTACT ISSUE-MECHANICAL","YIELD ISSUE","RKGU FAIL",
     "QA TEST","MISMATCH RESCREEN","RESCREEN",
     "NO INVENTORY","PLANNED IDLE","INACTIVE",
     "PRODUCT EVAL","INCOMPLETE RESOURCES",
-    "QA FAIL","STANDBY/IDLE","LOT COMPLETION",
-    "QUALIFICATION FAIL DFL","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION", "KGU / RKGU RELOAD", "KGU RETEST"
+    "QA FAIL","STANDBY/IDLE","LOT COMPLETION","CONTACT ISSUE",
+    "QUALIFICATION FAIL DFL","QUALIFICATION FAIL CNTC","HW CHECKER PROBLEM","SYSTEM PROBLEM","HANDLER PROBLEM", "TESTER PM/CAL", "TEMP CONVERSION", "KGU GENERATION", "KGU / RKGU RELOAD", "KGU RETEST"
   ];
-  for (const k of known) if (text.includes(k)) return k;
+  for (const k of known) {
+    if (text.includes(k)) {
+    // console.log("matched issue:", k);
+    return k;
+  }
+}
   return null;
 }
 
@@ -1008,7 +1336,7 @@ function collectIssueAlerts(tableEl) {
   if (!tableEl) return [];
   const rows = Array.from(tableEl.querySelectorAll("tbody tr"));
 
-  const alerts = { YIELD:[], CONTACT:[], RKGU:[], SYSTEM:[], QUALIFICATION:[], HW_CHECKER:[], QA:[],HANDLER:[] };
+  const alerts = { YIELD:[], CONTACT:[], RKGU:[], SYSTEM:[], QUALIFICATION:[], HW_CHECKER:[], QA:[],HANDLER:[],CONTACT_KMG:[],CONTACT_MECHANICAL:[],CONTACT_CMG:[] };
 
   for (const tr of rows) {
     const tester = (tr.cells?.[0]?.textContent || "").trim();
@@ -1021,17 +1349,32 @@ function collectIssueAlerts(tableEl) {
     const text = (cell.textContent || "").toUpperCase();
 
     if (text.includes("YIELD ISSUE")) alerts.YIELD.push(tester);
-    if (text.includes("CONTACT ISSUE")) alerts.CONTACT.push(tester);
+    // if (text.includes("CONTACT ISSUE")) alerts.CONTACT.push(tester);
     if (text.includes("RKGU FAIL")) alerts.RKGU.push(tester);
     if (text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM")) alerts.SYSTEM.push(tester);
     if (text.includes("QUALIFICATION FAILURE")) alerts.QUALIFICATION.push(tester);
     if (text.includes("HW CHECKER ISSUE")) alerts.HW_CHECKER.push(tester);
     if (text.includes("QA FAILURE")) alerts.QA.push(tester);
     if (text.includes("HANDLER PROBLEM")) alerts.HANDLER.push(tester);
+    if (text.includes("CONTACT ISSUE-KMG")) {
+      alerts.CONTACT_KMG.push(tester);
+    }
+    else if (text.includes("CONTACT ISSUE-CMG")) {
+      alerts.CONTACT_CMG.push(tester);
+    }
+    else if (text.includes("CONTACT ISSUE-MECHANICAL")) {
+      alerts.CONTACT_MECHANICAL.push(tester);
+    }
+      else if (text.includes("CONTACT ISSUE")) {
+        alerts.CONTACT.push(tester);
+    }
   }
 
   const result = [];
   if (alerts.YIELD.length) result.push({key:"YIELD", list: alerts.YIELD, type:"blue", label:"YIELD ISSUE"});
+  if (alerts.CONTACT_KMG.length) result.push({key:"CONTACT_KMG", list: alerts.CONTACT_KMG, type:"red", label:"CONTACT ISSUE-KMG"});
+  if (alerts.CONTACT_CMG.length) result.push({key:"CONTACT_CMG", list: alerts.CONTACT_CMG, type:"red", label:"CONTACT ISSUE-CMG"});
+  if (alerts.CONTACT_MECHANICAL.length) result.push({key:"CONTACT_MECHANICAL", list: alerts.CONTACT_MECHANICAL, type:"red", label:"CONTACT ISSUE-MECHANICAL"});
   if (alerts.CONTACT.length) result.push({key:"CONTACT", list: alerts.CONTACT, type:"red", label:"CONTACT ISSUE"});
   if (alerts.RKGU.length) result.push({key:"RKGU", list: alerts.RKGU, type:"pink", label:"RKGU FAIL"});
   if (alerts.SYSTEM.length) result.push({key:"SYSTEM", list: alerts.SYSTEM, type:"yellow", label:"SYSTEM ISSUE"});
@@ -1052,14 +1395,14 @@ function showViewAlertsOncePerChange(viewName, tableEl, scrapeTs) {
 
   if (lastViewToastKey.get(viewName) === signature) return;
   lastViewToastKey.set(viewName, signature);
-
-  for (const a of alerts) {
-    showToast({
-      type: a.type,
-      title: `[${viewName}] ${a.label}: ${a.list.length}`,
-      message: a.list.slice(0, 6).join(", ") + (a.list.length > 6 ? " ..." : ""),
-    });
-  }
+  alertViewIssues(viewName,alerts);
+//   for (const a of alerts) {
+//     showToast({
+//       type: a.type,
+//       title: `[${viewName}] ${a.label}: ${a.list.length}`,
+//       message: a.list.slice(0, 6).join(", ") + (a.list.length > 6 ? " ..." : ""),
+//     });
+//   }
 }
 // ===================== RENDER: SYSTEM PROBLEM ONLY (same style as other tables) =====================
 // async function loadSYSTEMLatest(tableEl) {
@@ -1175,7 +1518,8 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     if (!stateLong ||
       (filterMode === "downtime" && HIDE_STATES.has(state)) ||
       (filterMode === "tpe" && !isTPEDowntime(stateLong)) ||
-      (filterMode === "presetup" && !isPRESETUP(stateLong))) {
+      (filterMode === "presetup" && !isPRESETUP(stateLong)) ||
+      (filterMode === "system" && !isSYSTEM(stateLong)))  {
       tr.style.display = "none";
       continue;
     }
@@ -1191,45 +1535,34 @@ function renderProductionStatusUnified(tableEl, dataRows) {
     cell.innerHTML = "";
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
-    // if (commenturl) {
-    //   const a = document.createElement("a");
-    //   a.href = commenturl;
-    //   a.target = "_blank";
-    //   // a.href = `https://ajax-xt2d.onrender.com/?equipmentID=${id}`;
-    //   a.rel = "noopener noreferrer";
-    //   a.textContent = out.label;
-    //   a.classList.add("prod-link");
-    //   cell.appendChild(a);
-    //   a.addEventListener("click", async (e) => {
-    //     e.preventDefault();
-
-    //     await fetch("/api/comments/request", {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json"
-    //       },
-    //       body: JSON.stringify({
-    //         equipment_id: id,
-    //         statusphere_url: url
-    //       })
-    //     });
-
-        // window.open(
-        //   `/comments.html?equipment_id=${id}`,
-        //   "_blank"
-        // );
-    //   })
-    // } else {
-    //   cell.textContent = out.label;
-    // }
+    // const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
+      
+      // const mode = localStorage.getItem("ajaxMode") === "true"
+      // ? "ajax"
+      // : "statusphere";
+      //   console.log(`/api/redirect/${encodeURIComponent(id)}?mode=${mode}`);
+      // const a = document.createElement("a");
+      // a.href = `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`;
+      // a.target = "_blank";
+      // a.rel = "noopener noreferrer";
+      // a.textContent = out.label;
+      // a.classList.add("prod-link");
+      // cell.appendChild(a);
       const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}`;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
+      a.href = "#";
       a.textContent = out.label;
       a.classList.add("prod-link");
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const mode = localStorage.getItem("ajaxMode") === "true"
+        ? "ajax"
+        : "statusphere";
+        // console.log("CURRENT MODE:", mode);
+        window.open(`/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,"_blank",
+        "noopener,noreferrer");
+        
+      });
       cell.appendChild(a);
     } else {
       const span = document.createElement("span");
@@ -1246,7 +1579,23 @@ function renderProductionStatusUnified(tableEl, dataRows) {
   }
 }
 function playAlertSound() {
-  const audio = document.getElementById("alertSound");
+  const role = document.body.dataset.role || "guest";
+  let audioId = "alertSound";
+  if (role === "admin"){
+    audioId = "adminSound";
+  }
+
+  if (role === "superuser"){
+    audioId = "superSound";
+  }
+  // const isPrivileged = document.body.classList.contains("authenticated") && ["admin", "superuser"].includes(role);
+  const audio = document.getElementById(audioId);
+  // const audio = document.getElementById(
+  //   isPrivileged
+  //   ? "superSound"
+  //   : "alertSound"
+  // );
+
   if (!audio) return;
 
   audio.currentTime = 0; // restart sound
@@ -1293,14 +1642,29 @@ function renderProductionStatusFromDataAll(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    // const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
-      const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}`;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
+        const a = document.createElement("a");
+
+              a.href = "#";
+              a.textContent = out.label;
+              a.classList.add("prod-link");
+
+              a.addEventListener("click", (e) => {
+
+                  e.preventDefault();
+
+                  const mode =
+                      localStorage.getItem("ajaxMode") === "true"
+                          ? "ajax"
+                          : "statusphere";
+                  // console.log("CURRENT MODE:", mode);
+                  window.open(
+                      `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,
+                      "_blank",
+                      "noopener,noreferrer"
+            );
+      });
       cell.appendChild(a);
     } else {
       const span = document.createElement("span");
@@ -1357,6 +1721,11 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
       tr.style.display = "none";
       continue;
     }
+    if (filterMode === "system" && !isSYSTEM(stateLong)) {
+      tr.style.display = "none";
+    continue;
+    }
+      
     tr.style.display = "";
     
     const out = productionStatusFromDb(r.state_short, r.state_long, r.raw_title, r.checked_at);
@@ -1365,15 +1734,30 @@ function renderProductionStatusFromDataNonPMCAL(tableEl, dataRows) {
     cell.classList.remove("ps-red","ps-green","ps-pink","ps-gray","ps-blue","ps-yellow","ps-violet","ps-orange");
 
     const url = buildStatusphereUrlFromRow(r.href, id);
-    const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
+    // const commenturl = `https://ajax-xt2d.onrender.com/?equipmentID=${encodeURIComponent(id)}`;
     if (url) {
       const a = document.createElement("a");
-      a.href = `/api/redirect/${encodeURIComponent(id)}`;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = out.label;
-      a.classList.add("prod-link");
-      cell.appendChild(a);
+     a.href = "#";
+     a.textContent = out.label;
+     a.classList.add("prod-link");
+
+     a.addEventListener("click", (e) => {
+
+        e.preventDefault();
+
+        const mode =
+            localStorage.getItem("ajaxMode") === "true"
+                ? "ajax"
+                : "statusphere";
+        // console.log("CURRENT MODE:", mode);
+        window.open(
+            `/api/redirect/${encodeURIComponent(id)}?mode=${mode}`,
+            "_blank",
+            "noopener,noreferrer"
+        );
+    });
+
+    cell.appendChild(a);
     } else {
       const span = document.createElement("span");
       span.textContent = out.label;
@@ -1704,6 +2088,7 @@ async function refreshData() {
 
   try {
     await updateLastSyncIndicator();
+    await updateLastSyncIndicatorWS();
 
     const view = getCurrentView();
 
@@ -1756,7 +2141,7 @@ async function refreshData() {
       //   return db - da;
       // });
       // renderProductionStatusUnified(tableEl, data);
-      showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt);
+      showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt,lastSyncShownAtWS);
       return;
     }
 
@@ -1765,7 +2150,7 @@ async function refreshData() {
 
     if (loader && tableEl) {
       await loader(tableEl);
-      showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt);
+      showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt,lastSyncShownAtWS);
     }
 
   } catch (err) {
@@ -1821,7 +2206,12 @@ async function sendHeartBeat() {
       },
       body: JSON.stringify({
         page: window.location.pathname,
-        view: currentView
+        view: currentView,
+        browser: navigator.userAgent,
+        screen:`${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat()
+          .resolvedOptions()
+          .timeZone
       })
     });
   } catch (err) {
@@ -1837,17 +2227,20 @@ const UI_REFRESH_MS = 180 * 1000;
 const LAST_SYNC_MS = 60 * 1000;
 window.addEventListener("DOMContentLoaded", async () => {
  try {
+  ensureGuestId();
+  await sendHeartBeat();
   await checkAuthentication();
   loadData();
   renderViewTiles();
   setView(getCurrentView());
-  sendHeartBeat();
+  
   await loadDashboardCache();
   await refreshData();
-  updateLastSyncIndicator();
+  // updateLastSyncIndicator();
   alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
+  
  } catch (err) {
   console.error("BOOT ERROR:", err);
   alert("BOOT ERROR: " + err.message);
@@ -1856,7 +2249,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   
 
   // refreshData();  
-  const savedFilterMode = ["all", "downtime", "tpe", "presetup"].includes(filterMode)
+  const savedFilterMode = ["all", "downtime", "tpe", "presetup", "system"].includes(filterMode)
     ? filterMode
     : "all";
   filterMode = savedFilterMode;
@@ -1878,6 +2271,7 @@ dashboardInterval = setInterval(async () => {
   
 }, UI_REFRESH_MS);
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
+  setInterval(updateLastSyncIndicatorWS, LAST_SYNC_MS);
   setInterval(sendHeartBeat, 60000);
   alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);

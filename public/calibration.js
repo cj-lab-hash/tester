@@ -1909,7 +1909,7 @@ function updateStatusSummary(dataRows = []) {
       .toUpperCase();
 
     if (
-      ["PRODN","ENGG","LOT"]
+      ["PRODN","LOT"]
         .includes(stateShort)
     ) {
       production++;
@@ -1925,9 +1925,7 @@ function updateStatusSummary(dataRows = []) {
       handlerIssue++;
     }
     if (
-      text.includes("SYSTEM ISSUE") ||
-      text.includes("SYSTEM PROBLEM") ||
-      text.includes("SYSTEM FAILURE")
+      text.includes("SYSTEM PROBLEM")
     ) {
       system++;
     }

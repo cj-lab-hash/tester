@@ -333,7 +333,8 @@ function editCell(td) {
 
 
 function isTPEDowntime(stateLong) {
-  const state = (stateLong || "").toUpperCase();
+  const state = (stateLong || "").toUpperCase().trim();
+  console.log("TPE CHECK:", JSON.stringify(state));
  if (state === "CONTACT ISSUE") return true;
   return [...TPE_DOWNTIME].some(issue => state.includes(issue));
 }

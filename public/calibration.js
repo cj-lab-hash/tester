@@ -1932,7 +1932,7 @@ function updateStatusSummary(dataRows = []) {
 
     if (
       text.includes("YIELD ISSUE") ||
-      text.includes("RKGU FAIL") ||
+      text.includes("R/KGU FAIL") ||
       text.includes("QA FAIL") ||
       text.includes("QUALIFICATION FAIL DFL") ||
       text.includes("HW CHECKER PROBLEM")

@@ -1859,37 +1859,37 @@ async function loadDashboardCache() {
 //   renderProductionStatusUnified(actTable, dashboardCache.ACT);
 // }
 //WALA PA PURPOSE
-function showEmptyTableMessage(tableEl, message) {
-  if (!tableEl) return;
+// function showEmptyTableMessage(tableEl, message) {
+//   if (!tableEl) return;
 
-  const wrap = tableEl.closest(".table-wrap");
-  const tbody = tableEl.querySelector("tbody");
-  if (tbody) tbody.innerHTML = "";
+//   const wrap = tableEl.closest(".table-wrap");
+//   const tbody = tableEl.querySelector("tbody");
+//   if (tbody) tbody.innerHTML = "";
 
-  let banner = wrap?.querySelector(".system-empty-banner");
-  if (!banner) {
-    banner = document.createElement("div");
-    banner.className = "system-empty-banner";
-    banner.style.cssText = [
-      "margin: 10px 0 14px;",
-      "padding: 10px 14px;",
-      "border-radius: 10px;",
-      "background: rgba(235, 180, 52, 0.12);",
-      "border: 1px solid rgba(235, 180, 52, 0.5);",
-      "color: #f3e7b0;",
-      "font-weight: 700;",
-      "text-align: center;",
-      "letter-spacing: 0.02em;",
-      "box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);"
-    ].join("");
+//   let banner = wrap?.querySelector(".system-empty-banner");
+//   if (!banner) {
+//     banner = document.createElement("div");
+//     banner.className = "system-empty-banner";
+//     banner.style.cssText = [
+//       "margin: 10px 0 14px;",
+//       "padding: 10px 14px;",
+//       "border-radius: 10px;",
+//       "background: rgba(235, 180, 52, 0.12);",
+//       "border: 1px solid rgba(235, 180, 52, 0.5);",
+//       "color: #f3e7b0;",
+//       "font-weight: 700;",
+//       "text-align: center;",
+//       "letter-spacing: 0.02em;",
+//       "box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);"
+//     ].join("");
 
-    if (wrap) {
-      wrap.insertBefore(banner, tableEl);
-    }
-  }
+//     if (wrap) {
+//       wrap.insertBefore(banner, tableEl);
+//     }
+//   }
 
-  banner.textContent = message;
-}
+//   banner.textContent = message;
+// }
 function updateStatusSummary(dataRows = []) {
 
   let production = 0;
@@ -1897,6 +1897,7 @@ function updateStatusSummary(dataRows = []) {
   let system = 0;
   let yieldIssues = 0;
   let handlerIssue = 0;
+  let total = 0;
 
   for (const row of dataRows) {
 
@@ -1908,36 +1909,37 @@ function updateStatusSummary(dataRows = []) {
        (row.raw_title || ""))
       .toUpperCase();
 
-    if (
-      ["PRODN","LOT"]
-        .includes(stateShort)
-    ) {
-      production++;
-    }
-    if (
-      text.includes("CONTACT ISSUE")
-    ) {
-      contactIssue++;
-    }
-    if (
-      text.includes("HANDLER PROBLEM")
-    ) {
-      handlerIssue++;
-    }
-    if (
-      text.includes("SYSTEM PROBLEM")
-    ) {
-      system++;
-    }
-
-    if (
+    const isProduction = ["PRODN", "LOT"].includes(stateShort);
+    const isContactIssue = text.includes("CONTACT ISSUE");
+    const isHandlerIssue =
+      text.includes("HANDLER PROBLEM") ||
+      text.includes("TEMP STABILIZATION PROBLEM");
+    const isSystemIssue = text.includes("SYSTEM PROBLEM");
+    const isYieldIssue =
       text.includes("YIELD ISSUE") ||
       text.includes("R/KGU FAIL") ||
       text.includes("QA FAIL") ||
       text.includes("QUALIFICATION FAIL DFL") ||
-      text.includes("HW CHECKER PROBLEM")
-    ) {
+      text.includes("HW CHECKER PROBLEM") ||
+      text.includes("TPE VERIFICATION");
+
+    if (isProduction) {
+      production++;
+    }
+    if (isContactIssue) {
+      contactIssue++;
+    }
+    if (isHandlerIssue) {
+      handlerIssue++;
+    }
+    if (isSystemIssue) {
+      system++;
+    }
+    if (isYieldIssue) {
       yieldIssues++;
+    }
+    if (isProduction || isContactIssue || isHandlerIssue || isSystemIssue || isYieldIssue) {
+      total++;
     }
   }
 // console.log("Summary rows", dataRows.length);
@@ -1949,6 +1951,9 @@ function updateStatusSummary(dataRows = []) {
 //     stateLong: r.state_long
 //   }))
 // );
+
+  document.getElementById("totalCount").textContent =
+    total;
 
   document.getElementById("prodCount").textContent =
     production;
@@ -2007,9 +2012,9 @@ function loadFromCache({
     return text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM FAILURE");
   }));
 
-  if (!hasSystemIssue) {
-    showEmptyTableMessage(tableEl, "No current system issue.");
-  }
+  // if (!hasSystemIssue) {
+  //   // showEmptyTableMessage(tableEl, "No current system issue.");
+  // }
 }
 async function deleteComments() {
   try {
@@ -2281,9 +2286,9 @@ updateStatusSummary(summaryData || []);
         return text.includes("SYSTEM ISSUE") || text.includes("SYSTEM PROBLEM") || text.includes("SYSTEM FAILURE");
       });
 
-      if (!hasSystemIssue) {
-        showEmptyTableMessage(tableEl, "No current system issue.");
-      }
+      // if (!hasSystemIssue) {
+      //   showEmptyTableMessage(tableEl, "No current system issue.");
+      // }
 
       showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt,lastSyncShownAtWS);
     }

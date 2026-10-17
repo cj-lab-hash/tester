@@ -1895,7 +1895,7 @@ function updateStatusSummary(dataRows = []) {
       yieldIssues++;
       matchingCategories.push("yield");
     }
-    if (matchingCategories.length) {
+    if (isProduction || matchingCategories.length) {
       total++;
 
       const phase = getPhaseForState(stateShort, row.raw_title);

@@ -1900,8 +1900,6 @@ function updateStatusSummary(dataRows = []) {
   let handlerIssue = 0;
   let total = 0;
   const phaseCounts = {
-    total: { started: 0, waiting: 0 },
-    production: { started: 0, waiting: 0 },
     contact: { started: 0, waiting: 0 },
     system: { started: 0, waiting: 0 },
     yield: { started: 0, waiting: 0 },
@@ -1935,7 +1933,6 @@ function updateStatusSummary(dataRows = []) {
     const matchingCategories = [];
     if (isProduction) {
       production++;
-      matchingCategories.push("production");
     }
     if (isContactIssue) {
       contactIssue++;
@@ -1955,7 +1952,6 @@ function updateStatusSummary(dataRows = []) {
     }
     if (matchingCategories.length) {
       total++;
-      matchingCategories.push("total");
 
       const phase = getPhaseForState(stateShort, row.raw_title);
       if (phase === "ATTENDED") {
@@ -1998,17 +1994,13 @@ function updateStatusSummary(dataRows = []) {
   handlerIssue;
 
   const badgeLabels = {
-    total: "Total setups",
-    production: "Production",
     contact: "Contact",
     system: "System",
     yield: "Yield",
     handler: "Handler"
   };
   for (const [category, counts] of Object.entries(phaseCounts)) {
-    const badge = document.getElementById(
-      `${category === "production" ? "prod" : category}Badge`
-    );
+    const badge = document.getElementById(`${category}Badge`);
     const tooltip = `${badgeLabels[category]}: Started: ${counts.started}, Waiting: ${counts.waiting}`;
     badge.title = tooltip;
     badge.setAttribute("aria-label", tooltip);

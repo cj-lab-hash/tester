@@ -1897,6 +1897,7 @@ function updateStatusSummary(dataRows = []) {
   let system = 0;
   let yieldIssues = 0;
   let handlerIssue = 0;
+  let total = 0;
 
   for (const row of dataRows) {
 
@@ -1908,38 +1909,37 @@ function updateStatusSummary(dataRows = []) {
        (row.raw_title || ""))
       .toUpperCase();
 
-    if (
-      ["PRODN","LOT"]
-        .includes(stateShort)
-    ) {
-      production++;
-    }
-    if (
-      text.includes("CONTACT ISSUE")
-    ) {
-      contactIssue++;
-    }
-    if (
+    const isProduction = ["PRODN", "LOT"].includes(stateShort);
+    const isContactIssue = text.includes("CONTACT ISSUE");
+    const isHandlerIssue =
       text.includes("HANDLER PROBLEM") ||
-      text.includes("TEMP STABILIZATION PROBLEM")
-    ) {
-      handlerIssue++;
-    }
-    if (
-      text.includes("SYSTEM PROBLEM")
-    ) {
-      system++;
-    }
-
-    if (
+      text.includes("TEMP STABILIZATION PROBLEM");
+    const isSystemIssue = text.includes("SYSTEM PROBLEM");
+    const isYieldIssue =
       text.includes("YIELD ISSUE") ||
       text.includes("R/KGU FAIL") ||
       text.includes("QA FAIL") ||
       text.includes("QUALIFICATION FAIL DFL") ||
       text.includes("HW CHECKER PROBLEM") ||
-      text.includes("TPE VERIFICATION")
-    ) {
+      text.includes("TPE VERIFICATION");
+
+    if (isProduction) {
+      production++;
+    }
+    if (isContactIssue) {
+      contactIssue++;
+    }
+    if (isHandlerIssue) {
+      handlerIssue++;
+    }
+    if (isSystemIssue) {
+      system++;
+    }
+    if (isYieldIssue) {
       yieldIssues++;
+    }
+    if (isProduction || isContactIssue || isHandlerIssue || isSystemIssue || isYieldIssue) {
+      total++;
     }
   }
 // console.log("Summary rows", dataRows.length);
@@ -1951,6 +1951,9 @@ function updateStatusSummary(dataRows = []) {
 //     stateLong: r.state_long
 //   }))
 // );
+
+  document.getElementById("totalCount").textContent =
+    total;
 
   document.getElementById("prodCount").textContent =
     production;

@@ -706,7 +706,9 @@ td.cal-due, td.pm-due {
     background:#f9a825;
     color:#000;
 }
-
+.badge.may-green{
+    background:#4caf50;
+}
 .badge.blue{
     background:#1565c0;
 }

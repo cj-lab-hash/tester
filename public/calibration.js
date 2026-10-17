@@ -39,7 +39,6 @@ let plansMap = new Map();
 let currentVersion = localStorage.getItem('appVersion');
 let userPermissions = {comments: false};
 let dashboardInterval;
-let alertInterval;
 let updatecheckerInterval;
 let phasetimerInterval;
 let commentsInterval;
@@ -392,7 +391,6 @@ let lastSyncShownAt = null;
 let lastSyncShownAtWS = null;
 let lastSyncFetchedAtMs = 0;
 let lastSyncFetchedAtMsWs = 0;
-let lastAlertScrapeTs = null;
 const lastViewToastKey = new Map();
 
 // Prevent overlapping refresh calls
@@ -882,76 +880,6 @@ async function loadOccurrences() {
     );
 
 }
-// Alerts for ALL groups based on DB “latest scrape timestamp”
-async function alertIssuesAllGroupsIfNewScrape() {
-
-  const response = await fetch('/api/alerts');
-
-  if (!response.ok) {
-    console.error('Alert fetch failed');
-    return;
-  }
-
-  const result = await response.json();
-
-  const latestTs = result.latestTs;
-
-  if (!latestTs) return;
-
-  if (latestTs === lastAlertScrapeTs) return;
-
-  lastAlertScrapeTs = latestTs;
-
-  const buckets = result.buckets || {};
-
-  for (const [issueName, list] of Object.entries(buckets)) {
-
-    if (!list.length) continue;
-
-
-    const type =
-      issueName === "RKGU FAIL"
-        ? "pink"
-        : issueName.includes("SYSTEM")
-        ? "yellow"
-        : "red";
-
-    const preview =
-      list
-        .slice(0, 6)
-        .map(x => x.id)
-        .join(", ")
-      + (list.length > 6 ? " ..." : "");
-
-    showToast({
-      type,
-      title: `${issueName}: ${list.length}`,
-      message: preview,
-      onClick: () => {
-
-        const first = list[0];
-
-        const url =
-          buildStatusphereUrlFromRow(
-            first.href,
-            first.id
-          );
-
-        if (url) {
-          window.open(
-            url,
-            "_blank",
-            "noopener"
-          );
-        }
-
-      }
-    });
-
-  }
-
-}
-
 // ===================== SCHEDULES (ACT) =====================
 function parseScheduleDate(text) {
   if (!text) return null;
@@ -1409,6 +1337,23 @@ function showViewAlertsOncePerChange(viewName, tableEl, scrapeTs) {
 //     });
 //   }
 }
+
+function getLatestScrapeTimestamp(dataRows = []) {
+  let latestTimestamp = "";
+  let latestTime = Number.NEGATIVE_INFINITY;
+
+  for (const row of dataRows) {
+    const timestamp = row.checked_at;
+    const time = Date.parse(timestamp);
+    if (Number.isFinite(time) && time > latestTime) {
+      latestTimestamp = timestamp;
+      latestTime = time;
+    }
+  }
+
+  return latestTimestamp;
+}
+
 // ===================== RENDER: SYSTEM PROBLEM ONLY (same style as other tables) =====================
 // async function loadSYSTEMLatest(tableEl) {
 //   const tbody = document.getElementById("systemTbody");
@@ -1899,6 +1844,12 @@ function updateStatusSummary(dataRows = []) {
   let yieldIssues = 0;
   let handlerIssue = 0;
   let total = 0;
+  const phaseCounts = {
+    contact: { attended: 0, waiting: 0 },
+    system: { attended: 0, waiting: 0 },
+    yield: { attended: 0, waiting: 0 },
+    handler: { attended: 0, waiting: 0 }
+  };
 
   for (const row of dataRows) {
 
@@ -1924,23 +1875,39 @@ function updateStatusSummary(dataRows = []) {
       text.includes("HW CHECKER PROBLEM") ||
       text.includes("TPE VERIFICATION");
 
+    const matchingCategories = [];
     if (isProduction) {
       production++;
     }
     if (isContactIssue) {
       contactIssue++;
+      matchingCategories.push("contact");
     }
     if (isHandlerIssue) {
       handlerIssue++;
+      matchingCategories.push("handler");
     }
     if (isSystemIssue) {
       system++;
+      matchingCategories.push("system");
     }
     if (isYieldIssue) {
       yieldIssues++;
+      matchingCategories.push("yield");
     }
-    if (isProduction || isContactIssue || isHandlerIssue || isSystemIssue || isYieldIssue) {
+    if (isProduction || matchingCategories.length) {
       total++;
+
+      const phase = getPhaseForState(stateShort, row.raw_title);
+      if (phase === "ATTENDED") {
+        for (const category of matchingCategories) {
+          phaseCounts[category].attended++;
+        }
+      } else if (phase === "WAITING") {
+        for (const category of matchingCategories) {
+          phaseCounts[category].waiting++;
+        }
+      }
     }
   }
 // console.log("Summary rows", dataRows.length);
@@ -1970,6 +1937,19 @@ function updateStatusSummary(dataRows = []) {
 
   document.getElementById("handlerCount").textContent =
   handlerIssue;
+
+  const badgeLabels = {
+    contact: "Contact",
+    system: "System",
+    yield: "Yield",
+    handler: "Handler"
+  };
+  for (const [category, counts] of Object.entries(phaseCounts)) {
+    const badge = document.getElementById(`${category}Badge`);
+    const tooltip = `${badgeLabels[category]}: Attended: ${counts.attended}, Waiting: ${counts.waiting}`;
+    badge.title = tooltip;
+    badge.setAttribute("aria-label", tooltip);
+  }
 
 }
 function loadFromCache({
@@ -2276,7 +2256,11 @@ updateStatusSummary(summaryData || []);
       //   return db - da;
       // });
       // renderProductionStatusUnified(tableEl, data);
-      showViewAlertsOncePerChange("ACT", tableEl, lastSyncShownAt,lastSyncShownAtWS);
+      showViewAlertsOncePerChange(
+        view,
+        tableEl,
+        getLatestScrapeTimestamp(summaryData)
+      );
       return;
     }
 
@@ -2285,7 +2269,11 @@ updateStatusSummary(summaryData || []);
 
     if (loader && tableEl) {
       await loader(tableEl);
-      showViewAlertsOncePerChange(view, tableEl, lastSyncShownAt,lastSyncShownAtWS);
+      showViewAlertsOncePerChange(
+        view,
+        tableEl,
+        getLatestScrapeTimestamp(summaryData)
+      );
     }
 
   } catch (err) {
@@ -2306,7 +2294,6 @@ document.addEventListener("dblclick", (event) => {
 function pauseDashboard() {
   if (dashboardPause) return;
   clearInterval(dashboardInterval);
-  clearInterval(alertInterval);
   clearInterval(updatecheckerInterval);
   clearInterval(commentsInterval);
   clearInterval(phasetimerInterval);
@@ -2322,7 +2309,6 @@ function resumeDashboard() {
     await refreshData();
   }, UI_REFRESH_MS);
 
-  alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);
   commentsInterval = setInterval(deleteComments, 180_000);
   phasetimerInterval = setInterval(updatePhaseTimers, 60_000);
@@ -2372,7 +2358,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   await loadDashboardCache();
   await refreshData();
   // updateLastSyncIndicator();
-  alertIssuesAllGroupsIfNewScrape();
   loadVerseFromAPI();
   checkForUpdates();
   
@@ -2408,7 +2393,6 @@ dashboardInterval = setInterval(async () => {
   setInterval(updateLastSyncIndicator, LAST_SYNC_MS);
   setInterval(updateLastSyncIndicatorWS, LAST_SYNC_MS);
   setInterval(sendHeartBeat, 60000);
-  alertInterval = setInterval(alertIssuesAllGroupsIfNewScrape, 180_000);
   updatecheckerInterval = setInterval(checkForUpdates, 300_000);
   phasetimerInterval = setInterval(updatePhaseTimers, 60_000);
   commentsInterval = setInterval(deleteComments, 180_000);

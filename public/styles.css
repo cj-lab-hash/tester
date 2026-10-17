@@ -940,8 +940,11 @@ td.cal-due, td.pm-due {
 .filter-modes {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  margin: 0;
+  width: max-content;
+  max-width: calc(100% - 20px);
+  margin: 10px auto 12px;
   padding: 3px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
@@ -969,10 +972,10 @@ td.cal-due, td.pm-due {
 
 .filter-modes label span {
   display: block;
-  padding: 7px 9px;
+  padding: 6px 8px;
   border-radius: 6px;
   color: #475569;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -999,7 +1002,7 @@ body.dark-mode .filter-modes label:has(input:checked) span {
 @media (max-width: 900px) {
   .filter-modes {
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: center;
   }
 }
 
@@ -1106,8 +1109,8 @@ body.dark-mode .filter-modes label:has(input:checked) span {
   }
 
   .filter-modes label span {
-    padding: 6px 4px;
-    font-size: 10px;
+    padding: 5px 3px;
+    font-size: 9px;
   }
 
   .view-tiles-wrap {

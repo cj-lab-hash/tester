@@ -1935,7 +1935,8 @@ function updateStatusSummary(dataRows = []) {
       text.includes("R/KGU FAIL") ||
       text.includes("QA FAIL") ||
       text.includes("QUALIFICATION FAIL DFL") ||
-      text.includes("HW CHECKER PROBLEM")
+      text.includes("HW CHECKER PROBLEM") ||
+      text.includes("TPE VERIFICATION")
     ) {
       yieldIssues++;
     }

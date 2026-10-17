@@ -24,29 +24,6 @@
             <div id="lastSyncWS" class="last-sync-ws">WS Sync: --</div>
             <div id="currentUser" class="current-user">Not Logged In</div>
             <button id="loginButton" class="login-button" type="button">LOGIN</button>
-            <fieldset class="filter-modes" aria-label="Status filter">
-                <legend>FILTER</legend>
-                <label>
-                    <input type="radio" name="statusFilter" value="all" checked>
-                    <span>ALL STATUS</span>
-                </label>
-                <label>
-                    <input type="radio" name="statusFilter" value="downtime">
-                    <span>DOWNTIMES ONLY</span>
-                </label>
-                <label>
-                    <input type="radio" name="statusFilter" value="tpe">
-                    <span>TPE DOWNTIMES</span>
-                </label>
-                <label>
-                    <input type="radio" name="statusFilter" value="presetup">
-                    <span>PRESETUP</span>
-                </label>
-                <label>
-                    <input type="radio" name="statusFilter" value="system">
-                    <span>SYSTEM</span>
-                </label>
-            </fieldset>
             <div id="darkModeToggle">
             <span class="label-dark">🌙Dark Mode</span>
             </div>
@@ -109,6 +86,29 @@
     <div class="view-tiles-wrap">
         <div id="viewTiles" class="view-tiles" aria-label="View selector"></div>
      </div>           
+    <fieldset class="filter-modes" aria-label="Status filter">
+        <legend>FILTER</legend>
+        <label>
+            <input type="radio" name="statusFilter" value="all" checked>
+            <span>ALL STATUS</span>
+        </label>
+        <label>
+            <input type="radio" name="statusFilter" value="downtime">
+            <span>DOWNTIMES ONLY</span>
+        </label>
+        <label>
+            <input type="radio" name="statusFilter" value="tpe">
+            <span>TPE DOWNTIMES</span>
+        </label>
+        <label>
+            <input type="radio" name="statusFilter" value="presetup">
+            <span>PRESETUP</span>
+        </label>
+        <label>
+            <input type="radio" name="statusFilter" value="system">
+            <span>SYSTEM</span>
+        </label>
+    </fieldset>
     <div id="statusSummary" class="status-summary">
         <div class="badge may-green">
             TOTAL SETUPS: <span id="totalCount">0</span>

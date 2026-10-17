@@ -1920,7 +1920,8 @@ function updateStatusSummary(dataRows = []) {
       contactIssue++;
     }
     if (
-      text.includes("HANDLER PROBLEM")
+      text.includes("HANDLER PROBLEM") ||
+      text.includes("TEMP STABILIZATION PROBLEM")
     ) {
       handlerIssue++;
     }

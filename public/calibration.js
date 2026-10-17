@@ -1899,6 +1899,14 @@ function updateStatusSummary(dataRows = []) {
   let yieldIssues = 0;
   let handlerIssue = 0;
   let total = 0;
+  const phaseCounts = {
+    total: { started: 0, waiting: 0 },
+    production: { started: 0, waiting: 0 },
+    contact: { started: 0, waiting: 0 },
+    system: { started: 0, waiting: 0 },
+    yield: { started: 0, waiting: 0 },
+    handler: { started: 0, waiting: 0 }
+  };
 
   for (const row of dataRows) {
 
@@ -1924,23 +1932,41 @@ function updateStatusSummary(dataRows = []) {
       text.includes("HW CHECKER PROBLEM") ||
       text.includes("TPE VERIFICATION");
 
+    const matchingCategories = [];
     if (isProduction) {
       production++;
+      matchingCategories.push("production");
     }
     if (isContactIssue) {
       contactIssue++;
+      matchingCategories.push("contact");
     }
     if (isHandlerIssue) {
       handlerIssue++;
+      matchingCategories.push("handler");
     }
     if (isSystemIssue) {
       system++;
+      matchingCategories.push("system");
     }
     if (isYieldIssue) {
       yieldIssues++;
+      matchingCategories.push("yield");
     }
-    if (isProduction || isContactIssue || isHandlerIssue || isSystemIssue || isYieldIssue) {
+    if (matchingCategories.length) {
       total++;
+      matchingCategories.push("total");
+
+      const phase = getPhaseForState(stateShort, row.raw_title);
+      if (phase === "ATTENDED") {
+        for (const category of matchingCategories) {
+          phaseCounts[category].started++;
+        }
+      } else if (phase === "WAITING") {
+        for (const category of matchingCategories) {
+          phaseCounts[category].waiting++;
+        }
+      }
     }
   }
 // console.log("Summary rows", dataRows.length);
@@ -1970,6 +1996,23 @@ function updateStatusSummary(dataRows = []) {
 
   document.getElementById("handlerCount").textContent =
   handlerIssue;
+
+  const badgeLabels = {
+    total: "Total setups",
+    production: "Production",
+    contact: "Contact",
+    system: "System",
+    yield: "Yield",
+    handler: "Handler"
+  };
+  for (const [category, counts] of Object.entries(phaseCounts)) {
+    const badge = document.getElementById(
+      `${category === "production" ? "prod" : category}Badge`
+    );
+    const tooltip = `${badgeLabels[category]}: Started: ${counts.started}, Waiting: ${counts.waiting}`;
+    badge.title = tooltip;
+    badge.setAttribute("aria-label", tooltip);
+  }
 
 }
 function loadFromCache({

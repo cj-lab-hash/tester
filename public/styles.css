@@ -701,6 +701,10 @@ td.cal-due, td.pm-due {
     font-size:12px;
   }
 
+.status-summary .badge[title]{
+    cursor:help;
+ }
+
 .badge.green{
     background:#2e7d32;
 }

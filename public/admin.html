@@ -221,6 +221,9 @@ tr:hover{
 .danger-btn:hover{
     background:#ef4444;
 }
+#trendChart{
+    background:#f3f4f6;
+}
 .top-actions{
     position:absolute;
     top:20px;
@@ -1011,6 +1014,9 @@ const ctx =
                         label:
                             `${view} - ${issue}`,
                         data: counts,
+                        borderColor: "#dc2626",
+                        pointBackgroundColor: "#dc2626",
+                        pointBorderColor: "#dc2626",
                         borderWidth: 3,
                         tension: 0.2,
                         fill: false

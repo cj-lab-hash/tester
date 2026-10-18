@@ -705,6 +705,17 @@ td.cal-due, td.pm-due {
     cursor:help;
  }
 
+@media (hover: none) and (pointer: coarse){
+  .status-summary .badge{
+    transition: transform 120ms ease, filter 120ms ease;
+  }
+
+  .status-summary .badge:active{
+    transform: scale(.96);
+    filter: brightness(.9);
+  }
+}
+
 .badge.green{
     background:#2e7d32;
 }

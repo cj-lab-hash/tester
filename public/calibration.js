@@ -1861,7 +1861,12 @@ function updateStatusSummary(dataRows = []) {
        (row.raw_title || ""))
       .toUpperCase();
 
-    const isProduction = ["PRODN", "LOT"].includes(stateShort);
+    const isProduction = ["PRODN", "LOT"].includes(stateShort) || 
+      text.includes("TEMP CONVERSION") || 
+      text.includes("KGU GENERATION") || 
+      text.includes("KGU / RKGU RELOAD") || 
+      text.includes("KGU / RKGU RETEST") || 
+      text.includes("EQUIPMENT SETUP");
     const isContactIssue = text.includes("CONTACT ISSUE");
     const isHandlerIssue =
       text.includes("HANDLER PROBLEM") ||

@@ -1861,7 +1861,13 @@ function updateStatusSummary(dataRows = []) {
        (row.raw_title || ""))
       .toUpperCase();
 
-    const isProduction = ["PRODN", "LOT"].includes(stateShort);
+    const isProduction = ["PRODN", "LOT", "IDLE"].includes(stateShort) || 
+      text.includes("TEMP CONVERSION") || 
+      text.includes("KGU GENERATION") || 
+      text.includes("KGU / RKGU RELOAD") || 
+      text.includes("KGU / RKGU RETEST") ||
+      
+      text.includes("EQUIPMENT SETUP");
     const isContactIssue = text.includes("CONTACT ISSUE");
     const isHandlerIssue =
       text.includes("HANDLER PROBLEM") ||
@@ -1872,6 +1878,7 @@ function updateStatusSummary(dataRows = []) {
       text.includes("R/KGU FAIL") ||
       text.includes("QA FAIL") ||
       text.includes("QUALIFICATION FAIL DFL") ||
+      text.includes("QUALIFICATION FAIL CNTC") ||
       text.includes("HW CHECKER PROBLEM") ||
       text.includes("TPE VERIFICATION");
 

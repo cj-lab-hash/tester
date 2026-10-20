@@ -702,7 +702,7 @@ td.cal-due, td.pm-due {
   }
 
 .status-summary .badge[title]{
-    cursor:help;
+    cursor:progress;
  }
 
 @media (hover: none) and (pointer: coarse){

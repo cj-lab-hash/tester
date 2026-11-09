@@ -298,7 +298,8 @@ app.get('/api/dashboard-data', async (req, res) => {
 
             MAV: sortDashboardRows(filteredRows.filter(r =>
                 /^MAV/i.test(r.equipment_id) ||
-                /^TERMAG/i.test(r.equipment_id)
+                /^TERMAG/i.test(r.equipment_id) ||
+                /^TERJ750/i.test(r.equipment_id)
             )
         ),
 

@@ -87,6 +87,7 @@ return (
   /^LTXMX\d{3}$/.test(s) ||
   /^KVDM2\d{3}$/.test(s) ||
   /^ASL3K\d{3}$/.test(s) ||
+  /^TERJ750\d{3}$/.test(s) ||
   /^RFX\d{3}$/.test(s)
   
 
